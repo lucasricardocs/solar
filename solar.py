@@ -766,13 +766,13 @@ else:
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=4,
                 stroke='#a9a9a9',
-                strokeWidth=0
+                strokeWidth=1
             ).encode(
                 x=alt.X(
                     'week_num:O',
                     title=None,
                     axis=alt.Axis(labels=False, ticks=False, domain=False),
-                    scale=alt.Scale(padding=0.3)  # padding mínimo em X
+                    scale=alt.Scale(padding=0.1)  # padding mínimo em X
                 ),
                 y=alt.Y(
                     'day_of_week:O',
@@ -815,7 +815,7 @@ else:
             final_heatmap = alt.vconcat(
                 month_labels_chart,
                 heatmap_grid,
-                spacing=1
+                spacing=5
             ).properties(
                 title=f"Atividade de Geração Solar em {selected_year}"
             ).resolve_scale(
