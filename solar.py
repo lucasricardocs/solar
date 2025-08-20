@@ -17,42 +17,37 @@ except locale.Error:
 
 # --- Constantes de Configuração do Google Sheets ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'solardaily'
+WORKSHEET_NAME = 'Solardaily'
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 @st.cache_data(ttl=600)
 def load_data():
     """Carrega dados da planilha do Google Sheets e faz o pré-processamento."""
     try:
-        # ----- INÍCIO DA CORREÇÃO -----
-        # Definindo as permissões (scopes) necessárias para as APIs
         SCOPES = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive.readonly"
         ]
         creds_dict = st.secrets["gcp_service_account"]
-        # Passando os scopes durante a criação das credenciais
         creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         gc = gspread.authorize(creds)
-        # ----- FIM DA CORREÇÃO -----
         
         worksheet = gc.open_by_key(SPREADSHEET_ID).worksheet(WORKSHEET_NAME)
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
 
         # --- PROCESSAMENTO INICIAL DOS DADOS ---
-        # ATENÇÃO: Verifique se os nomes das colunas ('PRODUÇÃO TOTAL', 'DATA')
-        # correspondem aos da sua aba 'Solardaily'.
-        numeric_cols = ['PRODUÇÃO TOTAL']
+        # ATUALIZAÇÃO: Usando as colunas 'gerado' e 'data' que você informou.
+        numeric_cols = ['gerado']
         for col in numeric_cols:
             df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        df['DATA'] = pd.to_datetime(df['DATA'], errors='coerce')
-        df.dropna(subset=['DATA'] + numeric_cols, inplace=True)
+        df['data'] = pd.to_datetime(df['data'], errors='coerce')
+        df.dropna(subset=['data'] + numeric_cols, inplace=True)
 
-        df['ANO'] = df['DATA'].dt.year
-        df['MES'] = df['DATA'].dt.month
-        df['DIA'] = df['DATA'].dt.day
+        df['ANO'] = df['data'].dt.year
+        df['MES'] = df['data'].dt.month
+        df['DIA'] = df['data'].dt.day
         return df
     except gspread.exceptions.SpreadsheetNotFound:
         st.error(f"Planilha não encontrada! Verifique se o SPREADSHEET_ID '{SPREADSHEET_ID}' está correto e se o Service Account tem acesso a ela.")
@@ -60,7 +55,6 @@ def load_data():
     except Exception as e:
         st.error(f"Ocorreu um erro ao conectar ou processar os dados: {e}")
         return pd.DataFrame()
-
 
 # --- CARREGAMENTO DOS DADOS ---
 df = load_data()
@@ -91,7 +85,7 @@ else:
 df_filtrado_ano = df[df['ANO'] == ano_selecionado]
 
 # --- LAYOUT PRINCIPAL ---
-st.title(f"Dashboard de Produção")
+st.title(f"Dashboard de Geração de Energia")
 if meses_disponiveis and not df_filtrado_mes.empty:
     st.subheader(f"Análise de {nomes_meses[mes_selecionado]} de {ano_selecionado}")
 st.markdown("---")
@@ -100,25 +94,23 @@ st.markdown("---")
 if not df_filtrado_mes.empty:
     col1, col2 = st.columns(2)
     with col1:
-        st.header("Produção Diária (Histograma)")
-        # ... (código do gráfico de histograma mantido) ...
+        st.header("Geração Diária (Histograma)")
         chart_hist = alt.Chart(df_filtrado_mes).mark_bar(
             stroke='black',
             strokeWidth=1
         ).encode(
             x=alt.X('DIA:O', title='Dia do Mês'),
-            y=alt.Y('sum(PRODUÇÃO TOTAL):Q', title='Produção Total Acumulada'),
+            y=alt.Y('sum(gerado):Q', title='Total Gerado'),
             tooltip=[
                 alt.Tooltip('DIA', title='Dia'),
-                alt.Tooltip('sum(PRODUÇÃO TOTAL)', title='Produção Total', format=',.0f')
+                alt.Tooltip('sum(gerado)', title='Total Gerado', format=',.2f')
             ]
         ).properties(height=350)
         st.altair_chart(chart_hist, use_container_width=True)
 
     with col2:
-        st.header("Produção Acumulada (Montanha)")
-        # ... (código do gráfico de montanha mantido) ...
-        df_diario = df_filtrado_mes.groupby('DIA')['PRODUÇÃO TOTAL'].sum().reset_index()
+        st.header("Geração Acumulada (Montanha)")
+        df_diario = df_filtrado_mes.groupby('DIA')['gerado'].sum().reset_index()
         chart_area = alt.Chart(df_diario).mark_area(
             line={'color': '#1f77b4'},
             color=alt.Gradient(
@@ -128,17 +120,16 @@ if not df_filtrado_mes.empty:
             )
         ).encode(
             x=alt.X('DIA:Q', title='Dia do Mês'),
-            y=alt.Y('cumulative_sum:Q', title='Produção Acumulada'),
+            y=alt.Y('cumulative_sum:Q', title='Geração Acumulada'),
             tooltip=[
                 alt.Tooltip('DIA', title='Dia'),
-                alt.Tooltip('cumulative_sum:Q', title='Acumulado', format=',.0f')
+                alt.Tooltip('cumulative_sum:Q', title='Acumulado', format=',.2f')
             ]
         ).transform_window(
-            cumulative_sum='sum(PRODUÇÃO TOTAL)',
+            cumulative_sum='sum(gerado)',
             sort=[{'field': 'DIA'}]
         ).properties(height=350)
         st.altair_chart(chart_area, use_container_width=True)
-
 else:
     st.info("Selecione um mês com dados para ver os gráficos mensais.")
 
@@ -147,24 +138,27 @@ st.markdown("---")
 # --- HEATMAP ANUAL ESTILO GITHUB ---
 st.header(f"Heatmap de Atividade Anual ({ano_selecionado})")
 if not df_filtrado_ano.empty:
-    # ... (código do heatmap mantido) ...
     dias_do_ano = pd.to_datetime(pd.date_range(start=f'{ano_selecionado}-01-01', end=f'{ano_selecionado}-12-31'))
     df_calendario = pd.DataFrame({'DATA_COMPLETA': dias_do_ano})
-    df_producao_diaria = df_filtrado_ano.groupby(df_filtrado_ano['DATA'].dt.date)['PRODUÇÃO TOTAL'].sum().reset_index()
-    df_producao_diaria['DATA'] = pd.to_datetime(df_producao_diaria['DATA'])
-    df_heatmap = pd.merge(df_calendario, df_producao_diaria, left_on='DATA_COMPLETA', right_on='DATA', how='left').fillna({'PRODUÇÃO TOTAL': 0})
+    
+    df_producao_diaria = df_filtrado_ano.groupby(df_filtrado_ano['data'].dt.date)['gerado'].sum().reset_index()
+    df_producao_diaria['data'] = pd.to_datetime(df_producao_diaria['data'])
+    
+    df_heatmap = pd.merge(df_calendario, df_producao_diaria, left_on='DATA_COMPLETA', right_on='data', how='left').fillna({'gerado': 0})
+    
     df_heatmap['DIA_DA_SEMANA'] = df_heatmap['DATA_COMPLETA'].dt.dayofweek
     df_heatmap['SEMANA_DO_ANO'] = df_heatmap['DATA_COMPLETA'].dt.isocalendar().week
-    df_heatmap['NOME_MES'] = df_heatmap['DATA_COMPLETA'].dt.month.apply(lambda x: calendar.month_abbr[x].capitalize())
+    
     df_heatmap.loc[df_heatmap['DATA_COMPLETA'].dt.month == 1, 'SEMANA_DO_ANO'] = df_heatmap.loc[df_heatmap['DATA_COMPLETA'].dt.month == 1, 'SEMANA_DO_ANO'].replace(52, 0).replace(53, 0)
     df_heatmap.loc[df_heatmap['DATA_COMPLETA'].dt.month == 12, 'SEMANA_DO_ANO'] = df_heatmap.loc[df_heatmap['DATA_COMPLETA'].dt.month == 12, 'SEMANA_DO_ANO'].replace(1, 53)
+
     heatmap = alt.Chart(df_heatmap).mark_rect().encode(
         x=alt.X('SEMANA_DO_ANO:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
         y=alt.Y('DIA_DA_SEMANA:O', title=None, axis=alt.Axis(labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]", ticks=False, domain=False)),
-        color=alt.Color('PRODUÇÃO TOTAL:Q', legend=alt.Legend(title='Produção'), scale=alt.Scale(scheme='greens')),
-        tooltip=[alt.Tooltip('DATA_COMPLETA:T', title='Data'), alt.Tooltip('PRODUÇÃO TOTAL:Q', title='Produção', format=',.0f')]
+        color=alt.Color('gerado:Q', legend=alt.Legend(title='Gerado'), scale=alt.Scale(scheme='greens')),
+        tooltip=[alt.Tooltip('DATA_COMPLETA:T', title='Data'), alt.Tooltip('gerado:Q', title='Gerado', format=',.2f')]
     ).properties(width=alt.Step(15))
+    
     st.altair_chart(heatmap, use_container_width=True)
-
 else:
     st.info("Sem dados de produção para este ano.")
