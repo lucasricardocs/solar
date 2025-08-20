@@ -764,25 +764,15 @@ else:
             
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=5,   # <<< Aqui ajusta o raio dos cantos (radius)
-                stroke='#d3d3d3', # <<< Aqui ajusta a cor da borda
-                strokeWidth=2     # <<< Aqui ajusta a espessura da borda
+                cornerRadius=3,
+                stroke='#ffffff',
+                strokeWidth=1.5
             ).encode(
-                x=alt.X(
-                    'week_num:O', 
-                    title=None, 
-                    axis=alt.Axis(labels=False, ticks=False, domain=False),
-                    spacing=2      # <<< Aqui ajusta o espaçamento entre os quadrados no eixo X
-                ),
-                y=alt.Y(
-                    'day_of_week:O', 
-                    title=None, 
-                    axis=alt.Axis(
-                        labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
-                        ticks=False, domain=False
-                    ),
-                    spacing=2      # <<< Aqui ajusta o espaçamento entre os quadrados no eixo Y
-                ),
+                x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
+                y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
+                    labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
+                    ticks=False, domain=False
+                )),
                 color=alt.condition(
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color('Energia Gerada (kWh):Q',
@@ -794,7 +784,7 @@ else:
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
-            ).properties(height=150)
+            ).properties(height=300)
             
             # Rótulos dos meses acima do primeiro dia de cada mês
             month_starts = heatmap_df.groupby('month').agg(first_week=('week_num', 'min')).reset_index()
