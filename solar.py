@@ -784,7 +784,7 @@ else:
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
-            ).properties(height=150)
+            ).properties(height=300)
             
             # Rótulos dos meses acima do primeiro dia de cada mês
             month_starts = heatmap_df.groupby('month').agg(first_week=('week_num', 'min')).reset_index()
