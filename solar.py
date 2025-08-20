@@ -1,4 +1,4 @@
-# --- Estatísticas Anuais ---# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -29,46 +29,11 @@ except:
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
 WORKSHEET_NAME = 'solardaily'
 
-# --- Constantes para Controle de Tamanhos ---
-# ========== TAMANHOS DE FONTE ==========
+# Definir FONT_SIZES para evitar erro
 FONT_SIZES = {
-    'header_title': '2.5rem',        # Título principal do cabeçalho
-    'header_subtitle': '1.1rem',     # Subtítulo do cabeçalho
-    'section_title': '1.8rem',       # Títulos das seções (h1)
-    'subsection_title': '1.4rem',    # Subtítulos das seções (h2)
-    'minor_title': '1.2rem',         # Títulos menores (h3)
-    'body_text': '1rem',             # Texto do corpo
-    'small_text': '0.9rem',          # Texto pequeno
-    'metric_value': '2rem',          # Valores das métricas
-    'metric_label': '0.9rem',        # Labels das métricas
-    'button_text': '0.95rem',        # Texto dos botões
-    'input_text': '0.95rem',         # Texto dos inputs
-    'table_text': '0.9rem',          # Texto das tabelas
-    'chart_title': '1.3rem',         # Títulos dos gráficos
-    'chart_axis': '0.85rem',         # Textos dos eixos dos gráficos
-}
-
-# ========== ALTURAS DOS GRÁFICOS ==========
-CHART_HEIGHTS = {
-    'daily_chart': 400,       # Gráfico de produção diária
-    'accumulated_chart': 400,  # Gráfico de geração acumulada
-    'monthly_chart': 500,     # Gráfico mensal
-    'heatmap_chart': 120,     # Heatmap
-}
-
-# ========== LARGURAS DAS BARRAS DOS GRÁFICOS ==========
-BAR_WIDTHS = {
-    'daily_bars': 30,     # Barras do gráfico diário (10-50)
-    'monthly_bars': 40,   # Barras do gráfico mensal (10-60)
-}
-
-# ========== CONFIGURAÇÕES DO HEATMAP ==========
-HEATMAP_CONFIG = {
-    'corner_radius': 4,        # Raio das bordas arredondadas (0-10)
-    'stroke_width': 2,         # Largura da borda entre células
-    'stroke_color': 'white',   # Cor da borda entre células
-    'width': 650,              # Largura do heatmap
-    'height': 120,             # Altura do heatmap
+    'chart_axis': 10,
+    'chart_title': 14,
+    'chart_label': 12
 }
 
 # --- Configuração da Página ---
@@ -79,12 +44,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Estilo CSS Profissional e Aprimorado ---
-st.markdown(f"""
+# --- Estilo CSS Profissional e Limpo ---
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
 
-:root {{
+:root {
     --primary-color: #1f2937;
     --secondary-color: #3b82f6;
     --accent-color: #10b981;
@@ -92,191 +57,72 @@ st.markdown(f"""
     --text-secondary: #6b7280;
     --bg-light: #f8fafc;
     --border-light: #e2e8f0;
-}}
+}
 
-* {{
+* {
     font-family: 'Nunito', sans-serif !important;
-}}
+}
 
-html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6, label, input, button, select, textarea {{
+html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6, label, input, button, select, textarea {
     font-family: 'Nunito', sans-serif !important;
-}}
+}
 
-.stApp {{
+.stApp {
     background-color: var(--bg-light);
-}}
+}
 
-.main .block-container {{
+.main .block-container {
     padding-top: 2rem;
     padding-bottom: 2rem;
-    max-width: 1400px;
-}}
-
-/* ========== CONTROLE DE TAMANHOS DE FONTE ========== */
-/* Título principal */
-.header-title {{
-    font-size: {FONT_SIZES['header_title']} !important;
-}}
-
-/* Subtítulo principal */
-.header-subtitle {{
-    font-size: {FONT_SIZES['header_subtitle']} !important;
-}}
-
-/* Títulos das seções */
-h1 {{
-    font-size: {FONT_SIZES['section_title']} !important;
-}}
-
-/* Subtítulos das seções */
-h2 {{
-    font-size: {FONT_SIZES['subsection_title']} !important;
-}}
-
-/* Títulos menores */
-h3 {{
-    font-size: {FONT_SIZES['minor_title']} !important;
-}}
-
-/* Texto do corpo */
-p, div, span {{
-    font-size: {FONT_SIZES['body_text']} !important;
-}}
-
-/* Texto pequeno */
-.small-text {{
-    font-size: {FONT_SIZES['small_text']} !important;
-}}
-
-/* Métricas */
-[data-testid="metric-container"] [data-testid="metric-value"] {{
-    font-size: {FONT_SIZES['metric_value']} !important;
-}}
-
-[data-testid="metric-container"] [data-testid="metric-label"] {{
-    font-size: {FONT_SIZES['metric_label']} !important;
-}}
-
-/* Botões */
-.stButton > button {{
-    font-size: {FONT_SIZES['button_text']} !important;
-}}
-
-/* Inputs */
-.stSelectbox label, .stTextInput label, .stDateInput label, .stNumberInput label {{
-    font-size: {FONT_SIZES['input_text']} !important;
-}}
-
-/* Tabelas */
-.dataframe {{
-    font-size: {FONT_SIZES['table_text']} !important;
-}}
-
-/* ========== CONTAINERS ANIMADOS COM CORES SORTIDAS ========== */
-.animated-container {{
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-light);
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}}
-
-.animated-container:hover {{
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}}
-
-.animated-container::before {{
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(45deg, var(--accent-color), transparent);
-    animation: shimmer 3s ease-in-out infinite;
-}}
-
-@keyframes shimmer {{
-    0%, 100% {{ opacity: 0.7; }}
-    50% {{ opacity: 1; }}
-}}
-
-/* Cores específicas para cada seção */
-.container-orange::before {{
-    background: linear-gradient(45deg, #f59e0b, #f97316);
-}}
-
-.container-blue::before {{
-    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-}}
-
-.container-green::before {{
-    background: linear-gradient(45deg, #10b981, #059669);
-}}
-
-.container-purple::before {{
-    background: linear-gradient(45deg, #8b5cf6, #7c3aed);
-}}
-
-.container-red::before {{
-    background: linear-gradient(45deg, #ef4444, #dc2626);
-}}
+    max-width: 1200px;
+}
 
 /* Header */
-.header-section {{
+.header-section {
     background: linear-gradient(135deg, var(--primary-color), #374151);
     color: white;
     padding: 2rem;
     border-radius: 12px;
     margin-bottom: 2rem;
     text-align: center;
-}}
+}
 
-.header-title {{
+.header-title {
+    font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
     background: linear-gradient(135deg, #fbbf24, #f59e0b);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-}}
+}
 
-.header-subtitle {{
+.header-subtitle {
+    font-size: 1.1rem;
     opacity: 0.9;
     font-weight: 400;
-}}
+}
 
 /* Cards */
-[data-testid="metric-container"] {{
+[data-testid="metric-container"] {
     background: white;
     border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-}}
-
-[data-testid="metric-container"]:hover {{
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}}
+}
 
 /* Forms */
-.stForm {{
+.stForm {
     background: white;
     border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-}}
+}
 
 /* Buttons */
-.stButton > button {{
+.stButton > button {
     background: var(--secondary-color);
     color: white;
     border: none;
@@ -284,102 +130,96 @@ p, div, span {{
     padding: 0.5rem 1rem;
     font-weight: 500;
     transition: all 0.2s ease;
-}}
+}
 
-.stButton > button:hover {{
+.stButton > button:hover {
     background: #2563eb;
     transform: translateY(-1px);
-}}
+}
 
 /* Inputs */
 .stSelectbox > div > div,
 .stTextInput > div > div,
 .stDateInput > div > div,
-.stNumberInput > div > div {{
+.stNumberInput > div > div {
     background: white;
     border: 1px solid var(--border-light);
     border-radius: 6px;
-}}
+}
 
 .stSelectbox > div > div:focus,
 .stTextInput > div > div:focus,
 .stDateInput > div > div:focus,
-.stNumberInput > div > div:focus {{
+.stNumberInput > div > div:focus {
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}}
+}
 
-/* ========== CHARTS RESPONSIVOS ========== */
-.vega-embed {{
+/* Charts */
+.vega-embed {
     background: white;
     border-radius: 8px;
     padding: 1rem;
     border: 1px solid var(--border-light);
     margin-bottom: 1rem;
-    width: 100% !important;
-}}
-
-.vega-embed canvas {{
-    max-width: 100% !important;
-    height: auto !important;
-}}
+}
 
 /* Dataframe */
-.dataframe {{
+.dataframe {
     background: white;
     border: 1px solid var(--border-light);
     border-radius: 8px;
-}}
+}
 
 /* Status badges */
-.status-badge {{
+.status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     display: inline-block;
-}}
+}
 
-.status-connected {{
+.status-connected {
     background-color: #10B98120;
     color: #10B981;
-}}
+}
 
-.status-disconnected {{
+.status-disconnected {
     background-color: #EF444420;
     color: #EF4444;
-}}
+}
 
 /* Headers */
-h1, h2, h3 {{
+h1, h2, h3 {
     color: var(--text-primary);
     font-weight: 600;
-}}
+}
 
 /* Hide Streamlit elements */
-#MainMenu {{visibility: hidden;}}
-footer {{visibility: hidden;}}
-header {{visibility: hidden;}}
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
 
 /* Scrollbar */
-::-webkit-scrollbar {{
+::-webkit-scrollbar {
     width: 6px;
     height: 6px;
-}}
+}
 
-::-webkit-scrollbar-track {{
+::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 3px;
-}}
+}
 
-::-webkit-scrollbar-thumb {{
+::-webkit-scrollbar-thumb {
     background: var(--secondary-color);
     border-radius: 3px;
-}}
+}
 
-::-webkit-scrollbar-thumb:hover {{
+::-webkit-scrollbar-thumb:hover {
     background: #2563eb;
-}}
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -471,12 +311,12 @@ def load_data():
         # Criar DataFrame
         df = pd.DataFrame(values[1:], columns=values[0])
         df.columns = [col.lower().strip() for col in df.columns]
-
+        
         # Verificar colunas essenciais
         if 'data' not in df.columns or 'gerado' not in df.columns:
             st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' e 'gerado'.")
             return pd.DataFrame()
-
+        
         # Renomear colunas
         df.rename(columns={
             'data': 'Data', 
@@ -542,22 +382,8 @@ def format_number_br(number, decimals=2):
     """Formata números no padrão brasileiro"""
     return f"{number:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# --- Container Animado com Cores ---
-def create_animated_container(content, color_class=""):
-    """Cria um container animado com cor específica"""
-    st.markdown(f"""
-    <div class="animated-container {color_class}">
-        {content}
-    </div>
-    """, unsafe_allow_html=True)
-
 # --- Formulário de Cadastro ---
-st.markdown("""
-<div class="animated-container container-orange">
-    <h1>☀️ Registro de Geração</h1>
-</div>
-""", unsafe_allow_html=True)
-
+st.header("☀️ Registro de Geração")
 with st.form("entry_form", clear_on_submit=True):
     col1, col2, col3 = st.columns([2, 2, 1])
     
@@ -581,7 +407,7 @@ with st.form("entry_form", clear_on_submit=True):
         st.write("")
         st.write("")
         submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
-
+    
     if submitted:
         if input_energy > 0:
             with st.spinner("💾 Salvando dados..."):
@@ -597,16 +423,11 @@ with st.form("entry_form", clear_on_submit=True):
 
 # --- Análise de Dados ---
 df = load_data()
-
 if df.empty:
     st.info("📊 **Nenhum dado encontrado**. Comece registrando sua primeira geração de energia solar!")
 else:
     # --- Filtros ---
-    st.markdown("""
-    <div class="animated-container container-blue">
-        <h1>🔍 Filtros de Análise</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    st.header("🔍 Filtros de Análise")
     
     col1, col2, col3 = st.columns([1, 1, 2])
     
@@ -635,7 +456,7 @@ else:
     with col3:
         total_year = df[df['Data'].dt.year == selected_year]['Energia Gerada (kWh)'].sum()
         st.metric(f"📈 Total em {selected_year}", f"{format_number_br(total_year)} kWh")
-
+    
     if selected_month_num is not None:
         # Filtrar dados
         filtered_df = df[
@@ -664,36 +485,30 @@ else:
             with col4:
                 st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh",
                          delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
-
+            
             # --- Abas de Análise ---
             tab1, tab2, tab3 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📋 Dados"])
             
             with tab1:
-                # Gráfico de barras
+                # Gráfico de barras - CORRIGIDO
                 bar_chart = alt.Chart(filtered_df).mark_bar(
                     color="#3b82f6",
                     cornerRadiusTopLeft=4,
                     cornerRadiusTopRight=4,
-                    size=BAR_WIDTHS['daily_bars']  # LARGURA DAS BARRAS - altere BAR_WIDTHS['daily_bars'] (10-50)
+                    size=30
                 ).encode(
                     x=alt.X(
                         'Data:T', 
-                        title='Data', 
+                        title='Data',
                         axis=alt.Axis(
-                            format='%d/%m', 
+                            format='%d/%m',
                             labelAngle=-45,
                             tickCount='day',
-                            titleFontSize=FONT_SIZES['chart_axis'],
                             labelFontSize=FONT_SIZES['chart_axis']
                         ),
                         scale=alt.Scale(nice=False)
                     ),
-                    y=alt.Y('Energia Gerada (kWh):Q', 
-                           title='Energia Gerada (kWh)',
-                           axis=alt.Axis(
-                               titleFontSize=FONT_SIZES['chart_axis'],
-                               labelFontSize=FONT_SIZES['chart_axis']
-                           )),
+                    y=alt.Y('Energia Gerada (kWh):Q', title='Energia Gerada (kWh)'),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
@@ -713,12 +528,8 @@ else:
                 
                 # Combinar gráfico
                 final_chart = (bar_chart + linha_media).properties(
-                    height=CHART_HEIGHTS['daily_chart'],  # ALTURA DO GRÁFICO - altere CHART_HEIGHTS['daily_chart']
-                    title=alt.TitleParams(
-                        text=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}",
-                        fontSize=FONT_SIZES['chart_title']
-                    ),
-                    width="container"  # Responsivo à largura do container
+                    height=400,
+                    title=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}"
                 ).resolve_scale(
                     x='independent'
                 )
@@ -742,30 +553,16 @@ else:
                     ),
                     interpolate='monotone'
                 ).encode(
-                    x=alt.X('Data:T', 
-                           title='Data',
-                           axis=alt.Axis(
-                               titleFontSize=FONT_SIZES['chart_axis'],
-                               labelFontSize=FONT_SIZES['chart_axis']
-                           )),
-                    y=alt.Y('Acumulado:Q', 
-                           title='Energia Acumulada (kWh)',
-                           axis=alt.Axis(
-                               titleFontSize=FONT_SIZES['chart_axis'],
-                               labelFontSize=FONT_SIZES['chart_axis']
-                           )),
+                    x=alt.X('Data:T', title='Data'),
+                    y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'),
                         alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')
                     ]
                 ).properties(
-                    height=CHART_HEIGHTS['accumulated_chart'],  # ALTURA DO GRÁFICO - altere CHART_HEIGHTS['accumulated_chart']
-                    title=alt.TitleParams(
-                        text=f"Geração Acumulada - {month_names.get(selected_month_num, '')} {selected_year}",
-                        fontSize=FONT_SIZES['chart_title']
-                    ),
-                    width="container"  # Responsivo à largura do container
+                    height=400,
+                    title=f"Geração Acumulada - {month_names.get(selected_month_num, '')} {selected_year}"
                 )
                 
                 st.altair_chart(area_chart, use_container_width=True)
@@ -837,16 +634,12 @@ else:
                                         st.session_state.edit_mode = False
                                         time.sleep(1)
                                         st.rerun()
-
+        
         # --- Análise Anual ---
         year_df = df[df['Data'].dt.year == selected_year].copy()
         
         if not year_df.empty:
-            st.markdown("""
-            <div class="animated-container container-green">
-                <h1>📅 Resumo Anual</h1>
-            </div>
-            """, unsafe_allow_html=True)
+            st.header(f"📅 Resumo Anual de {selected_year}")
             
             # Gráfico mensal
             monthly_summary = year_df.groupby(
@@ -858,26 +651,20 @@ else:
                 lambda m: month_names[m][:3]
             )
             
-            # Gráfico de barras mensais
+            # Gráfico de barras mensais - CORRIGIDO
             monthly_bars = alt.Chart(monthly_summary).mark_bar(
                 color="#f59e0b",
                 cornerRadiusTopLeft=4,
                 cornerRadiusTopRight=4,
-                size=BAR_WIDTHS['monthly_bars']  # LARGURA DAS BARRAS MENSAIS - altere BAR_WIDTHS['monthly_bars'] (10-60)
+                size=40
             ).encode(
-                x=alt.X('Nome Mês:N', 
-                       title='Mês', 
-                       sort=[m[:3] for m in month_names.values()],
-                       axis=alt.Axis(
-                           titleFontSize=FONT_SIZES['chart_axis'],
-                           labelFontSize=FONT_SIZES['chart_axis']
-                       )),
-                y=alt.Y('Energia Gerada (kWh):Q', 
-                       title='Total Mensal (kWh)',
-                       axis=alt.Axis(
-                           titleFontSize=FONT_SIZES['chart_axis'],
-                           labelFontSize=FONT_SIZES['chart_axis']
-                       )),
+                x=alt.X(
+                    'Nome Mês:N', 
+                    title='Mês', 
+                    sort=[m[:3] for m in month_names.values()],
+                    axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])
+                ),
+                y=alt.Y('Energia Gerada (kWh):Q', title='Total Mensal (kWh)'),
                 tooltip=[
                     alt.Tooltip('Nome Mês:N', title='Mês'), 
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Total', format='.2f')
@@ -897,12 +684,8 @@ else:
             
             # Combinar gráfico mensal
             monthly_chart = (monthly_bars + linha_media_mensal).properties(
-                height=CHART_HEIGHTS['monthly_chart'],  # ALTURA DO GRÁFICO - altere CHART_HEIGHTS['monthly_chart']
-                title=alt.TitleParams(
-                    text=f"Geração Mensal - {selected_year}",
-                    fontSize=FONT_SIZES['chart_title']
-                ),
-                width="container"  # Responsivo à largura do container
+                height=500,
+                title=f"Geração Mensal - {selected_year}"
             ).resolve_scale(
                 x='independent'
             )
@@ -910,11 +693,7 @@ else:
             st.altair_chart(monthly_chart, use_container_width=True)
             
             # --- Heatmap estilo GitHub ---
-            st.markdown("""
-            <div class="animated-container container-purple">
-                <h2>🗓️ Heatmap de Geração</h2>
-            </div>
-            """, unsafe_allow_html=True)
+            st.subheader(f"🗓️ Heatmap de Geração - {selected_year}")
             
             # Preparar dados para heatmap
             start_date = datetime(selected_year, 1, 1)
@@ -943,11 +722,10 @@ else:
             min_week = heatmap_df['week'].min()
             heatmap_df['week_adj'] = heatmap_df['week'] - min_week
             
-            # Criar heatmap com bordas arredondadas
+            # Criar heatmap - CORRIGIDO
             heatmap = alt.Chart(heatmap_df).mark_rect(
-                stroke=HEATMAP_CONFIG['stroke_color'],        # COR DA BORDA - altere HEATMAP_CONFIG['stroke_color']
-                strokeWidth=HEATMAP_CONFIG['stroke_width'],   # LARGURA DA BORDA - altere HEATMAP_CONFIG['stroke_width']
-                cornerRadius=HEATMAP_CONFIG['corner_radius']  # RAIO DAS BORDAS ARREDONDADAS - altere HEATMAP_CONFIG['corner_radius'] (0-10)
+                stroke='white',
+                strokeWidth=2
             ).encode(
                 x=alt.X(
                     'week_adj:O',
@@ -961,7 +739,7 @@ else:
                         labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                         ticks=False,
                         domain=False,
-                        labelFontSize=FONT_SIZES['small_text']
+                        labelFontSize=FONT_SIZES['chart_axis']
                     )
                 ),
                 color=alt.Color(
@@ -970,10 +748,6 @@ else:
                     scale=alt.Scale(
                         scheme='greens',
                         range=['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127']
-                    ),
-                    legend=alt.Legend(
-                        titleFontSize=FONT_SIZES['small_text'],
-                        labelFontSize=FONT_SIZES['small_text']
                     )
                 ),
                 tooltip=[
@@ -981,21 +755,14 @@ else:
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
             ).properties(
-                width=HEATMAP_CONFIG['width'],    # LARGURA DO HEATMAP - altere HEATMAP_CONFIG['width']
-                height=HEATMAP_CONFIG['height'],  # ALTURA DO HEATMAP - altere HEATMAP_CONFIG['height']
-                title=alt.TitleParams(
-                    text=f"Contribuições de Energia Solar - {selected_year}",
-                    fontSize=FONT_SIZES['chart_title']
-                )
+                width=650,
+                height=120,
+                title=f"Contribuições de Energia Solar - {selected_year}"
             )
             
             st.altair_chart(heatmap, use_container_width=True)
             
-            st.markdown("""
-            <div class="animated-container container-red">
-                <h2>📈 Estatísticas do Ano</h2>
-            </div>
-            """, unsafe_allow_html=True)
+            st.subheader("📈 Estatísticas do Ano")
             
             year_total = year_df['Energia Gerada (kWh)'].sum()
             year_avg = year_df['Energia Gerada (kWh)'].mean()
@@ -1017,8 +784,8 @@ else:
 st.divider()
 st.markdown(f"""
 <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
-    <p style="font-size: {FONT_SIZES['body_text']};">🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
-    <p style="font-size: {FONT_SIZES['small_text']};"><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
+    <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
+    <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
 """, unsafe_allow_html=True)
 
