@@ -24,7 +24,7 @@ except:
 
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'Solardaily'
+WORKSHEET_NAME = 'solardaily'
 
 # --- Configuração da Página ---
 st.set_page_config(
