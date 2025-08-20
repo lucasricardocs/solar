@@ -630,51 +630,75 @@ else:
         # --- HEATMAP ESTILO GITHUB APRIMORADO ---
         st.subheader(f"🗓️ Calendário de Geração - {selected_year}")
         
-        all_days_of_year = pd.date_range(start=f'{selected_year}-01-01', end=f'{selected_year}-12-31', freq='D')
-        all_days_df = pd.DataFrame({'Data': all_days_of_year})
-        
-        heatmap_df = pd.merge(all_days_df, year_df_filtered, on='Data', how='left')
-        
-        heatmap_df['day_of_week_num'] = heatmap_df['Data'].dt.dayofweek
+        # Preparar dados para o heatmap
+        heatmap_df = year_df_filtered.copy()
+        heatmap_df['date_str'] = heatmap_df['Data'].dt.strftime('%Y-%m-%d')
+        heatmap_df['day_of_week'] = heatmap_df['Data'].dt.dayofweek  # 0=Segunda, 6=Domingo
         heatmap_df['week_of_year'] = heatmap_df['Data'].dt.isocalendar().week
-        heatmap_df['month_abbr'] = heatmap_df['Data'].dt.month.apply(lambda m: month_names.get(m, '')[:3])
         
-        month_labels = heatmap_df.groupby('month_abbr')['week_of_year'].min().reset_index()
-        month_order = [month_names[i][:3] for i in range(1, 13)]
-        month_labels['month_cat'] = pd.Categorical(month_labels['month_abbr'], categories=month_order, ordered=True)
-        month_labels = month_labels.sort_values('month_cat')
+        # Garantir que temos todos os dias do ano
+        all_days = pd.date_range(start=f'{selected_year}-01-01', end=f'{selected_year}-12-31', freq='D')
+        all_days_df = pd.DataFrame({'Data': all_days})
+        all_days_df['date_str'] = all_days_df['Data'].dt.strftime('%Y-%m-%d')
+        all_days_df['day_of_week'] = all_days_df['Data'].dt.dayofweek
+        all_days_df['week_of_year'] = all_days_df['Data'].dt.isocalendar().week
         
-        month_labels_dict = dict(zip(month_labels['week_of_year'], month_labels['month_abbr']))
-        label_expr = f"datum.value in {list(month_labels_dict.keys())} ? {month_labels_dict}[datum.value] : ''"
-
+        # Mesclar com dados existentes
+        heatmap_df = pd.merge(all_days_df, heatmap_df[['date_str', 'Energia Gerada (kWh)']], 
+                             on='date_str', how='left')
+        
+        # Configurações do heatmap
+        days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+        days_of_week = [0, 1, 2, 3, 4, 5, 6]
+        month_names = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+                      7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
+        
+        # Obter a primeira semana de cada mês para os rótulos
+        heatmap_df['month'] = heatmap_df['Data'].dt.month
+        month_labels = heatmap_df.groupby('month')['week_of_year'].min().reset_index()
+        month_labels['month_abbr'] = month_labels['month'].map(month_names)
+        
+        # Criar expressão para rótulos dos meses
+        label_dict = dict(zip(month_labels['week_of_year'], month_labels['month_abbr']))
+        expr = f"datum.value in {list(label_dict.keys())} ? {label_dict} : ''"
+        
+        # Criar o heatmap
         heatmap = alt.Chart(heatmap_df).mark_rect(
-            width=14, height=14, cornerRadius=2, stroke='white', strokeWidth=1.5
+            cornerRadius=2,
+            width=20,
+            height=20
         ).encode(
-            x=alt.X('week_of_year:O', title=None, 
-                   axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr=label_expr, 
-                                labelAlign='left', labelOffset=8, labelPadding=3, labelFontSize=10)),
-            y=alt.Y('day_of_week_num:O', title=None, sort=None, 
-                   axis=alt.Axis(labels=True, ticks=False, domain=False, 
-                                labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
-                                labelFontSize=10)),
-            color=alt.condition(
-                'isValid(datum["Energia Gerada (kWh)"])',
-                alt.Color('Energia Gerada (kWh):Q', 
-                          legend=alt.Legend(title="Energia (kWh)", orient='bottom', titleFontSize=12), 
-                          scale=alt.Scale(scheme='greens', range=[0.2, 1])),
-                alt.value('#e5e7eb')
-            ),
+            x=alt.X('week_of_year:O', title=None,
+                   axis=alt.Axis(
+                       tickSize=0,
+                       domain=False,
+                       labelExpr=expr,
+                       labelAngle=0,
+                       labelFontSize=10
+                   )),
+            y=alt.Y('day_of_week:O', title=None,
+                   axis=alt.Axis(
+                       tickSize=0,
+                       domain=False,
+                       values=days_of_week,
+                       labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
+                       labelFontSize=10
+                   )),
+            color=alt.Color('Energia Gerada (kWh):Q',
+                           legend=alt.Legend(title="Energia (kWh)", orient='bottom'),
+                           scale=alt.Scale(scheme='greens', reverse=False)),
             tooltip=[
-                alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
+                alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                 alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format='.2f')
             ]
         ).properties(
-            height=160
-        ).configure(
-            background='transparent'
+            height=200
+        ).configure_scale(
+            rectBandPaddingInner=0.1
         ).configure_view(
             strokeWidth=0
         )
+        
         st.altair_chart(heatmap, use_container_width=True)
 
         # --- Estatísticas Adicionais ---
