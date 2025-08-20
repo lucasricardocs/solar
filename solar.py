@@ -765,14 +765,14 @@ else:
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
-                stroke='#dcdcdc',
-                strokeWidth=1
+                stroke='white',
+                strokeWidth=2
             ).encode(
                 x=alt.X(
                     'week_num:O',
                     title=None,
                     axis=alt.Axis(labels=False, ticks=False, domain=False),
-                    scale=alt.Scale(padding=0.2)  # padding mínimo em X
+                    scale=alt.Scale(padding=0.1)  # padding mínimo em X
                 ),
                 y=alt.Y(
                     'day_of_week:O',
@@ -804,7 +804,7 @@ else:
             month_starts['month_name'] = month_starts['month'].apply(lambda m: month_names[m][:3])
             
             month_labels_chart = alt.Chart(month_starts).mark_text(
-                align='left', baseline='bottom', dx=2,
+                align='left', baseline='bottom', dx=1,
                 font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('first_week:O', title=None, axis=None),
@@ -815,7 +815,7 @@ else:
             final_heatmap = alt.vconcat(
                 month_labels_chart,
                 heatmap_grid,
-                spacing=3
+                spacing=1
             ).properties(
                 title=f"Atividade de Geração Solar em {selected_year}"
             ).resolve_scale(
