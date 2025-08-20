@@ -546,7 +546,7 @@ else:
                     color="green",
                     cornerRadiusTopLeft=3,
                     cornerRadiusTopRight=3,
-                    stroke="white",
+                    stroke="#d3d3d3",
                     strokeWidth=2,
                     size=40
                 ).encode(
