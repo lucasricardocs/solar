@@ -1,4 +1,346 @@
-# -*- coding: utf-8 -*-
+# --- SISTEMA DE PREVISÕES ESTATÍSTICAS ---
+        if len(year_df) >= 7:  # Mínimo de dados para previsões
+            st.markdown("""
+            <div class="section-header">
+                <span class="section-icon">🔮</span>
+                <h2 class="section-title">Previsões Inteligentes</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Gerar previsões
+            with st.spinner("📊 Analisando padrões e gerando previsões..."):
+                predictions_df, ml_metrics = generate_smart_predictions(year_df, 30)
+            
+            if not predictions_df.empty:
+                # Configurações de previsão
+                pred_col1, pred_col2 = st.columns([2, 1])
+                
+                with pred_col2:
+                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                    st.markdown("**⚙️ Configurações de Previsão**")
+                    
+                    days_ahead = st.slider("📅 Dias para prever", 7, 60, 30)
+                    show_confidence = st.checkbox("📊 Mostrar intervalo de confiança", True)
+                    
+                    # Gerar nova previsão se dias mudaram
+                    if days_ahead != 30:
+                        predictions_df, ml_metrics = generate_smart_predictions(year_df, days_ahead)
+                    
+                    # Métricas do modelo
+                    st.markdown(f"""
+                    **🤖 Modelo:** {ml_metrics['model_name']}
+                    
+                    **📊 Performance:**
+                    - Precisão: {ml_metrics['r2']:.1%}
+                    - Erro Médio: {ml_metrics['mae']:.2f} kWh
+                    - MAPE: {ml_metrics['mape']:.1f}%
+                    
+                    **✅ Qualidade:** {ml_metrics['quality']}
+                    """)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with pred_col1:
+                    if not predictions_df.empty:
+                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                        
+                        # Combinar dados históricos com previsões
+                        historical_df = year_df.tail(30).copy()  # Últimos 30 dias
+                        historical_df['Tipo'] = 'Histórico'
+                        historical_df['Previsao'] = historical_df['Energia Gerada (kWh)']
+                        historical_df['Limite_Inferior'] = historical_df['Energia Gerada (kWh)']
+                        historical_df['Limite_Superior'] = historical_df['Energia Gerada (kWh)']
+                        
+                        predictions_df['Tipo'] = 'Previsão'
+                        predictions_df['Energia Gerada (kWh)'] = predictions_df['Previsao']
+                        
+                        combined_df = pd.concat([historical_df, predictions_df], ignore_index=True)
+                        
+                        # Gráfico base
+                        base = alt.Chart(combined_df)
+                        
+                        # Linha histórica
+                        historical_line = base.transform_filter(
+                            alt.datum.Tipo == 'Histórico'
+                        ).mark_line(
+                            color='#3b82f6',
+                            strokeWidth=3,
+                            point=alt.OverlayMarkDef(size=60, filled=True, color='#1d4ed8')
+                        ).encode(
+                            x=alt.X('Data:T', title='Data', axis=alt.Axis(titleFontSize=12)),
+                            y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)', axis=alt.Axis(titleFontSize=12)),
+                            tooltip=[
+                                alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                                alt.Tooltip('Energia Gerada (kWh):Q', title='Real', format='.2f')
+                            ]
+                        )
+                        
+                        # Linha de previsão
+                        prediction_line = base.transform_filter(
+                            alt.datum.Tipo == 'Previsão'
+                        ).mark_line(
+                            color='#f59e0b',
+                            strokeWidth=3,
+                            strokeDash=[8, 4],
+                            point=alt.OverlayMarkDef(size=50, filled=True, color='#d97706', shape='diamond')
+                        ).encode(
+                            x='Data:T',
+                            y='Previsao:Q',
+                            tooltip=[
+                                alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                                alt.Tooltip('Previsao:Q', title='Previsão', format='.2f')
+                            ]
+                        )
+                        
+                        # Intervalo de confiança
+                        confidence_band = base.transform_filter(
+                            alt.datum.Tipo == 'Previsão'
+                        ).mark_area(
+                            opacity=0.3,
+                            color='#f59e0b'
+                        ).encode(
+                            x='Data:T',
+                            y='Limite_Inferior:Q',
+                            y2='Limite_Superior:Q',
+                            tooltip=[
+                                alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                                alt.Tooltip('Limite_Inferior:Q', title='Mín', format='.2f'),
+                                alt.Tooltip('Limite_Superior:Q', title='Máx', format='.2f')
+                            ]
+                        )
+                        
+                        # Combinar gráficos
+                        if show_confidence:
+                            final_chart = (confidence_band + historical_line + prediction_line)
+                        else:
+                            final_chart = (historical_line + prediction_line)
+                        
+                        final_chart = final_chart.properties(
+                            title=alt.TitleParams(
+                                text=f"🔮 Previsão de Geração - Próximos {days_ahead} dias",
+                                fontSize=16,
+                                fontWeight='bold',
+                                anchor='start'
+                            ),
+                            height=400,
+                            width=600
+                        ).resolve_scale(
+                            y='shared'
+                        ).interactive()
+                        
+                        st.altair_chart(final_chart, use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                
+                # --- Insights de Previsão ---
+                st.markdown("""
+                <div class="section-header">
+                    <span class="section-icon">💡</span>
+                    <h2 class="section-title">Insights Preditivos</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                insight_col1, insight_col2, insight_col3 = st.columns(3)
+                
+                with insight_col1:
+                    predicted_total = predictions_df['Previsao'].sum()
+                    current_monthly_avg = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().mean()
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">{predicted_total:.1f}</div>
+                        <div class="metric-label">Total Previsto ({days_ahead} dias)</div>
+                        <div class="metric-change positive">
+                            🎯 {(predicted_total/current_monthly_avg*100):.0f}% da média mensal
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with insight_col2:
+                    predicted_avg = predictions_df['Previsao'].mean()
+                    historical_avg = year_df['Energia Gerada (kWh)'].mean()
+                    trend_vs_historical = ((predicted_avg - historical_avg) / historical_avg * 100)
+                    
+                    trend_class = "positive" if trend_vs_historical >= 0 else "negative"
+                    trend_icon = "📈" if trend_vs_historical >= 0 else "📉"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">{predicted_avg:.1f}</div>
+                        <div class="metric-label">Média Diária Prevista</div>
+                        <div class="metric-change {trend_class}">
+                            {trend_icon} {abs(trend_vs_historical):.1f}% vs histórico
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with insight_col3:
+                    best_predicted_day = predictions_df.loc[predictions_df['Previsao'].idxmax()]
+                    confidence_range = best_predicted_day['Limite_Superior'] - best_predicted_day['Limite_Inferior']
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">{best_predicted_day['Previsao']:.1f}</div>
+                        <div class="metric-label">Melhor Dia Previsto</div>
+                        <div class="metric-change positive">
+                            ⭐ {best_predicted_day['Data'].strftime('%d/%m/%Y')}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # --- Análise Detalhada das Previsões ---
+                st.markdown("""
+                <div class="section-header">
+                    <span class="section-icon">🔬</span>
+                    <h2 class="section-title">Análise Preditiva Detalhada</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                analysis_col1, analysis_col2 = st.columns(2)
+                
+                with analysis_col1:
+                    # Tendência detectada
+                    patterns = calculate_seasonal_pattern(year_df)
+                    trend_direction = "crescente" if patterns['trend_slope'] > 0 else "decrescente" if patterns['trend_slope'] < 0 else "estável"
+                    trend_strength = abs(patterns['trend_slope']) * 365  # Mudança anual
+                    
+                    st.markdown(f"""
+                    <div class="custom-alert alert-info">
+                        <strong>📈 Tendência Detectada:</strong><br>
+                        • <strong>Direção:</strong> {trend_direction.title()}<br>
+                        • <strong>Intensidade:</strong> {trend_strength:.1f} kWh/ano<br>
+                        • <strong>Confiança:</strong> {patterns['trend_r2']:.1%}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Padrão sazonal
+                    best_months = sorted(patterns['monthly_pattern'].items(), key=lambda x: x[1], reverse=True)[:3]
+                    worst_months = sorted(patterns['monthly_pattern'].items(), key=lambda x: x[1])[:3]
+                    
+                    month_names_short = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+                                       7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
+                    
+                    best_months_str = ", ".join([month_names_short[m[0]] for m in best_months])
+                    worst_months_str = ", ".join([month_names_short[m[0]] for m in worst_months])
+                    
+                    st.markdown(f"""
+                    <div class="custom-alert alert-success">
+                        <strong>🌞 Padrão Sazonal:</strong><br>
+                        • <strong>Melhores meses:</strong> {best_months_str}<br>
+                        • <strong>Meses mais fracos:</strong> {worst_months_str}<br>
+                        • <strong>Variação sazonal:</strong> {((max(patterns['monthly_pattern'].values()) - min(patterns['monthly_pattern'].values())) / patterns['overall_mean'] * 100):.0f}%
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with analysis_col2:
+                    # Previsão de performance mensal
+                    if days_ahead >= 30:
+                        next_month_pred = predictions_df.head(30)['Previsao'].sum()
+                        current_month_actual = filtered_df['Energia Gerada (kWh)'].sum() if not filtered_df.empty else 0
+                        
+                        performance_vs_current = ((next_month_pred - current_month_actual) / current_month_actual * 100) if current_month_actual > 0 else 0
+                        performance_class = "positive" if performance_vs_current >= 0 else "negative"
+                        performance_icon = "🚀" if performance_vs_current >= 0 else "⚠️"
+                        
+                        st.markdown(f"""
+                        <div class="custom-alert alert-{performance_class.replace('negative', 'warning')}">
+                            <strong>🎯 Previsão Próximo Mês:</strong><br>
+                            • <strong>Total esperado:</strong> {next_month_pred:.1f} kWh<br>
+                            • <strong>Vs mês atual:</strong> {performance_icon} {abs(performance_vs_current):.1f}%<br>
+                            • <strong>Status:</strong> {'Acima da média' if performance_vs_current >= 0 else 'Abaixo da média'}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Recomendações baseadas em IA
+                    recent_trend = year_df.tail(14)['Energia Gerada (kWh)'].mean()
+                    overall_avg = year_df['Energia Gerada (kWh)'].mean()
+                    
+                    if recent_trend < overall_avg * 0.9:
+                        recommendation = "🔧 Verificar manutenção dos painéis"
+                        rec_detail = "Performance recente abaixo da média histórica"
+                        rec_color = "warning"
+                    elif recent_trend > overall_avg * 1.1:
+                        recommendation = "⭐ Sistema funcionando acima da média"
+                        rec_detail = "Excelente performance detectada"
+                        rec_color = "success"
+                    else:
+                        recommendation = "✅ Performance dentro do esperado"
+                        rec_detail = "Sistema operando normalmente"
+                        rec_color = "info"
+                    
+                    st.markdown(f"""
+                    <div class="custom-alert alert-{rec_color}">
+                        <strong>🎯 Recomendação IA:</strong><br>
+                        • <strong>{recommendation}</strong><br>
+                        • {rec_detail}<br>
+                        • <strong>Confiança:</strong> {ml_metrics['r2']:.0%}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # --- Tabela de Previsões Detalhada ---
+                st.markdown("""
+                <div class="section-header">
+                    <span class="section-icon">📋</span>
+                    <h2 class="section-title">Cronograma de Previsões</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Mostrar próximos 14 dias em formato tabela
+                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+                
+                next_14_days = predictions_df.head(14).copy()
+                next_14_days['Dia da Semana'] = next_14_days['Data'].dt.strftime('%A')
+                next_14_days['Data Formatada'] = next_14_days['Data'].dt.strftime('%d/%m/%Y')
+                next_14_days['Dia da Semana PT'] = next_14_days['Data'].dt.dayofweek.map({
+                    0: 'Segunda', 1: 'Terça', 2: 'Quarta', 3: 'Quinta', 
+                    4: 'Sexta', 5: 'Sábado', 6: 'Domingo'
+                })
+                
+                # Criar DataFrame para exibição
+                display_df = next_14_days[['Data Formatada', 'Dia da Semana PT', 'Previsao']].copy()
+                display_df.columns = ['📅 Data', '🗓️ Dia', '⚡ Previsão (kWh)']
+                display_df['⚡ Previsão (kWh)'] = display_df['⚡ Previsão (kWh)'].apply(lambda x: f"{x:.2f}")
+                
+                st.dataframe(
+                    display_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "📅 Data": st.column_config.TextColumn(width="small"),
+                        "🗓️ Dia": st.column_config.TextColumn(width="small"),
+                        "⚡ Previsão (kWh)": st.column_config.TextColumn(width="medium")
+                    }
+                )
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # --- Análise de Confiabilidade ---
+                st.markdown(f"""
+                <div class="custom-alert alert-info">
+                    <strong>🔬 Como Funcionam as Previsões:</strong><br>
+                    • <strong>Algoritmo:</strong> {ml_metrics['model_name']} com análise multifatorial<br>
+                    • <strong>Fatores Analisados:</strong> Tendências históricas, sazonalidade mensal, padrões semanais<br>
+                    • <strong>Precisão:</strong> {ml_metrics['r2']:.1%} de acurácia | Erro médio de ±{ml_metrics['mae']:.1f} kWh<br>
+                    • <strong>Atualização:</strong> Previsões recalculadas automaticamente com novos dados<br>
+                    • <strong>Metodologia:</strong> Combinação ponderada de componentes estatísticos
+                </div>
+                """, unsafe_allow_html=True)
+                
+            else:
+                st.markdown("""
+                <div class="custom-alert alert-warning">
+                    ⚠️ <strong>Erro na Geração de Previsões</strong><br>
+                    Não foi possível gerar previsões confiáveis com os dados atuais.
+                </div>
+                """, unsafe_allow_html=True)
+        
+        else:
+            st.markdown("""
+            <div class="custom-alert alert-info">
+                📊 <strong>Previsões Disponíveis em Breve</strong><br>
+                Continue coletando dados! Previsões estarão disponíveis após 7 dias de registros.
+                Progresso atual: {current}/{needed} dias.
+            </div>
+            """.format(current=len(year_df), needed=7), unsafe_allow_html=True)
+                # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -8,11 +350,8 @@ from google.oauth2.service_account import Credentials
 import warnings
 import altair as alt
 import locale
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_absolute_error, r2_score
 import math
+from scipy import stats
 
 # Ignora avisos futuros do pandas
 warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=False.*')
@@ -378,107 +717,7 @@ def calculate_performance_metrics(df, period='month'):
         'days_count': len(df)
     }
 
-def create_features(df):
-    """Cria features para o modelo de ML."""
-    df_features = df.copy()
-    
-    # Features temporais
-    df_features['day_of_year'] = df_features['Data'].dt.dayofyear
-    df_features['month'] = df_features['Data'].dt.month
-    df_features['day_of_week'] = df_features['Data'].dt.dayofweek
-    df_features['quarter'] = df_features['Data'].dt.quarter
-    df_features['is_weekend'] = df_features['day_of_week'].isin([5, 6]).astype(int)
-    
-    # Features cíclicas (captura sazonalidade)
-    df_features['month_sin'] = np.sin(2 * np.pi * df_features['month'] / 12)
-    df_features['month_cos'] = np.cos(2 * np.pi * df_features['month'] / 12)
-    df_features['day_sin'] = np.sin(2 * np.pi * df_features['day_of_year'] / 365)
-    df_features['day_cos'] = np.cos(2 * np.pi * df_features['day_of_year'] / 365)
-    
-    # Features de tendência
-    df_features['days_since_start'] = (df_features['Data'] - df_features['Data'].min()).dt.days
-    
-    # Médias móveis
-    df_features['ma_7'] = df_features['Energia Gerada (kWh)'].rolling(window=7, min_periods=1).mean()
-    df_features['ma_30'] = df_features['Energia Gerada (kWh)'].rolling(window=30, min_periods=1).mean()
-    
-    return df_features
-
-def train_prediction_models(df):
-    """Treina modelos de previsão."""
-    if len(df) < 30:  # Precisa de pelo menos 30 dias
-        return None, None, {}
-    
-    df_features = create_features(df)
-    
-    # Features para treinamento
-    feature_cols = ['day_of_year', 'month', 'day_of_week', 'quarter', 'is_weekend',
-                   'month_sin', 'month_cos', 'day_sin', 'day_cos', 'days_since_start',
-                   'ma_7', 'ma_30']
-    
-    X = df_features[feature_cols].fillna(0)
-    y = df_features['Energia Gerada (kWh)']
-    
-    # Divisão treino/teste (80/20)
-    split_point = int(len(X) * 0.8)
-    X_train, X_test = X[:split_point], X[split_point:]
-    y_train, y_test = y[:split_point], y[split_point:]
-    
-    # Normalização
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-    
-    # Modelos
-    rf_model = RandomForestRegressor(n_estimators=100, random_state=42, max_depth=10)
-    lr_model = LinearRegression()
-    
-    # Treinamento
-    rf_model.fit(X_train_scaled, y_train)
-    lr_model.fit(X_train_scaled, y_train)
-    
-    # Avaliação
-    rf_pred = rf_model.predict(X_test_scaled)
-    lr_pred = lr_model.predict(X_test_scaled)
-    
-    rf_mae = mean_absolute_error(y_test, rf_pred)
-    lr_mae = mean_absolute_error(y_test, lr_pred)
-    rf_r2 = r2_score(y_test, rf_pred)
-    lr_r2 = r2_score(y_test, lr_pred)
-    
-    # Escolhe melhor modelo
-    best_model = rf_model if rf_mae < lr_mae else lr_model
-    best_model_name = "Random Forest" if rf_mae < lr_mae else "Regressão Linear"
-    
-    metrics = {
-        'rf_mae': rf_mae,
-        'lr_mae': lr_mae,
-        'rf_r2': rf_r2,
-        'lr_r2': lr_r2,
-        'best_model_name': best_model_name,
-        'best_mae': min(rf_mae, lr_mae),
-        'best_r2': rf_r2 if rf_mae < lr_mae else lr_r2
-    }
-    
-    return best_model, scaler, metrics
-
-def generate_predictions(model, scaler, df, days_ahead=30):
-    """Gera previsões para os próximos dias."""
-    if model is None:
-        return pd.DataFrame()
-    
-    last_date = df['Data'].max()
-    future_dates = [last_date + timedelta(days=i+1) for i in range(days_ahead)]
-    
-    # Criar DataFrame para previsões
-    future_df = pd.DataFrame({'Data': future_dates})
-    
-    # Criar features para datas futuras
-    future_df['day_of_year'] = future_df['Data'].dt.dayofyear
-    future_df['month'] = future_df['Data'].dt.month
-    future_df['day_of_week'] = future_df['Data'].dt.dayofweek
-    future_df['quarter'] = future_df['Data'].dt.quarter
-    future_df['is_weekend'] = future_df['day_of_week'].isin([5, 6]).astype(int)
+def calculate_performance_metrics(df, period='month'):week'].isin([5, 6]).astype(int)
     
     future_df['month_sin'] = np.sin(2 * np.pi * future_df['month'] / 12)
     future_df['month_cos'] = np.cos(2 * np.pi * future_df['month'] / 12)
@@ -1045,11 +1284,10 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Treinar modelos
-            with st.spinner("🤖 Treinando modelos de IA..."):
-                model, scaler, ml_metrics = train_prediction_models(year_df)
+                            # Gerar previsões
+                predictions_df, ml_metrics = generate_smart_predictions(year_df, days_ahead)
             
-            if model is not None:
+            if not predictions_df.empty:
                 # Configurações de previsão
                 pred_col1, pred_col2 = st.columns([2, 1])
                 
