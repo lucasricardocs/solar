@@ -878,15 +878,6 @@ else:
                 height=400,
                 title=f"Contribuições de Energia Solar - {selected_year}"
             )
-            ).configure_view(
-                stroke=None,
-                fill='transparent'
-            ).configure(
-                background='transparent'
-            ).configure_axis(
-                labelFont='Nunito',
-                titleFont='Nunito'
-            )
             
             st.altair_chart(heatmap, use_container_width=True)
             
