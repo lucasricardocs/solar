@@ -543,7 +543,7 @@ else:
             with tab1:
                 # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO ---
                 bar_chart = alt.Chart(filtered_df).mark_bar(
-                    color="#3b82f6",
+                    color="green",
                     cornerRadiusTopLeft=4,
                     cornerRadiusTopRight=4,
                     stroke="#dcdcdc",
