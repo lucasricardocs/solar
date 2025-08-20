@@ -768,7 +768,7 @@ else:
                     scale=alt.Scale(
                         scheme='greens',
                         # range=['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'] # Github classic
-                        range=['#DCDCDC', '#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127']] # Tailwind green
+                        range=['#DCDCDC', '#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'] # Tailwind green
                     )
                 ),
                 tooltip=[
