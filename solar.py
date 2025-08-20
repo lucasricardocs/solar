@@ -809,6 +809,21 @@ else:
             
             # --- Heatmap estilo GitHub ---
             st.markdown("""
+                <style>
+                    .subheader-container {
+                        color: white;
+                        padding: 0.8rem 1.2rem;
+                        border-radius: 12px; /* <<< bordas arredondadas */
+                        margin-bottom: 1rem;
+                    }
+                    .subheader-container h3 {
+                        margin: 0;
+                        font-size: 1.1rem;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("""
             <div class="subheader-container teal">
                 <h3>🗓️ Heatmap de Geração</h3>
             </div>
