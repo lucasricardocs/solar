@@ -24,7 +24,7 @@ except:
 
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'solardaily'
+WORKSHEET_NAME = 'Solardaily'
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -451,7 +451,10 @@ else:
         # --- Gráficos do Mês ---
         col1, col2 = st.columns(2)
         with col1:
-            bar_chart = alt.Chart(filtered_df).mark_bar(color="#3b82f6").encode(
+            bar_chart = alt.Chart(filtered_df).mark_bar(
+                color="#3b82f6",
+                size=20 # Aumenta a espessura das barras
+            ).encode(
                 x=alt.X('Data:T', title='Dia'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
                 tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado')]
             ).properties(title="Produção Diária").configure_view(stroke=None, fill='transparent')
@@ -473,7 +476,10 @@ else:
         # Gráfico Mensal
         monthly_summary = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
         monthly_summary['Nome Mês'] = monthly_summary['Data'].apply(lambda m: month_names[m][:3])
-        monthly_chart = alt.Chart(monthly_summary).mark_bar(color="#f59e0b").encode(
+        monthly_chart = alt.Chart(monthly_summary).mark_bar(
+            color="#f59e0b",
+            size=40 # Aumenta a espessura das barras
+        ).encode(
             x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
             y=alt.Y('Energia Gerada (kWh):Q', title='Total (kWh)'),
             tooltip=[alt.Tooltip('Nome Mês', title='Mês'), alt.Tooltip('Energia Gerada (kWh):Q', title='Total Gerado')]
@@ -534,7 +540,7 @@ else:
                     
                     final_chart = (confidence_band + historical_line + prediction_line).properties(
                         title=f"Previsão de Geração - Próximos {days_ahead} dias"
-                    ).interactive()
+                    ).configure_view(stroke=None, fill='transparent').interactive()
                     
                     st.altair_chart(final_chart, use_container_width=True)
 
