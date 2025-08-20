@@ -809,21 +809,6 @@ else:
             
             # --- Heatmap estilo GitHub ---
             st.markdown("""
-                <style>
-                    .subheader-container {
-                        color: black;
-                        padding: 0.8rem 1.2rem;
-                        border-radius: 50px; /* <<< bordas arredondadas */
-                        margin-bottom: 1rem;
-                    }
-                    .subheader-container h3 {
-                        margin: 0;
-                        font-size: 1.1rem;
-                    }
-                </style>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("""
             <div class="subheader-container teal">
                 <h3>🗓️ Heatmap de Geração</h3>
             </div>
@@ -858,8 +843,8 @@ else:
             
             # Criar heatmap - CORRIGIDO
             heatmap = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=4,
-                stroke='white',
+                cornerRadius=15,
+                stroke='d3d3d3',
                 strokeWidth=2
             ).encode(
                 x=alt.X(
