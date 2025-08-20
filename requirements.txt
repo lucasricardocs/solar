@@ -2,6 +2,4 @@ streamlit
 pandas
 gspread
 oauth2client
-altair
-scikit-learn
-scipy
+Plotly
