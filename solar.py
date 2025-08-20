@@ -766,7 +766,7 @@ else:
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
                 stroke='#dcdcdc',
-                strokeWidth=2
+                strokeWidth=1
             ).encode(
                 x=alt.X(
                     'week_num:O',
@@ -782,7 +782,7 @@ else:
                         ticks=False,
                         domain=False
                     ),
-                    scale=alt.Scale(padding=0.2)  # padding mínimo em Y
+                    scale=alt.Scale(padding=0.1)  # padding mínimo em Y
                 ),
                 color=alt.condition(
                     alt.datum['Energia Gerada (kWh)'] > 0,
