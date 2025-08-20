@@ -320,7 +320,7 @@ if 'edit_mode' not in st.session_state:
 st.markdown("""
 <div class="header-section">
     <div class="header-content">
-        <img src="https://raw.githubusercontent.com/seuusuario/seurepositorio/main/solar.png" 
+        <img src="https://github.com/lucasricardocs/solar/blob/9868c74f5dfb83ac716830bb6eef17a9db4bc21d/solar.png" 
              class="solar-icon" 
              alt="Solar Icon"
              onerror="this.style.display='none'">
