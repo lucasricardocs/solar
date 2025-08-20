@@ -674,7 +674,7 @@ else:
             
             # Combinar gráfico mensal
             monthly_chart = (monthly_bars + linha_media_mensal).properties(
-                height=400,
+                height=500,
                 title=f"Geração Mensal - {selected_year}"
             ).resolve_scale(
                 x='independent'
@@ -714,8 +714,8 @@ else:
             
             # Criar heatmap
             heatmap = alt.Chart(heatmap_df).mark_rect(
-                stroke='#d3d3d3',
-                strokeWidth=1
+                stroke='white',
+                strokeWidth=2
             ).encode(
                 x=alt.X(
                     'week_adj:O',
