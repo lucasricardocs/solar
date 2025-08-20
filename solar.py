@@ -785,13 +785,13 @@ else:
                     scale=alt.Scale(padding=0.1)  # padding mínimo em Y
                 ),
                 color=alt.condition(
-                    alt.datum['Energia Gerada (kWh)'] > 0,
+                    alt.datum['Energia Gerada (kWh)'] > 10,
                     alt.Color(
                         'Energia Gerada (kWh):Q',
                         scale=alt.Scale(scheme='greens'),
                         legend=alt.Legend(title="kWh Gerado")
                     ),
-                    alt.value('#eeeeee')
+                    alt.value(#dcdcdc)
                 ),
                 tooltip=[
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
