@@ -89,7 +89,7 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    height: 250px;
+    height: 200px;
 }
 
 .header-content {
