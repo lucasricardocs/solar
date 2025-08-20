@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+e# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -788,7 +788,7 @@ else:
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color(
                         'Energia Gerada (kWh):Q',
-                        scale=alt.Scale(scheme='greens'),
+                        scale=alt.Scale(scheme='spectral'),
                         legend=alt.Legend(title="kWh Gerado")
                     ),
                     alt.value('#eeeeee')
