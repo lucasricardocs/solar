@@ -5,3 +5,6 @@ gspread
 oauth2client
 altair
 numpy
+calplot
+matplotlib.pyplot
+pyplot
