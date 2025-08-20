@@ -51,9 +51,9 @@ html, body, [class*="st-"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Background principal com degradê de cinza escuro para d3d3d3 */
+/* Background principal com degradê de #dcdcdc para #d3d3d3 */
 .stApp {
-    background: linear-gradient(135deg, #2d3748 0%, #4a5568 25%, #718096 50%, #a0aec0 75%, #d3d3d3 100%);
+    background: linear-gradient(135deg, #dcdcdc 0%, #d3d3d3 100%);
     min-height: 100vh;
 }
 
