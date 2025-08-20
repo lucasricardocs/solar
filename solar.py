@@ -625,6 +625,15 @@ else:
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
                     ]
                 )
+                ).configure_view(
+                    stroke=None,
+                    fill='transparent'
+                ).configure(
+                    background='transparent'
+                ).configure_axis(
+                    labelFont='Nunito',
+                    titleFont='Nunito'
+                )
                 
                 # Linha da média
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
@@ -878,6 +887,15 @@ else:
                 width=650,
                 height=400,
                 title=f"Contribuições de Energia Solar - {selected_year}"
+            )
+            ).configure_view(
+                stroke=None,
+                fill='transparent'
+            ).configure(
+                background='transparent'
+            ).configure_axis(
+                labelFont='Nunito',
+                titleFont='Nunito'
             )
             
             st.altair_chart(heatmap, use_container_width=True)
