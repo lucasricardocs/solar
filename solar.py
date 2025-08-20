@@ -788,11 +788,15 @@ else:
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color(
                         'Energia Gerada (kWh):Q',
-                        scale=alt.Scale(scheme='spectral'),
-                        domain=[10, 20],
+                        scale=alt.Scale(
+                            scheme='spectral',
+                            domainMin=10,  # força o mínimo da cor em 10
+                            domainMax=20   # máximo em 20
+                        ),
                         legend=alt.Legend(title="kWh Gerado")
                     ),
                     alt.value('#eeeeee')
+                )
                 ),
                 tooltip=[
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
