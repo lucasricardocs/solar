@@ -843,8 +843,8 @@ else:
             
             # Criar heatmap - CORRIGIDO
             heatmap = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=15,
-                stroke='d3d3d3',
+                cornerRadius=6,
+                stroke='#DCDCDC',
                 strokeWidth=2
             ).encode(
                 x=alt.X(
