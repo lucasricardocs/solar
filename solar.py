@@ -6,13 +6,20 @@ from datetime import datetime
 from google.oauth2.service_account import Credentials
 import warnings
 import altair as alt
+import locale
 
 # Ignora avisos futuros do pandas
 warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=False.*')
 
+# Tenta configurar a localidade para português, útil para formatação de data/hora
+try:
+    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+except:
+    pass
+
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'solardaily' # Nome da sua aba na planilha
+WORKSHEET_NAME = 'Solardaily' # Nome da sua aba na planilha
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -21,12 +28,12 @@ st.set_page_config(
     page_icon="☀️"
 )
 
-# --- Estilo CSS Customizado (Tema Claro) ---
+# --- Estilo CSS Customizado (Tema Claro com Fonte Livvic) ---
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Livvic:wght@300;400;600;700&display=swap');
 html, body, [class*="st-"] {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Livvic', sans-serif;
 }
 .stApp {
     background-color: #F0F2F6; /* Fundo claro */
@@ -49,7 +56,7 @@ html, body, [class*="st-"] {
     background-color: #0056b3;
 }
 [data-testid="stSidebar"] {
-    background-color: #FFFFFF;
+    display: none; /* Oculta a sidebar que pode aparecer por padrão */
 }
 h1, h2, h3 {
     color: #007BFF; /* Azul como cor de destaque */
@@ -87,20 +94,23 @@ def load_data():
         return pd.DataFrame()
     
     df = pd.DataFrame(data)
-
-    # CORREÇÃO: Converte todos os nomes de coluna para minúsculas para evitar erros
     df.columns = [col.lower() for col in df.columns]
 
-    # Agora a verificação usa os nomes em minúsculas
     if 'data' not in df.columns or 'gerado' not in df.columns:
-        st.error("Erro: A planilha deve conter as colunas 'data' e 'gerado'. Verifique os nomes das colunas na sua planilha.")
+        st.error("Erro: A planilha deve conter as colunas 'data' e 'gerado'. Verifique os nomes das colunas.")
         return pd.DataFrame()
 
-    # Renomeia as colunas da sua planilha para as que o app espera
     df.rename(columns={'data': 'Data', 'gerado': 'Energia Gerada (kWh)'}, inplace=True)
     
     df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
-    df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
+    
+    # --- CORREÇÃO APLICADA AQUI ---
+    # Garante que a coluna de energia seja tratada como texto, substitui a vírgula
+    # por ponto e então converte para número. Isso resolve o problema de leitura.
+    if 'Energia Gerada (kWh)' in df.columns:
+        df['Energia Gerada (kWh)'] = df['Energia Gerada (kWh)'].astype(str).str.replace(',', '.', regex=False)
+        df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
+
     df.dropna(subset=['Data', 'Energia Gerada (kWh)'], inplace=True)
     df = df.sort_values(by='Data')
     return df
@@ -109,70 +119,85 @@ def append_data(date, energy):
     """Adiciona uma nova linha de dados na planilha."""
     try:
         formatted_date = date.strftime('%d/%m/%Y')
-        # A ordem aqui (data, gerado) corresponde à sua planilha
-        sheet.append_row([formatted_date, float(energy)])
-        st.cache_data.clear() # Limpa o cache para recarregar os dados
+        # Salva o valor numérico. O Google Sheets formatará com vírgula se a localidade for Brasil.
+        sheet.append_row([formatted_date, energy])
+        st.cache_data.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao salvar os dados: {e}")
         return False
 
-# --- Barra Lateral (Sidebar) ---
-with st.sidebar:
-    st.header("☀️ Cadastro de Geração")
-    with st.form("entry_form", clear_on_submit=True):
-        input_date = st.date_input("Selecione a Data", value=datetime.today())
-        input_energy = st.number_input("Energia Gerada (kWh)", min_value=0.0, format="%.2f")
-        submitted = st.form_submit_button("Salvar Geração")
-
-        if submitted:
-            if input_energy > 0:
-                if append_data(input_date, input_energy):
-                    st.success("Dados salvos com sucesso!")
-                else:
-                    st.error("Falha ao salvar os dados.")
-            else:
-                st.warning("A energia gerada deve ser maior que zero.")
-
-    df = load_data()
-    
-    if not df.empty:
-        st.divider()
-        st.header("🔍 Filtros")
-        years = sorted(df['Data'].dt.year.unique(), reverse=True)
-        selected_year = st.selectbox("Selecione o Ano", options=years)
-
-        months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
-        month_names = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
-        selected_month_num = st.selectbox("Selecione o Mês", options=months, format_func=lambda x: month_names.get(x, ''))
-
-        st.divider()
-        st.header("💡 Insights do Mês")
-        
-        filtered_df = df[(df['Data'].dt.year == selected_year) & (df['Data'].dt.month == selected_month_num)]
-        if not filtered_df.empty:
-            total = filtered_df['Energia Gerada (kWh)'].sum()
-            avg = filtered_df['Energia Gerada (kWh)'].mean()
-            best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
-            worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
-
-            st.metric("Total Gerado no Mês", f"{total:.2f} kWh")
-            st.metric("Média Diária", f"{avg:.2f} kWh")
-            st.metric("Melhor Dia", f"{best['Energia Gerada (kWh)']:.2f} kWh", delta=best['Data'].strftime('%d/%m'))
-            st.metric("Pior Dia", f"{worst['Energia Gerada (kWh)']:.2f} kWh", delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
-        else:
-            st.info("Nenhum dado para o período.")
-
 # --- Página Principal ---
 st.title("Dashboard de Geração de Energia Solar")
 st.markdown("Acompanhe a performance da sua geração de energia de forma visual e interativa.")
 
+# --- Formulário de Cadastro (em um expander) ---
+with st.expander("☀️ Cadastrar Nova Geração", expanded=True):
+    with st.form("entry_form", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            input_date = st.date_input("Data da Geração (dd/mm/aaaa)", value=datetime.today(), format="DD/MM/YYYY")
+        with col2:
+            input_energy_str = st.text_input("Energia Gerada (kWh)", placeholder="Ex: 20,13")
+
+        submitted = st.form_submit_button("Salvar Geração")
+
+        if submitted:
+            if input_energy_str:
+                try:
+                    energy_value = float(input_energy_str.replace(',', '.'))
+                    if energy_value > 0:
+                        if append_data(input_date, energy_value):
+                            st.success("Dados salvos com sucesso!")
+                        else:
+                            st.error("Falha ao salvar os dados.")
+                    else:
+                        st.warning("A energia gerada deve ser maior que zero.")
+                except ValueError:
+                    st.error("Valor de energia inválido. Por favor, insira um número (ex: 20 ou 20,13).")
+            else:
+                st.warning("Por favor, preencha o valor da energia gerada.")
+
+# --- Análise de Dados ---
+df = load_data()
+
 if df.empty:
-    st.warning("Nenhum dado encontrado. Cadastre uma nova geração na barra lateral.")
+    st.warning("Nenhum dado encontrado. Comece cadastrando uma nova geração.")
 else:
+    st.divider()
+    
+    # --- Filtros ---
+    st.header("🔍 Filtros e Análise")
+    filter_col1, filter_col2 = st.columns(2)
+    with filter_col1:
+        years = sorted(df['Data'].dt.year.unique(), reverse=True)
+        selected_year = st.selectbox("Selecione o Ano", options=years)
+    with filter_col2:
+        months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
+        month_names = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
+        selected_month_num = st.selectbox("Selecione o Mês", options=months, format_func=lambda x: month_names.get(x, ''))
+
+    filtered_df = df[(df['Data'].dt.year == selected_year) & (df['Data'].dt.month == selected_month_num)]
+    
+    # --- Insights e Gráficos ---
     st.header(f"Análise de {month_names.get(selected_month_num, '')} de {selected_year}")
 
     if not filtered_df.empty:
+        # --- Métricas (Insights) ---
+        total = filtered_df['Energia Gerada (kWh)'].sum()
+        avg = filtered_df['Energia Gerada (kWh)'].mean()
+        best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
+        worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
+        
+        metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+        metric_col1.metric("Total no Mês", f"{total:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."))
+        metric_col2.metric("Média Diária", f"{avg:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."))
+        metric_col3.metric("Melhor Dia", f"{best['Energia Gerada (kWh)']:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."), delta=best['Data'].strftime('%d/%m'))
+        metric_col4.metric("Pior Dia", f"{worst['Energia Gerada (kWh)']:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."), delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
+
+        st.write("") # Espaçamento
+
+        # --- Gráficos ---
         col1, col2 = st.columns(2)
         with col1:
             bar_chart = alt.Chart(filtered_df).mark_bar(
@@ -180,7 +205,7 @@ else:
             ).encode(
                 x=alt.X('Data:T', title='Dia', axis=alt.Axis(format='%d', grid=False, labelAngle=0)),
                 y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)', axis=alt.Axis(grid=False)),
-                tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format='.2f')]
+                tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
             ).properties(title="Produção Diária").configure_view(stroke=None).configure_axis(
                 labelColor='#333', titleColor='#333'
             ).configure_title(color='#333').interactive()
@@ -198,7 +223,7 @@ else:
             ).encode(
                 x=alt.X('Data:T', title='Dia', axis=alt.Axis(format='%d', grid=False, labelAngle=0)),
                 y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)', axis=alt.Axis(grid=False)),
-                tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')]
+                tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Acumulado:Q', title='Acumulado', format=',.2f')]
             ).properties(title="Geração Mensal Acumulada").configure_view(stroke=None).configure_axis(
                 labelColor='#333', titleColor='#333'
             ).configure_title(color='#333').interactive()
@@ -214,7 +239,7 @@ else:
             x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labelAngle=0)),
             y=alt.Y('day_of_week:O', title='Dia da Semana', sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
             color=alt.Color('Energia Gerada (kWh):Q', legend=alt.Legend(title="Energia (kWh)"), scale=alt.Scale(scheme='blues')),
-            tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format='.2f')]
+            tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
         ).properties(title=f"Geração Diária em {selected_year}").configure_view(stroke=None).configure_axis(
             labelColor='#333', titleColor='#333'
         ).configure_title(color='#333').configure_legend(labelColor='#333', titleColor='#333')
