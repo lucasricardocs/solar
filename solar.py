@@ -29,13 +29,6 @@ except:
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
 WORKSHEET_NAME = 'solardaily'
 
-# Definir FONT_SIZES para evitar erro
-FONT_SIZES = {
-    'chart_axis': 10,
-    'chart_title': 14,
-    'chart_label': 12
-}
-
 # --- Configuração da Página ---
 st.set_page_config(
     layout="wide",
@@ -44,10 +37,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Estilo CSS Profissional e Limpo ---
+# --- AJUSTES ESTÉTICOS ---
+# 1. Ajustado o CSS para diminuir o tamanho dos containers e ajustar fontes.
+# 2. Adicionado estilo para os títulos dentro dos containers para melhor espaçamento.
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
 
 :root {
     --primary-color: #1f2937;
@@ -59,11 +54,8 @@ st.markdown("""
     --border-light: #e2e8f0;
 }
 
-* {
-    font-family: 'Nunito', sans-serif !important;
-}
-
-html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6, label, input, button, select, textarea {
+/* Aplica a fonte Nunito a todos os elementos */
+html, body, [class*="st-"], .stApp, .main {
     font-family: 'Nunito', sans-serif !important;
 }
 
@@ -77,9 +69,9 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     max-width: 1200px;
 }
 
-/* Header com gradiente azul claro para #dcdcdc */
+/* Header com gradiente */
 .header-section {
-    background: linear-gradient(135deg, #e6f3ff, #dcdcdc);
+    background: linear-gradient(135deg, #e6f3ff, #f0f0f0);
     color: #1f2937;
     padding: 2rem;
     border-radius: 12px;
@@ -125,82 +117,49 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     color: #1f2937;
 }
 
-/* Padrão para containers de subheaders */
+/* Padrão para containers de subheaders (MENORES) */
 .subheader-container {
-    margin: 25px 0;
-    padding: 20px 25px;
+    margin: 20px 0;
+    padding: 12px 20px; /* Padding reduzido */
     background: #ffffff;
     border-radius: 8px;
     border-left: 5px solid;
-    border: 1px solid white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     animation: shadowPulse 2s infinite alternate;
-    height=150px;
+}
+
+/* Ajuste do tamanho da fonte dos títulos dentro dos containers */
+.subheader-container h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+.subheader-container h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
 }
 
 @keyframes shadowPulse {
-    0% {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-    100% {
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
+    0% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
+    100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); }
 }
 
 .subheader-container:hover {
     transform: translateX(5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Diferentes cores para as bordas esquerdas dos subheaders */
-.subheader-container.blue {
-    border-left-color: #3498db;
-}
+.subheader-container.blue { border-left-color: #3498db; }
+.subheader-container.green { border-left-color: #2ecc71; }
+.subheader-container.orange { border-left-color: #f39c12; }
+.subheader-container.purple { border-left-color: #9b59b6; }
+.subheader-container.red { border-left-color: #e74c3c; }
+.subheader-container.teal { border-left-color: #1abc9c; }
+.subheader-container.pink { border-left-color: #e91e63; }
+.subheader-container.indigo { border-left-color: #3f51b5; }
 
-.subheader-container.green {
-    border-left-color: #2ecc71;
-}
-
-.subheader-container.orange {
-    border-left-color: #f39c12;
-}
-
-.subheader-container.purple {
-    border-left-color: #9b59b6;
-}
-
-.subheader-container.red {
-    border-left-color: #e74c3c;
-}
-
-.subheader-container.teal {
-    border-left-color: #1abc9c;
-}
-
-.subheader-container.pink {
-    border-left-color: #e91e63;
-}
-
-.subheader-container.indigo {
-    border-left-color: #3f51b5;
-}
-
-/* Gráficos fora de containers com fundo transparente */
-.chart-container {
-    background: transparent !important;
-    border: none;
-    border-radius: 8px;
-    padding: 1rem;
-    margin: 1rem 0;
-}
-
-./* Fundo transparente para todos os gráficos */
-        .stApp [data-testid="stVegaLiteChart"] > div,
-        .vega-embed.has-actions {
-            background-color: transparent !important;
-        }
-}
 
 /* Cards */
 [data-testid="metric-container"] {
@@ -220,47 +179,6 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     margin-bottom: 2rem;
 }
 
-/* Buttons */
-.stButton > button {
-    background: var(--secondary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.stButton > button:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
-}
-
-/* Inputs */
-.stSelectbox > div > div,
-.stTextInput > div > div,
-.stDateInput > div > div,
-.stNumberInput > div > div {
-    background: white;
-    border: 1px solid var(--border-light);
-    border-radius: 6px;
-}
-
-.stSelectbox > div > div:focus,
-.stTextInput > div > div:focus,
-.stDateInput > div > div:focus,
-.stNumberInput > div > div:focus {
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Dataframe */
-.dataframe {
-    background: white;
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-}
-
 /* Status badges */
 .status-badge {
     padding: 0.25rem 0.75rem;
@@ -269,49 +187,69 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     font-weight: 600;
     display: inline-block;
 }
-
-.status-connected {
-    background-color: #10B98120;
-    color: #10B981;
-}
-
-.status-disconnected {
-    background-color: #EF444420;
-    color: #EF4444;
-}
-
-/* Headers */
-h1, h2, h3 {
-    color: var(--text-primary);
-    font-weight: 600;
-}
+.status-connected { background-color: #10B98120; color: #10B981; }
+.status-disconnected { background-color: #EF444420; color: #EF4444; }
 
 /* Hide Streamlit elements */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--secondary-color);
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #2563eb;
-}
 </style>
 """, unsafe_allow_html=True)
+
+
+# --- AJUSTES ESTÉTICOS ---
+# 3. Criada uma função para configurar um tema padrão para TODOS os gráficos Altair.
+#    - Define a fonte padrão como 'Nunito'.
+#    - Define o fundo do gráfico (view) como 'transparent'.
+#    - Padroniza o tamanho e peso das fontes de títulos e eixos.
+def configure_altair_theme():
+    """Configura um tema global para todos os gráficos Altair."""
+    font = "Nunito"
+    
+    alt.themes.register("custom_theme", lambda: {
+        "config": {
+            "view": {
+                "fill": "transparent", # Fundo transparente
+                "strokeWidth": 0
+            },
+            "title": {
+                "font": font,
+                "fontSize": 16,
+                "fontWeight": 600,
+                "anchor": "start", # Alinha o título à esquerda
+                "color": "#1f2937"
+            },
+            "axis": {
+                "labelFont": font,
+                "titleFont": font,
+                "labelFontSize": 11,
+                "titleFontSize": 13,
+                "gridColor": "#e2e8f0",
+                "domain": False,
+                "tickColor": "#6b7280",
+                "labelColor": "#6b7280",
+                "titleColor": "#1f2937",
+                "titleFontWeight": 600,
+                "labelFontWeight": 400
+            },
+            "legend": {
+                "labelFont": font,
+                "titleFont": font,
+                "labelFontSize": 11,
+                "titleFontSize": 12,
+                "titleFontWeight": 600,
+                "labelColor": "#6b7280",
+                "titleColor": "#1f2937"
+            }
+        }
+    })
+    alt.themes.enable("custom_theme")
+
+# Aplica o tema aos gráficos
+configure_altair_theme()
+
 
 # --- Inicialização do Session State ---
 if 'edit_mode' not in st.session_state:
@@ -333,7 +271,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Conexão com Google Sheets ---
+# --- Conexão com Google Sheets (NÃO ALTERADO) ---
 @st.cache_resource(show_spinner="🔌 Conectando ao Google Sheets...")
 def connect_to_gsheets():
     """Conecta ao Google Sheets com tratamento robusto de erros"""
@@ -346,11 +284,9 @@ def connect_to_gsheets():
         creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         client = gspread.authorize(creds)
         
-        # Testar a conexão
         spreadsheet = client.open_by_key(SPREADSHEET_ID)
         sheet = spreadsheet.worksheet(WORKSHEET_NAME)
         
-        # Verificar se as colunas existem
         try:
             headers = sheet.row_values(1)
             if not headers:
@@ -380,7 +316,6 @@ def connect_to_gsheets():
         st.error(f"🚨 **Erro de Conexão**: {str(e)}")
         return None
 
-# Conexão e status
 sheet = connect_to_gsheets()
 if sheet:
     st.sidebar.markdown(
@@ -395,42 +330,35 @@ else:
     st.error("⚠️ **Sistema Offline**: Não foi possível conectar ao Google Sheets.")
     st.stop()
 
-# --- Funções de Dados ---
+# --- Funções de Dados (NÃO ALTERADO) ---
 @st.cache_data(ttl=300, show_spinner="📊 Carregando dados...")
 def load_data():
     """Carrega e processa os dados da planilha"""
     try:
-        # Obter todos os valores
         values = sheet.get_all_values()
         
         if len(values) < 2: 
             return pd.DataFrame()
         
-        # Criar DataFrame
         df = pd.DataFrame(values[1:], columns=values[0])
         df.columns = [col.lower().strip() for col in df.columns]
         
-        # Verificar colunas essenciais
         if 'data' not in df.columns or 'gerado' not in df.columns:
             st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' e 'gerado'.")
             return pd.DataFrame()
         
-        # Renomear colunas
         df.rename(columns={
             'data': 'Data', 
             'gerado': 'Energia Gerada (kWh)'
         }, inplace=True)
         
-        # Processar datas
         df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
         if df['Data'].isna().any():
             df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
         
-        # Processar valores de energia
         df['Energia Gerada (kWh)'] = df['Energia Gerada (kWh)'].astype(str).str.replace(',', '.', regex=False)
         df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
         
-        # Limpar dados inválidos
         df.dropna(subset=['Data', 'Energia Gerada (kWh)'], inplace=True)
         df = df[df['Energia Gerada (kWh)'] >= 0]
         df = df.sort_values(by='Data').drop_duplicates(subset=['Data'], keep='last')
@@ -565,7 +493,6 @@ else:
         st.metric(f"📈 Total em {selected_year}", f"{format_number_br(total_year)} kWh")
     
     if selected_month_num is not None:
-        # Filtrar dados
         filtered_df = df[
             (df['Data'].dt.year == selected_year) & 
             (df['Data'].dt.month == selected_month_num)
@@ -592,31 +519,24 @@ else:
                 st.metric("📈 Média Diária", f"{format_number_br(avg)} kWh")
             with col3:
                 st.metric("⭐ Melhor Dia", f"{format_number_br(best['Energia Gerada (kWh)'])} kWh", 
-                         delta=best['Data'].strftime('%d/%m'))
+                          delta=best['Data'].strftime('%d/%m'))
             with col4:
                 st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh",
-                         delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
+                          delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
             
             # --- Abas de Análise ---
             tab1, tab2, tab3 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📋 Dados"])
             
             with tab1:
-                # Gráfico de barras - CORRIGIDO
                 bar_chart = alt.Chart(filtered_df).mark_bar(
                     color="#3b82f6",
                     cornerRadiusTopLeft=4,
-                    cornerRadiusTopRight=4,
-                    size=30
+                    cornerRadiusTopRight=4
                 ).encode(
                     x=alt.X(
                         'Data:T', 
                         title='Data',
-                        axis=alt.Axis(
-                            format='%d/%m',
-                            labelAngle=-45,
-                            tickCount='day',
-                            labelFontSize=FONT_SIZES['chart_axis']
-                        ),
+                        axis=alt.Axis(format='%d/%m', labelAngle=-45, tickCount='day'),
                         scale=alt.Scale(nice=False)
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title='Energia Gerada (kWh)'),
@@ -626,7 +546,6 @@ else:
                     ]
                 )
                 
-                # Linha da média
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
                 linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
                     color='red',
@@ -636,18 +555,14 @@ else:
                     tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
                 )
                 
-                # Combinar gráfico
                 final_chart = (bar_chart + linha_media).properties(
                     height=400,
                     title=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}"
-                ).resolve_scale(
-                    x='independent'
                 )
                 
                 st.altair_chart(final_chart, use_container_width=True)
             
             with tab2:
-                # Gráfico acumulado
                 filtered_df_sorted = filtered_df.sort_values('Data').copy()
                 filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
                 
@@ -657,7 +572,7 @@ else:
                         gradient='linear', 
                         stops=[
                             alt.GradientStop(color='#10b981', offset=0), 
-                            alt.GradientStop(color='rgba(16, 185, 129, 0.3)', offset=1)
+                            alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)
                         ],
                         x1=1, x2=1, y1=1, y2=0
                     ),
@@ -678,7 +593,6 @@ else:
                 st.altair_chart(area_chart, use_container_width=True)
             
             with tab3:
-                # Tabela de dados
                 display_df = filtered_df.copy()
                 display_df['Data_str'] = display_df['Data'].dt.strftime('%d/%m/%Y')
                 display_df['Energia_str'] = display_df['Energia Gerada (kWh)'].apply(lambda x: format_number_br(x))
@@ -699,7 +613,6 @@ else:
                     if st.button("✏️ Editar Registros", use_container_width=True):
                         st.session_state.edit_mode = not st.session_state.edit_mode
                 
-                # Modo de edição
                 if st.session_state.edit_mode:
                     st.divider()
                     st.subheader("✏️ Editar Registros")
@@ -745,7 +658,6 @@ else:
                                         time.sleep(1)
                                         st.rerun()
         
-        # --- Análise Anual ---
         year_df = df[df['Data'].dt.year == selected_year].copy()
         
         if not year_df.empty:
@@ -755,7 +667,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Gráfico mensal
             monthly_summary = year_df.groupby(
                 year_df['Data'].dt.month
             )['Energia Gerada (kWh)'].sum().reset_index()
@@ -765,18 +676,15 @@ else:
                 lambda m: month_names[m][:3]
             )
             
-            # Gráfico de barras mensais - CORRIGIDO
             monthly_bars = alt.Chart(monthly_summary).mark_bar(
                 color="#f59e0b",
                 cornerRadiusTopLeft=4,
                 cornerRadiusTopRight=4,
-                size=40
             ).encode(
                 x=alt.X(
                     'Nome Mês:N', 
                     title='Mês', 
-                    sort=[m[:3] for m in month_names.values()],
-                    axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])
+                    sort=[m[:3] for m in month_names.values()]
                 ),
                 y=alt.Y('Energia Gerada (kWh):Q', title='Total Mensal (kWh)'),
                 tooltip=[
@@ -785,7 +693,6 @@ else:
                 ]
             )
             
-            # Linha da média mensal
             media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
             linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
                 color='red',
@@ -796,12 +703,9 @@ else:
                 tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
             )
             
-            # Combinar gráfico mensal
             monthly_chart = (monthly_bars + linha_media_mensal).properties(
-                height=500,
+                height=400,
                 title=f"Geração Mensal - {selected_year}"
-            ).resolve_scale(
-                x='independent'
             )
             
             st.altair_chart(monthly_chart, use_container_width=True)
@@ -813,60 +717,58 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Preparar dados para heatmap
             start_date = datetime(selected_year, 1, 1)
             end_date = datetime(selected_year, 12, 31)
             all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
             
-            # Criar DataFrame base
             heatmap_df = pd.DataFrame({'date': all_dates})
             heatmap_df['date_str'] = heatmap_df['date'].dt.strftime('%Y-%m-%d')
             
-            # Preparar dados existentes
             year_data_heat = year_df.copy()
             year_data_heat['date_str'] = year_data_heat['Data'].dt.strftime('%Y-%m-%d')
             year_data_heat = year_data_heat.groupby('date_str')['Energia Gerada (kWh)'].sum().reset_index()
             
-            # Merge dos dados
             heatmap_df = pd.merge(heatmap_df, year_data_heat, on='date_str', how='left')
             heatmap_df['Energia Gerada (kWh)'] = heatmap_df['Energia Gerada (kWh)'].fillna(0)
             
-            # Adicionar informações de calendário
             heatmap_df['week'] = heatmap_df['date'].dt.isocalendar().week
             heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
             heatmap_df['month'] = heatmap_df['date'].dt.month
             
-            # Ajustar semanas
             min_week = heatmap_df['week'].min()
             heatmap_df['week_adj'] = heatmap_df['week'] - min_week
             
-            # Criar heatmap - CORRIGIDO
+            # --- AJUSTES ESTÉTICOS ---
+            # 4. Adicionado 'paddingInner' às escalas X e Y para criar espaçamento.
+            # 5. Alterado o 'stroke' (borda) dos quadrados para branco para melhor separação.
             heatmap = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=6,
-                stroke='#DCDCDC',
-                strokeWidth=2
+                cornerRadius=3,
+                stroke='#ffffff', # Borda branca para melhor separação
+                strokeWidth=1.5
             ).encode(
                 x=alt.X(
                     'week_adj:O',
                     title=None,
-                    axis=alt.Axis(labels=False, ticks=False, domain=False)
+                    axis=alt.Axis(labels=False, ticks=False, domain=False),
+                    scale=alt.Scale(paddingInner=0.1) # Adiciona espaçamento horizontal
                 ),
                 y=alt.Y(
                     'day_of_week:O',
                     title=None,
                     axis=alt.Axis(
-                        labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
+                        labelExpr="['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][datum.value]",
                         ticks=False,
-                        domain=False,
-                        labelFontSize=FONT_SIZES['chart_axis']
-                    )
+                        domain=False
+                    ),
+                    scale=alt.Scale(paddingInner=0.1) # Adiciona espaçamento vertical
                 ),
                 color=alt.Color(
                     'Energia Gerada (kWh):Q',
                     title='kWh',
                     scale=alt.Scale(
                         scheme='greens',
-                        range=['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127']
+                        # range=['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'] # Github classic
+                        range=['#f0fdf4', '#bbf7d0', '#4ade80', '#16a34a', '#14532d'] # Tailwind green
                     )
                 ),
                 tooltip=[
@@ -874,8 +776,6 @@ else:
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
             ).properties(
-                width=650,
-                height=400,
                 title=f"Contribuições de Energia Solar - {selected_year}"
             )
             
@@ -911,7 +811,6 @@ if not df.empty:
     </div>
     """, unsafe_allow_html=True)
     
-    # Dados da fatura (exemplo baseado no documento fornecido)
     conta_dados = {
         'uc': '15491948',
         'consumo_kwh': 253,
@@ -925,7 +824,6 @@ if not df.empty:
         'mes_referencia': 'JUL/2025'
     }
     
-    # Métricas principais da conta
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -937,13 +835,11 @@ if not df.empty:
     with col4:
         st.metric("💰 Valor da Fatura", f"R$ {format_number_br(conta_dados['valor_fatura'])}")
     
-    # Cálculos de economia e performance
     performance_perc = (conta_dados['geracao_kwh'] / conta_dados['consumo_kwh'] * 100) if conta_dados['consumo_kwh'] > 0 else 0
     valor_sem_solar = conta_dados['geracao_kwh'] * conta_dados['tarifa_scee']
     economia_mensal = valor_sem_solar - conta_dados['valor_fatura']
     economia_perc = (economia_mensal / valor_sem_solar * 100) if valor_sem_solar > 0 else 0
     
-    # Container para análise de performance
     st.markdown("""
     <div class="subheader-container blue">
         <h3>📊 Performance do Sistema Solar</h3>
@@ -954,22 +850,20 @@ if not df.empty:
     
     with col1:
         st.metric("🎯 Eficiência do Sistema", f"{performance_perc:.0f}%", 
-                 delta="Geração vs Consumo")
+                  delta="Geração vs Consumo")
     with col2:
         st.metric("💸 Economia Mensal", f"R$ {format_number_br(economia_mensal)}", 
-                 delta=f"{economia_perc:.0f}% economia")
+                  delta=f"{economia_perc:.0f}% economia")
     with col3:
         st.metric("⚡ Excedente", f"{conta_dados['geracao_kwh'] - conta_dados['consumo_kwh']} kWh",
-                 delta="Créditos gerados")
+                  delta="Créditos gerados")
     
-    # Container para análise financeira
     st.markdown("""
     <div class="subheader-container green">
         <h3>💰 Análise Financeira Detalhada</h3>
     </div>
     """, unsafe_allow_html=True)
     
-    # Tabela de composição da conta
     composicao_df = pd.DataFrame([
         ["Consumo SCEE", f"{conta_dados['consumo_kwh']} kWh", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'])}", "Cobrança"],
         ["Injeção SCEE", f"{conta_dados['consumo_kwh']} kWh", f"-R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'])}", "Desconto"],
@@ -981,7 +875,6 @@ if not df.empty:
     
     st.dataframe(composicao_df, use_container_width=True, hide_index=True)
     
-    # Container para impostos
     st.markdown("""
     <div class="subheader-container orange">
         <h3>📋 Detalhamento de Impostos</h3>
@@ -997,7 +890,6 @@ if not df.empty:
     
     st.dataframe(impostos_df, use_container_width=True, hide_index=True)
     
-    # Container para nova regulamentação
     st.markdown("""
     <div class="subheader-container red">
         <h3>⚖️ Nova Regulamentação (Lei 14.300/21)</h3>
@@ -1012,7 +904,6 @@ if not df.empty:
     - Mesmo com as taxas, economia de 87% ainda é mantida
     """)
     
-    # Container para comparação e economia
     st.markdown("""
     <div class="subheader-container teal">
         <h3>💸 Comparativo de Economia</h3>
@@ -1023,20 +914,18 @@ if not df.empty:
     
     with col1:
         st.metric("🚫 Sem Energia Solar", 
-                 f"R$ {format_number_br(valor_sem_solar)}", 
-                 delta=f"{conta_dados['geracao_kwh']} kWh × R$ {conta_dados['tarifa_scee']:.3f}")
+                  f"R$ {format_number_br(valor_sem_solar)}", 
+                  delta=f"{conta_dados['geracao_kwh']} kWh × R$ {conta_dados['tarifa_scee']:.3f}")
     with col2:
         st.metric("⚡ Com Energia Solar", 
-                 f"R$ {format_number_br(conta_dados['valor_fatura'])}", 
-                 delta="Valor atual da fatura")
+                  f"R$ {format_number_br(conta_dados['valor_fatura'])}", 
+                  delta="Valor atual da fatura")
     with col3:
         st.metric("💰 Economia Mensal", 
-                 f"R$ {format_number_br(economia_mensal)}", 
-                 delta=f"{economia_perc:.0f}% de economia!", 
-                 delta_color="normal")
+                  f"R$ {format_number_br(economia_mensal)}", 
+                  delta=f"{economia_perc:.0f}% de economia!", 
+                  delta_color="normal")
     
-    # Gráfico de comparação
-    # Dados para o gráfico de comparação
     comparacao_df = pd.DataFrame([
         {"Situação": "Sem Solar", "Valor": valor_sem_solar, "Tipo": "Gasto Total"},
         {"Situação": "Com Solar", "Valor": conta_dados['valor_fatura'], "Tipo": "Fatura Atual"},
@@ -1048,11 +937,11 @@ if not df.empty:
         cornerRadiusTopRight=8,
         size=100
     ).encode(
-        x=alt.X('Situação:N', title='Cenário', axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])),
-        y=alt.Y('Valor:Q', title='Valor (R$)', axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])),
+        x=alt.X('Situação:N', title='Cenário'),
+        y=alt.Y('Valor:Q', title='Valor (R$)'),
         color=alt.Color('Situação:N', 
-                       scale=alt.Scale(range=['#ef4444', '#10b981', '#3b82f6']),
-                       legend=None),
+                      scale=alt.Scale(range=['#ef4444', '#10b981', '#3b82f6']),
+                      legend=None),
         tooltip=[
             alt.Tooltip('Situação:N', title='Cenário'),
             alt.Tooltip('Valor:Q', title='Valor', format='.2f'),
@@ -1065,16 +954,14 @@ if not df.empty:
     
     st.altair_chart(comparacao_chart, use_container_width=True)
     
-    # Gráfico de composição da fatura
-    # Dados para o gráfico pizza
     pizza_df = pd.DataFrame([
         {"Componente": "Taxa Injeção", "Valor": conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457},
         {"Componente": "ICMS", "Valor": conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19},
         {"Componente": "Iluminação Pública", "Valor": conta_dados['iluminacao_publica']},
         {"Componente": "Outros", "Valor": max(0, conta_dados['valor_fatura'] - 
-                                             (conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457 + 
-                                              conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19 + 
-                                              conta_dados['iluminacao_publica']))}
+                                            (conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457 + 
+                                             conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19 + 
+                                             conta_dados['iluminacao_publica']))}
     ])
     
     pizza_chart = alt.Chart(pizza_df).mark_arc(
@@ -1083,13 +970,12 @@ if not df.empty:
     ).encode(
         theta=alt.Theta('Valor:Q', title='Valor'),
         color=alt.Color('Componente:N', 
-                       scale=alt.Scale(range=['#ef4444', '#f59e0b', '#10b981', '#3b82f6'])),
+                      scale=alt.Scale(range=['#ef4444', '#f59e0b', '#10b981', '#3b82f6'])),
         tooltip=[
             alt.Tooltip('Componente:N', title='Componente'),
             alt.Tooltip('Valor:Q', title='Valor', format='.2f')
         ]
     ).properties(
-        height=300,
         title=f"Composição da Fatura - {conta_dados['mes_referencia']}"
     )
     
@@ -1098,7 +984,7 @@ if not df.empty:
 # --- Footer ---
 st.divider()
 st.markdown(f"""
-<div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+<div style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
@@ -1116,6 +1002,7 @@ if st.sidebar.button("🔄 Atualizar"):
     st.cache_data.clear()
     st.rerun()
 
-if st.sidebar.button("❌ Sair Edição"):
-    st.session_state.edit_mode = False
-    st.rerun()
+if st.session_state.edit_mode:
+    if st.sidebar.button("❌ Sair do Modo Edição"):
+        st.session_state.edit_mode = False
+        st.rerun()
