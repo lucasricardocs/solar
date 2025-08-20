@@ -764,8 +764,8 @@ else:
             
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=2,
-                stroke='#d3d3d3',
+                cornerRadius=4,
+                stroke='white',
                 strokeWidth=2
             ).encode(
                 x=alt.X(
