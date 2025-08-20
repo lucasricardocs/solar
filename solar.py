@@ -89,7 +89,7 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    height: 200px;
+    height: 250px;
 }
 
 .header-content {
@@ -99,8 +99,8 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
 }
 
 .solar-icon {
-    width: 200px;
-    height: 200px;
+    width: 250px;
+    height: 250px;
     flex-shrink: 0;
 }
 
@@ -188,7 +188,7 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
 /* Gráficos fora de containers com fundo transparente */
 .chart-container {
     background: transparent !important;
-    border: 2px solid #dcdcdc;
+    border: none;
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
@@ -196,7 +196,7 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
 
 .vega-embed {
     background: transparent !important;
-    border: 2px solid #dcdcdc !important;
+    border: none !important;
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
