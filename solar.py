@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=Fa
 
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'Solardaily' # Nome da sua aba na planilha
+WORKSHEET_NAME = 'solardaily' # Nome da sua aba na planilha
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -88,7 +88,10 @@ def load_data():
     
     df = pd.DataFrame(data)
 
-    # CORREÇÃO DO ERRO: Verifica se as colunas esperadas existem
+    # CORREÇÃO: Converte todos os nomes de coluna para minúsculas para evitar erros
+    df.columns = [col.lower() for col in df.columns]
+
+    # Agora a verificação usa os nomes em minúsculas
     if 'data' not in df.columns or 'gerado' not in df.columns:
         st.error("Erro: A planilha deve conter as colunas 'data' e 'gerado'. Verifique os nomes das colunas na sua planilha.")
         return pd.DataFrame()
