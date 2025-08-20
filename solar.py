@@ -262,21 +262,42 @@ else:
             st.metric("Pior Dia", f"{worst['Energia Gerada (kWh)']:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."), delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
 
         # --- Gráficos do Mês ---
-        st.subheader("Produção Diária vs. Acumulada")
+        st.subheader("Produção Diária")
         bar_chart = alt.Chart(filtered_df).mark_bar(
             color="#3b82f6"
         ).encode(
-            x=alt.X('Data:T', title='Dia'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
+            x=alt.X('Data:T', title='Dia', scale=alt.Scale(paddingInner=0.2)), # DICA: Altere paddingInner (0 a 1) para o espaçamento. 0.1 é bem próximo.
+            y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
             tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado')]
-        ).properties(height=300).configure(background='transparent')
+        ).properties(height=350).configure(background='transparent')
         st.altair_chart(bar_chart, use_container_width=True)
 
-        filtered_df['Acumulado'] = filtered_df['Energia Gerada (kWh)'].cumsum()
-        area_chart = alt.Chart(filtered_df).mark_area(line={'color':'#10b981'}, color=alt.Gradient(gradient='linear', stops=[alt.GradientStop(color='#10b981', offset=0), alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)])).encode(
-            x=alt.X('Data:T', title='Dia'), y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
+        st.subheader("Geração Acumulada no Mês")
+        base = alt.Chart(filtered_df).encode(
+            x=alt.X('Data:T', title='Dia'),
             tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Acumulado:Q', title='Acumulado')]
-        ).properties(height=300).configure(background='transparent')
-        st.altair_chart(area_chart, use_container_width=True)
+        ).transform_window(
+            Acumulado='sum(`Energia Gerada (kWh)`)',
+            frame=[None, 0]
+        )
+
+        area = base.mark_area(
+            line={'color':'#10b981'}, 
+            color=alt.Gradient(
+                gradient='linear', 
+                stops=[alt.GradientStop(color='#10b981', offset=0), alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)],
+                x1=1, x2=1, y1=1, y2=0
+            )
+        ).encode(y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'))
+        
+        points = base.mark_point(
+            size=40,
+            color='#10b981',
+            opacity=0.7,
+            filled=True
+        ).encode(y=alt.Y('Acumulado:Q'))
+
+        st.altair_chart((area + points).properties(height=350).configure(background='transparent'), use_container_width=True)
 
     # --- Análise Anual ---
     year_df_filtered = df[df['Data'].dt.year == selected_year].copy()
@@ -291,10 +312,10 @@ else:
         monthly_chart = alt.Chart(monthly_summary).mark_bar(
             color="#f59e0b"
         ).encode(
-            x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
+            x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()], scale=alt.Scale(paddingInner=0.3)),
             y=alt.Y('Energia Gerada (kWh):Q', title='Total (kWh)'),
             tooltip=[alt.Tooltip('Nome Mês', title='Mês'), alt.Tooltip('Energia Gerada (kWh):Q', title='Total Gerado')]
-        ).properties(height=300).configure(background='transparent')
+        ).properties(height=350).configure(background='transparent')
         st.altair_chart(monthly_chart, use_container_width=True)
         
         # --- HEATMAP ESTILO GITHUB ---
@@ -309,27 +330,25 @@ else:
         heatmap_df['week_of_year'] = heatmap_df['Data'].dt.isocalendar().week
         heatmap_df['month_abbr'] = heatmap_df['Data'].dt.month.apply(lambda m: month_names.get(m, '')[:3])
         
-        # Lógica para exibir os meses no topo
         month_labels = heatmap_df.groupby('month_abbr')['week_of_year'].min().reset_index()
-        # Ordenar os meses corretamente
-        month_order = [m[:3] for m in month_names.values()]
+        month_order = [month_names[i][:3] for i in range(1, 13)]
         month_labels['month_cat'] = pd.Categorical(month_labels['month_abbr'], categories=month_order, ordered=True)
         month_labels = month_labels.sort_values('month_cat')
         
         month_labels_dict = dict(zip(month_labels['week_of_year'], month_labels['month_abbr']))
-        label_expr = f"({month_labels_dict})[datum.value]"
+        label_expr = f"datum.value in {list(month_labels_dict.keys())} ? {month_labels_dict}[datum.value] : ''"
 
         heatmap = alt.Chart(heatmap_df).mark_rect(
             width=15, height=15, cornerRadius=3, stroke='white', strokeWidth=2
         ).encode(
-            x=alt.X('week_of_year:O', title=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr=label_expr, labelAlign='left', labelOffset=10)),
+            x=alt.X('week_of_year:O', title=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr=label_expr, labelAlign='left', labelOffset=10, labelPadding=5)),
             y=alt.Y('day_of_week_num:O', title=None, sort=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]")),
             color=alt.condition(
                 'isValid(datum["Energia Gerada (kWh)"])',
                 alt.Color('Energia Gerada (kWh):Q', 
                           legend=alt.Legend(title="kWh", orient='bottom'), 
                           scale=alt.Scale(scheme='greens')),
-                alt.value('#d3d3d3') # Cor para dias sem dados
+                alt.value('#d3d3d3')
             ),
             tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
         ).properties(
