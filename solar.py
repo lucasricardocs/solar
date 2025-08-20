@@ -796,7 +796,6 @@ else:
                         legend=alt.Legend(title="kWh Gerado")
                     ),
                     alt.value('#eeeeee')
-                )
                 ),
                 tooltip=[
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
