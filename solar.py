@@ -764,15 +764,15 @@ else:
             
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=3,
-                stroke='white',
+                cornerRadius=2,
+                stroke='#d3d3d3',
                 strokeWidth=2
             ).encode(
                 x=alt.X(
                     'week_num:O',
                     title=None,
                     axis=alt.Axis(labels=False, ticks=False, domain=False),
-                    scale=alt.Scale(padding=0.1)  # padding mínimo em X
+                    scale=alt.Scale(padding=0.01)  # padding mínimo em X
                 ),
                 y=alt.Y(
                     'day_of_week:O',
