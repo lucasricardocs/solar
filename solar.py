@@ -37,9 +37,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- AJUSTES ESTÉTICOS ---
-# 1. Ajustado o CSS para diminuir o tamanho dos containers e ajustar fontes.
-# 2. Adicionado estilo para os títulos dentro dos containers para melhor espaçamento.
+# --- CSS (NÃO ALTERADO) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
@@ -199,26 +197,27 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 
-# --- AJUSTES ESTÉTICOS ---
-# 3. Criada uma função para configurar um tema padrão para TODOS os gráficos Altair.
-#    - Define a fonte padrão como 'Nunito'.
-#    - Define o fundo do gráfico (view) como 'transparent'.
-#    - Padroniza o tamanho e peso das fontes de títulos e eixos.
+# --- AJUSTES NO TEMA DOS GRÁFICOS ---
 def configure_altair_theme():
     """Configura um tema global para todos os gráficos Altair."""
     font = "Nunito"
     
+    # Desativa o tema padrão para começar do zero
+    alt.themes.enable('none')
+    
+    # Registra e ativa o tema customizado
     alt.themes.register("custom_theme", lambda: {
         "config": {
+            "background": "transparent", # Fundo geral transparente
             "view": {
-                "fill": "transparent", # Fundo transparente
+                "fill": "transparent",   # Fundo da área de plotagem transparente
                 "strokeWidth": 0
             },
             "title": {
                 "font": font,
-                "fontSize": 16,
-                "fontWeight": 600,
-                "anchor": "start", # Alinha o título à esquerda
+                "fontSize": 18,
+                "fontWeight": 700,
+                "anchor": "middle", # <-- TÍTULO CENTRALIZADO
                 "color": "#1f2937"
             },
             "axis": {
@@ -556,7 +555,7 @@ else:
                 )
                 
                 final_chart = (bar_chart + linha_media).properties(
-                    height=400,
+                    height=400, # <-- ALTURA FIXA
                     title=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}"
                 )
                 
@@ -586,7 +585,7 @@ else:
                         alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')
                     ]
                 ).properties(
-                    height=400,
+                    height=400, # <-- ALTURA FIXA
                     title=f"Geração Acumulada - {month_names.get(selected_month_num, '')} {selected_year}"
                 )
                 
@@ -704,7 +703,7 @@ else:
             )
             
             monthly_chart = (monthly_bars + linha_media_mensal).properties(
-                height=400,
+                height=400, # <-- ALTURA FIXA
                 title=f"Geração Mensal - {selected_year}"
             )
             
@@ -738,19 +737,16 @@ else:
             min_week = heatmap_df['week'].min()
             heatmap_df['week_adj'] = heatmap_df['week'] - min_week
             
-            # --- AJUSTES ESTÉTICOS ---
-            # 4. Adicionado 'paddingInner' às escalas X e Y para criar espaçamento.
-            # 5. Alterado o 'stroke' (borda) dos quadrados para branco para melhor separação.
             heatmap = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
-                stroke='#ffffff', # Borda branca para melhor separação
+                stroke='#ffffff',
                 strokeWidth=1.5
             ).encode(
                 x=alt.X(
                     'week_adj:O',
                     title=None,
                     axis=alt.Axis(labels=False, ticks=False, domain=False),
-                    scale=alt.Scale(paddingInner=0.1) # Adiciona espaçamento horizontal
+                    scale=alt.Scale(paddingInner=0.1)
                 ),
                 y=alt.Y(
                     'day_of_week:O',
@@ -760,15 +756,14 @@ else:
                         ticks=False,
                         domain=False
                     ),
-                    scale=alt.Scale(paddingInner=0.1) # Adiciona espaçamento vertical
+                    scale=alt.Scale(paddingInner=0.1)
                 ),
                 color=alt.Color(
                     'Energia Gerada (kWh):Q',
                     title='kWh',
                     scale=alt.Scale(
                         scheme='greens',
-                        # range=['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'] # Github classic
-                        range=['#DCDCDC', '#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'] # Tailwind green
+                        range=['#f0fdf4', '#bbf7d0', '#4ade80', '#16a34a', '#14532d']
                     )
                 ),
                 tooltip=[
@@ -776,6 +771,7 @@ else:
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
             ).properties(
+                height=200, # Heatmap é melhor mais baixo
                 title=f"Contribuições de Energia Solar - {selected_year}"
             )
             
@@ -948,7 +944,7 @@ if not df.empty:
             alt.Tooltip('Tipo:N', title='Descrição')
         ]
     ).properties(
-        height=400,
+        height=400, # <-- ALTURA FIXA
         title=f"Comparativo Financeiro - {conta_dados['mes_referencia']}"
     )
     
@@ -976,6 +972,7 @@ if not df.empty:
             alt.Tooltip('Valor:Q', title='Valor', format='.2f')
         ]
     ).properties(
+        height=300, # Pizza chart fica melhor um pouco menor
         title=f"Composição da Fatura - {conta_dados['mes_referencia']}"
     )
     
