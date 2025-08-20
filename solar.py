@@ -17,7 +17,7 @@ except locale.Error:
 
 # --- Constantes de Configuração do Google Sheets ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'Solardaily'
+WORKSHEET_NAME = 'solardaily'
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 @st.cache_data(ttl=600)
