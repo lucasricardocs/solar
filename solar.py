@@ -453,7 +453,7 @@ else:
         with col1:
             bar_chart = alt.Chart(filtered_df).mark_bar(
                 color="#3b82f6",
-                width=20 # Aumenta a espessura das barras
+                width=20
             ).encode(
                 x=alt.X('Data:T', title='Dia'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
                 tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado')]
@@ -479,7 +479,7 @@ else:
         monthly_summary['Nome Mês'] = monthly_summary['Mês'].apply(lambda m: month_names[m][:3])
         monthly_chart = alt.Chart(monthly_summary).mark_bar(
             color="#f59e0b",
-            width=30 # Aumenta a espessura das barras
+            width=30
         ).encode(
             x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
             y=alt.Y('Energia Gerada (kWh):Q', title='Total (kWh)'),
@@ -489,18 +489,29 @@ else:
         
         # --- HEATMAP ESTILO GITHUB ---
         st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
-        heatmap_df = year_df.copy()
+        
+        # Criar um DataFrame com todos os dias do ano selecionado
+        all_days_of_year = pd.date_range(start=f'{selected_year}-01-01', end=f'{selected_year}-12-31', freq='D')
+        all_days_df = pd.DataFrame({'Data': all_days_of_year})
+        
+        # Juntar com os dados existentes
+        heatmap_df = pd.merge(all_days_df, year_df, on='Data', how='left')
+        
         heatmap_df['day_of_week_num'] = heatmap_df['Data'].dt.dayofweek
         heatmap_df['week_of_year'] = heatmap_df['Data'].dt.isocalendar().week
-        
-        days_order = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
         
         heatmap = alt.Chart(heatmap_df).mark_rect(
             width=15, height=15, cornerRadius=3
         ).encode(
             x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labels=False, ticks=False, domain=False)),
-            y=alt.Y('day_of_week_num:O', title='Dia da Semana', sort=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr="['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][datum.value]")),
-            color=alt.Color('Energia Gerada (kWh):Q', legend=alt.Legend(title="kWh", orient='bottom'), scale=alt.Scale(scheme='greens')),
+            y=alt.Y('day_of_week_num:O', title='Dia da Semana', sort=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]")),
+            color=alt.condition(
+                'isValid(datum["Energia Gerada (kWh)"])',
+                alt.Color('Energia Gerada (kWh):Q', 
+                          legend=alt.Legend(title="kWh", orient='bottom'), 
+                          scale=alt.Scale(scheme='greens', domain=[8, 25], clamp=True)),
+                alt.value('#f0f0f0') # Cor para dias sem dados
+            ),
             tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
         ).properties(
             title=f"Calendário de Geração - {selected_year}"
