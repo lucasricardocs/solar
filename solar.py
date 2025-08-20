@@ -766,7 +766,7 @@ else:
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
                 stroke='#dcdcdc',
-                strokeWidth=1
+                strokeWidth=2
             ).encode(
                 x=alt.X(
                     'week_num:O',
