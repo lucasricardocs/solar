@@ -780,7 +780,7 @@ else:
                     axis=alt.Axis(
                         labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                         ticks=False,
-                        domain=domain=[10, 20] 
+                        domain=[10, 20] 
                     ),
                     scale=alt.Scale(padding=0.04)  # padding mínimo em Y
                 ),
