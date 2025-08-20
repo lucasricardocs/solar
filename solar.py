@@ -89,11 +89,11 @@ sheet = connect_to_gsheets()
 @st.cache_data(ttl=600)
 def load_data():
     """Carrega os dados da planilha, processa e retorna um DataFrame."""
-    data = sheet.get_all_records()
-    if not data:
+    values = sheet.get_all_values()
+    if len(values) < 2:
         return pd.DataFrame()
     
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(values[1:], columns=values[0])
     df.columns = [col.lower() for col in df.columns]
 
     if 'data' not in df.columns or 'gerado' not in df.columns:
@@ -104,9 +104,6 @@ def load_data():
     
     df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
     
-    # --- CORREÇÃO APLICADA AQUI ---
-    # Garante que a coluna de energia seja tratada como texto, substitui a vírgula
-    # por ponto e então converte para número. Isso resolve o problema de leitura.
     if 'Energia Gerada (kWh)' in df.columns:
         df['Energia Gerada (kWh)'] = df['Energia Gerada (kWh)'].astype(str).str.replace(',', '.', regex=False)
         df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
@@ -119,8 +116,7 @@ def append_data(date, energy):
     """Adiciona uma nova linha de dados na planilha."""
     try:
         formatted_date = date.strftime('%d/%m/%Y')
-        # Salva o valor numérico. O Google Sheets formatará com vírgula se a localidade for Brasil.
-        sheet.append_row([formatted_date, energy])
+        sheet.append_row([formatted_date, energy], value_input_option='USER_ENTERED')
         st.cache_data.clear()
         return True
     except Exception as e:
@@ -131,32 +127,32 @@ def append_data(date, energy):
 st.title("Dashboard de Geração de Energia Solar")
 st.markdown("Acompanhe a performance da sua geração de energia de forma visual e interativa.")
 
-# --- Formulário de Cadastro (em um expander) ---
-with st.expander("☀️ Cadastrar Nova Geração", expanded=True):
-    with st.form("entry_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            input_date = st.date_input("Data da Geração (dd/mm/aaaa)", value=datetime.today(), format="DD/MM/YYYY")
-        with col2:
-            input_energy_str = st.text_input("Energia Gerada (kWh)", placeholder="Ex: 20,13")
+# --- Formulário de Cadastro ---
+st.header("☀️ Cadastrar Nova Geração")
+with st.form("entry_form", clear_on_submit=True):
+    col1, col2 = st.columns(2)
+    with col1:
+        input_date = st.date_input("Data da Geração (dd/mm/aaaa)", value=datetime.today(), format="DD/MM/YYYY")
+    with col2:
+        input_energy_str = st.text_input("Energia Gerada (kWh)", placeholder="Ex: 20,13")
 
-        submitted = st.form_submit_button("Salvar Geração")
+    submitted = st.form_submit_button("Salvar Geração")
 
-        if submitted:
-            if input_energy_str:
-                try:
-                    energy_value = float(input_energy_str.replace(',', '.'))
-                    if energy_value > 0:
-                        if append_data(input_date, energy_value):
-                            st.success("Dados salvos com sucesso!")
-                        else:
-                            st.error("Falha ao salvar os dados.")
+    if submitted:
+        if input_energy_str:
+            try:
+                energy_value = float(input_energy_str.replace(',', '.'))
+                if energy_value > 0:
+                    if append_data(input_date, energy_value):
+                        st.success("Dados salvos com sucesso!")
                     else:
-                        st.warning("A energia gerada deve ser maior que zero.")
-                except ValueError:
-                    st.error("Valor de energia inválido. Por favor, insira um número (ex: 20 ou 20,13).")
-            else:
-                st.warning("Por favor, preencha o valor da energia gerada.")
+                        st.error("Falha ao salvar os dados.")
+                else:
+                    st.warning("A energia gerada deve ser maior que zero.")
+            except ValueError:
+                st.error("Valor de energia inválido. Por favor, insira um número (ex: 20 ou 20,13).")
+        else:
+            st.warning("Por favor, preencha o valor da energia gerada.")
 
 # --- Análise de Dados ---
 df = load_data()
@@ -238,7 +234,11 @@ else:
         heatmap = alt.Chart(year_df).mark_rect().encode(
             x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labelAngle=0)),
             y=alt.Y('day_of_week:O', title='Dia da Semana', sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-            color=alt.Color('Energia Gerada (kWh):Q', legend=alt.Legend(title="Energia (kWh)"), scale=alt.Scale(scheme='blues')),
+            color=alt.Color('Energia Gerada (kWh):Q',
+                legend=alt.Legend(title="Energia (kWh)"),
+                # Define a nova escala de cores: de vermelho claro, passando por amarelo, até verde escuro
+                scale=alt.Scale(range=['#ffcdd2', '#fff9c4', '#2e7d32'])
+            ),
             tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
         ).properties(title=f"Geração Diária em {selected_year}").configure_view(stroke=None).configure_axis(
             labelColor='#333', titleColor='#333'
