@@ -811,9 +811,9 @@ else:
             st.markdown("""
                 <style>
                     .subheader-container {
-                        color: white;
+                        color: black;
                         padding: 0.8rem 1.2rem;
-                        border-radius: 12px; /* <<< bordas arredondadas */
+                        border-radius: 50px; /* <<< bordas arredondadas */
                         margin-bottom: 1rem;
                     }
                     .subheader-container h3 {
