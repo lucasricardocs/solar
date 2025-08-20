@@ -363,9 +363,7 @@ else:
         month_names = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
         months_in_year = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
         
-        # --- ATUALIZAÇÃO: Adiciona a opção "Ano Inteiro" ---
         month_options = [0] + months_in_year
-        
         def format_month(x):
             return "Ano Inteiro" if x == 0 else month_names.get(x, '')
 
@@ -376,7 +374,6 @@ else:
                 default_index = month_options.index(current_month)
             else:
                 default_index = len(month_options) - 1 if len(month_options) > 1 else 0
-
             selected_month_num = st.selectbox("📊 Mês", options=month_options, format_func=format_month, index=default_index)
         else:
             st.info("Nenhum dado disponível para este ano")
@@ -385,12 +382,11 @@ else:
         total_year = df[df['Data'].dt.year == selected_year]['Energia Gerada (kWh)'].sum()
         st.metric(f"📈 Total em {selected_year}", f"{format_number_br(total_year)} kWh")
     
-    # --- ATUALIZAÇÃO: Define o dataframe e o título com base na seleção (Mês ou Ano) ---
     if selected_month_num is not None:
-        if selected_month_num == 0: # Opção "Ano Inteiro"
+        if selected_month_num == 0:
             filtered_df = df[df['Data'].dt.year == selected_year].copy()
             periodo_selecionado = f"o Ano de {selected_year}"
-        else: # Opção de Mês específico
+        else:
             filtered_df = df[(df['Data'].dt.year == selected_year) & (df['Data'].dt.month == selected_month_num)].copy()
             periodo_selecionado = f"{month_names.get(selected_month_num, '')} de {selected_year}"
 
@@ -411,19 +407,15 @@ else:
             tab1, tab2, tab3 = st.tabs(["📊 Produção no Período", "📈 Geração Acumulada", "📋 Dados Detalhados"])
             
             with tab1:
-                # --- ATUALIZAÇÃO: Gráfico dinâmico (Diário para Mês, Mensal para Ano) ---
                 if selected_month_num == 0:
-                    # Se "Ano Inteiro", mostra gráfico MENSAL
                     monthly_summary = filtered_df.groupby(filtered_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
                     monthly_summary['Nome Mês'] = monthly_summary['Data'].apply(lambda m: month_names[m][:3])
-                    
                     chart = alt.Chart(monthly_summary).mark_bar(color="#3b82f6", size=30, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                         x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
                         y=alt.Y('Energia Gerada (kWh):Q', title='Total Gerado (kWh)'),
                         tooltip=[alt.Tooltip('Nome Mês:N', title='Mês'), alt.Tooltip('Energia Gerada (kWh):Q', title='Total', format='.2f')]
                     ).properties(height=400, title=f"Geração Mensal - {selected_year}")
                 else:
-                    # Se Mês específico, mostra gráfico DIÁRIO
                     chart = alt.Chart(filtered_df).mark_bar(color="#3b82f6", size=25, cornerRadiusTopLeft=4, cornerRadiusTopRight=4, stroke="#dcdcdc", strokeWidth=2).encode(
                         x=alt.X('Data:T', title='Data', axis=alt.Axis(format='%d/%m', labelAngle=-45, tickCount='day'), scale=alt.Scale(nice=False)),
                         y=alt.Y('Energia Gerada (kWh):Q', title='Energia Gerada (kWh)'),
@@ -437,38 +429,30 @@ else:
                 st.divider()
             
             with tab2:
-                # Este gráfico funciona bem tanto para mês quanto para ano
                 df_sorted = filtered_df.sort_values('Data').copy()
                 df_sorted['Acumulado'] = df_sorted['Energia Gerada (kWh)'].cumsum()
-                
                 area_chart = alt.Chart(df_sorted).mark_area(line={'color':'#10b981', 'strokeWidth': 3}, color=alt.Gradient(gradient='linear', stops=[alt.GradientStop(color='#10b981', offset=0), alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)], x1=1, x2=1, y1=1, y2=0), interpolate='monotone').encode(
                     x=alt.X('Data:T', title='Data'),
                     y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
                     tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'), alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')]
                 ).properties(height=400, title=f"Geração Acumulada - {periodo_selecionado}")
-                
                 st.altair_chart(area_chart, use_container_width=True)
                 st.divider()
             
             with tab3:
-                # A tabela também funciona bem para mês ou ano
                 display_df = filtered_df.copy()
                 display_df['Data'] = display_df['Data'].dt.strftime('%d/%m/%Y')
                 display_df['Energia Gerada (kWh)'] = display_df['Energia Gerada (kWh)'].apply(lambda x: format_number_br(x))
                 st.dataframe(display_df, use_container_width=True, hide_index=True)
-
                 if st.button("✏️ Editar Registros", use_container_width=True):
                     st.session_state.edit_mode = not st.session_state.edit_mode
-                
                 if st.session_state.edit_mode:
                     st.divider()
                     st.subheader("✏️ Editar Registros")
-                    selected_idx = st.selectbox("Selecione o registro", options=range(len(filtered_df)), format_func=lambda x: f"{filtered_df.iloc[x]['Data'].strftime('%d/%m/%Y')} - {format_number_br(filtered_df.iloc[x]['Energia Gerada (kWh)'])} kWh")
-                    
+                    selected_idx = st.selectbox("Selecione o registro", options=range(len(filtered_df)), format_func=lambda x: f"{filtered_df.iloc[x]['Data']} - {format_number_br(float(filtered_df.iloc[x]['Energia Gerada (kWh)'].replace('.', '').replace(',', '.')))} kWh")
                     c1, c2, c3 = st.columns(3)
-                    edit_date = c1.date_input("📅 Data", value=filtered_df.iloc[selected_idx]['Data'], format="DD/MM/YYYY")
-                    edit_energy = c2.number_input("⚡ Energia (kWh)", value=float(filtered_df.iloc[selected_idx]['Energia Gerada (kWh)']), min_value=0.0, step=0.1, format="%.2f")
-                    
+                    edit_date = c1.date_input("📅 Data", value=datetime.strptime(filtered_df.iloc[selected_idx]['Data'], '%d/%m/%Y'), format="DD/MM/YYYY")
+                    edit_energy = c2.number_input("⚡ Energia (kWh)", value=float(filtered_df.iloc[selected_idx]['Energia Gerada (kWh)'].replace('.', '').replace(',', '.')), min_value=0.0, step=0.1, format="%.2f")
                     c3.write("")
                     sc1, sc2 = c3.columns(2)
                     if sc1.button("💾 Salvar", use_container_width=True):
@@ -479,13 +463,10 @@ else:
                             st.success("✅ Excluído!"); st.session_state.edit_mode = False; time.sleep(1); st.rerun()
         
         year_df = df[df['Data'].dt.year == selected_year].copy()
-        
         if not year_df.empty and selected_month_num != 0:
             st.markdown(f"""<div class="subheader-container purple"><h2>📅 Resumo Anual de {selected_year}</h2></div>""", unsafe_allow_html=True)
-            
             monthly_summary = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
             monthly_summary['Nome Mês'] = monthly_summary['Data'].apply(lambda m: month_names[m][:3])
-            
             monthly_bars = alt.Chart(monthly_summary).mark_bar(color="#f59e0b", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
                 x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
                 y=alt.Y('Energia Gerada (kWh):Q', title='Total Mensal (kWh)'),
@@ -493,10 +474,63 @@ else:
             )
             media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
             linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(color='red', strokeWidth=2, strokeDash=[5, 5]).encode(y='media:Q', tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh'))
-            
             monthly_chart = (monthly_bars + linha_media_mensal).properties(height=400, title=f"Geração Mensal - {selected_year}")
-            
             st.altair_chart(monthly_chart, use_container_width=True)
+            st.divider()
+            
+            # --- HEATMAP ATUALIZADO ---
+            st.markdown("""<div class="subheader-container teal"><h3>🗓️ Heatmap de Geração Anual</h3></div>""", unsafe_allow_html=True)
+
+            start_date = datetime(selected_year, 1, 1)
+            end_date = datetime(selected_year, 12, 31)
+            all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
+            heatmap_df = pd.DataFrame({'date': all_dates})
+            year_data_heat = year_df.copy()
+            year_data_heat['date'] = pd.to_datetime(year_data_heat['Data'])
+            heatmap_df = pd.merge(heatmap_df, year_data_heat[['date', 'Energia Gerada (kWh)']], on='date', how='left').fillna(0)
+            heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
+            heatmap_df['month'] = heatmap_df['date'].dt.month
+            heatmap_df['week_num'] = heatmap_df['date'].dt.isocalendar().week
+            heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
+            heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 53
+            
+            # --- CORREÇÃO: Renomeia a coluna agregada para 'week_num' para garantir o alinhamento ---
+            month_centers = heatmap_df.groupby('month').agg(week_num=('week_num', 'median')).reset_index()
+            month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
+            
+            month_labels_chart = alt.Chart(month_centers).mark_text(
+                align='center', baseline='middle', font='Nunito', fontSize=11, color='#6b7280'
+            ).encode(
+                # --- CORREÇÃO: Usa o mesmo nome de campo 'week_num:O' ---
+                x=alt.X('week_num:O', title=None, axis=None),
+                text='month_name:N'
+            ).properties(height=20)
+            
+            heatmap_grid = alt.Chart(heatmap_df).mark_rect(cornerRadius=3, stroke='#ffffff', strokeWidth=1.5).encode(
+                x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
+                y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
+                    # --- ATUALIZAÇÃO: Mostra todos os dias da semana ---
+                    labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
+                    ticks=False, domain=False
+                )),
+                color=alt.condition(alt.datum['Energia Gerada (kWh)'] > 0, alt.Color('Energia Gerada (kWh):Q', scale=alt.Scale(scheme='greens'), legend=alt.Legend(title="kWh Gerado")), alt.value('#eeeeee')),
+                tooltip=[alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')]
+            ).properties(height=150)
+            
+            # --- CORREÇÃO: Usa vconcat para empilhar os gráficos corretamente ---
+            final_heatmap = alt.vconcat(
+                month_labels_chart,
+                heatmap_grid,
+                spacing=5
+            ).properties(
+                title=f"Atividade de Geração Solar em {selected_year}"
+            ).resolve_scale(
+                x='shared'
+            ).configure_view(
+                strokeWidth=0
+            )
+            
+            st.altair_chart(final_heatmap, use_container_width=True)
             st.divider()
 
 # --- Footer ---
