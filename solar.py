@@ -875,7 +875,7 @@ else:
                 ]
             ).properties(
                 width=650,
-                height=120,
+                height=400,
                 title=f"Contribuições de Energia Solar - {selected_year}"
             )
             
