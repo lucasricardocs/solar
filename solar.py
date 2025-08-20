@@ -4,12 +4,11 @@ import numpy as np
 import streamlit as st
 import gspread
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from google.oauth2.service_account import Credentials
 import warnings
 import altair as alt
 import locale
-import calplot
 import matplotlib.pyplot as plt
 
 # Ignora avisos futuros do pandas
@@ -475,7 +474,6 @@ else:
         selected_year = st.selectbox("📅 Ano", options=years, index=year_index)
         
     with col2:
-        # --- LÓGICA DO FILTRO DE MÊS MODIFICADA ---
         months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
         month_names = {
             1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 
@@ -483,16 +481,13 @@ else:
             9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
         }
         
-        # Adiciona a opção "Ano Inteiro" no início da lista de opções
         period_options = ["Ano Inteiro"] + months
         
-        # Define o índice padrão (pode ser o mês atual ou "Ano Inteiro")
         default_index = 0
         current_month = datetime.now().month
         if selected_year == datetime.now().year and current_month in period_options:
             default_index = period_options.index(current_month)
 
-        # O selectbox agora tem a opção de selecionar o ano inteiro
         selected_period = st.selectbox(
             "📊 Período", 
             options=period_options, 
@@ -504,7 +499,7 @@ else:
         total_year = df[df['Data'].dt.year == selected_year]['Energia Gerada (kWh)'].sum()
         st.metric(f"📈 Total Gerado em {selected_year}", f"{format_number_br(total_year)} kWh")
     
-    # --- LÓGICA DE EXIBIÇÃO MODIFICADA ---
+    # --- LÓGICA DE EXIBIÇÃO ---
 
     # CASO 1: USUÁRIO SELECIONOU "ANO INTEIRO"
     if selected_period == "Ano Inteiro":
@@ -542,17 +537,72 @@ else:
             st.altair_chart(monthly_chart, use_container_width=True)
             st.divider()
             
-            # Heatmap Anual
+            # Heatmap Anual com Matplotlib
             st.markdown("""<div class="subheader-container teal"><h3>🗓️ Heatmap de Geração Anual</h3></div>""", unsafe_allow_html=True)
-            events = pd.Series(year_df['Energia Gerada (kWh)'].values, index=year_df['Data'])
-            fig, ax = calplot.calplot(events, cmap='YlGn', suptitle=f"Atividade de Geração Solar em {selected_year}",
-                                      suptitle_kws={'fontsize': 18, 'fontweight': 'bold', 'color': '#1f2937'},
-                                      yearlabel_kws={'fontsize': 16, 'color': '#6b7280', 'fontweight': 'bold'},
-                                      monthlabel_kws={'fontsize': 10, 'color': '#6b7280'},
-                                      daylabel_kws={'fontsize': 8, 'color': '#6b7280'},
-                                      linewidth=1.5, edgecolor='white', fig_kws={'figsize': (12, 2.5)})
-            fig.patch.set_facecolor('none')
-            ax.set_facecolor('none')
+
+            year = selected_year
+            start_date = pd.to_datetime(f'{year}-01-01')
+            end_date = pd.to_datetime(f'{year}-12-31')
+            all_days = pd.date_range(start=start_date, end=end_date, freq='D')
+            heatmap_df = pd.DataFrame(index=all_days)
+            heatmap_df = heatmap_df.join(year_df.set_index('Data')[['Energia Gerada (kWh)']], how='left').fillna(0)
+            
+            data = heatmap_df['Energia Gerada (kWh)'].values
+            dates = heatmap_df.index
+
+            cmap = plt.cm.get_cmap('YlGn')
+            vmin = data.min()
+            vmax = data.max()
+
+            fig, ax = plt.subplots(figsize=(12, 2.5))
+            fig.patch.set_facecolor('#f8fafc')  # Cor de fundo igual ao do app
+            ax.set_facecolor('#f8fafc')
+
+            # Calcula a posição de cada dia (semana no eixo X, dia da semana no eixo Y)
+            day_of_week = dates.weekday
+            week_of_year = dates.isocalendar().week
+            
+            # Desenha um retângulo para cada dia
+            for i, day in enumerate(dates):
+                # O isocalendar() pode ter a semana 53 no início do ano, ajustamos para a semana 0
+                week_num = week_of_year[i]
+                if day.month == 1 and week_num >= 52:
+                    week_num = 0
+                
+                # O isocalendar() pode ter a semana 1 no final do ano, ajustamos para a semana 53
+                if day.month == 12 and week_num == 1:
+                    week_num = 53
+
+                # Normaliza a cor baseado no valor
+                color_value = (data[i] - vmin) / (vmax - vmin) if vmax > vmin else 0
+                rect = plt.Rectangle((week_num, day_of_week[i]), 1, 1, 
+                                     facecolor=cmap(color_value), 
+                                     edgecolor='white', linewidth=0.5)
+                ax.add_patch(rect)
+                
+                # Adiciona texto para valores altos
+                if data[i] > vmax * 0.7:  # Apenas em dias de alta geração para não poluir
+                    ax.text(week_num + 0.5, day_of_week[i] + 0.5, f'{data[i]:.0f}', 
+                            ha='center', va='center', fontsize=6, color='black')
+
+            # Labels dos meses
+            month_labels = [d.strftime('%b') for d in pd.date_range(start_date, end_date, freq='MS')]
+            month_weeks = [d.isocalendar().week for d in pd.date_range(start_date, end_date, freq='MS')]
+            
+            ax.set_xticks(month_weeks)
+            ax.set_xticklabels(month_labels)
+            ax.xaxis.tick_top()
+            ax.xaxis.set_label_position('top')
+
+            # Labels dos dias da semana
+            ax.set_yticks(np.arange(7) + 0.5)
+            ax.set_yticklabels(['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], fontsize=9)
+            ax.invert_yaxis() # Inverte o eixo Y para ter Segunda no topo
+
+            # Ajustes finais
+            ax.set_title(f'Atividade de Geração Solar em {year}', fontsize=16, fontweight='bold', color='#1f2937', pad=40)
+            ax.tick_params(axis='both', which='both', bottom=False, top=False, left=False, labelbottom=False)
+            
             st.pyplot(fig, use_container_width=True)
             st.divider()
             
@@ -577,17 +627,16 @@ else:
         ].copy()
         
         if not filtered_df.empty:
-            # --- Métricas do Mês ---
-            total = filtered_df['Energia Gerada (kWh)'].sum()
-            avg = filtered_df['Energia Gerada (kWh)'].mean()
-            best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
-            worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
-            
             st.markdown(f"""
             <div class="subheader-container orange">
                 <h2>📊 Análise de {month_names.get(selected_period, '')} de {selected_year}</h2>
             </div>
             """, unsafe_allow_html=True)
+            
+            total = filtered_df['Energia Gerada (kWh)'].sum()
+            avg = filtered_df['Energia Gerada (kWh)'].mean()
+            best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
+            worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
             
             col1, col2, col3, col4 = st.columns(4)
             with col1: st.metric("🔋 Total no Mês", f"{format_number_br(total)} kWh")
@@ -595,7 +644,6 @@ else:
             with col3: st.metric("⭐ Melhor Dia", f"{format_number_br(best['Energia Gerada (kWh)'])} kWh", delta=best['Data'].strftime('%d/%m'))
             with col4: st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh", delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
             
-            # --- Abas de Análise ---
             tab1, tab2, tab3 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📋 Dados"])
             
             with tab1:
