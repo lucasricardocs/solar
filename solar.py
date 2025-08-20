@@ -782,7 +782,7 @@ else:
                         ticks=False,
                         domain=False
                     ),
-                    scale=alt.Scale(padding=0.1)  # padding mínimo em Y
+                    scale=alt.Scale(padding=0.01)  # padding mínimo em Y
                 ),
                 color=alt.condition(
                     alt.datum['Energia Gerada (kWh)'] > 0,
