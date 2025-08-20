@@ -544,11 +544,11 @@ else:
                 # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO ---
                 bar_chart = alt.Chart(filtered_df).mark_bar(
                     color="green",
-                    cornerRadiusTopLeft=4,
-                    cornerRadiusTopRight=4,
-                    stroke="#dcdcdc",
+                    cornerRadiusTopLeft=3,
+                    cornerRadiusTopRight=3,
+                    stroke="white",
                     strokeWidth=2,
-                    size=25
+                    size=40
                 ).encode(
                     x=alt.X(
                         'Data:T', 
