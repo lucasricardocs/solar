@@ -765,7 +765,7 @@ else:
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=2,
-                stroke='#a9a9a9',
+                stroke='#d3d3d3',
                 strokeWidth=1
             ).encode(
                 x=alt.X(
@@ -801,7 +801,7 @@ else:
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
-            ).properties(height=300)
+            ).properties(height=250)
             
             # Rótulos dos meses acima do primeiro dia de cada mês
             month_starts = heatmap_df.groupby('month').agg(first_week=('week_num', 'min')).reset_index()
@@ -819,7 +819,7 @@ else:
             final_heatmap = alt.vconcat(
                 month_labels_chart,
                 heatmap_grid,
-                spacing=5
+                spacing=25
             ).properties(
                 title=f"Atividade de Geração Solar em {selected_year}"
             ).resolve_scale(
