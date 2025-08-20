@@ -8,10 +8,6 @@ from google.oauth2.service_account import Credentials
 import warnings
 import altair as alt
 import locale
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import r2_score, mean_absolute_error
-from sklearn.preprocessing import StandardScaler
 
 # Ignora avisos futuros do pandas
 warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=False.*')
@@ -24,7 +20,7 @@ except:
 
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'solardaily'
+WORKSHEET_NAME = 'Solardaily'
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -96,75 +92,6 @@ html, body, [class*="st-"] {
     font-weight: 400;
 }
 
-/* Cards de métricas */
-.metric-card {
-    background: var(--card-background);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    height: 100%;
-}
-
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.metric-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.metric-label {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.metric-change {
-    font-size: 0.75rem;
-    margin-top: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-}
-
-.metric-change.positive {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-}
-
-.metric-change.negative {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-/* Seções */
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 2rem 0 1rem 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin: 0;
-}
-
-.section-icon {
-    font-size: 1.5rem;
-}
-
 /* Formulário */
 .form-container {
     background: var(--card-background);
@@ -191,16 +118,6 @@ html, body, [class*="st-"] {
     box-shadow: var(--shadow-lg);
 }
 
-/* Charts container */
-.chart-container {
-    background: var(--card-background);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
-}
-
 /* Filtros */
 .filters-container {
     background: var(--card-background);
@@ -209,42 +126,6 @@ html, body, [class*="st-"] {
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
     margin-bottom: 2rem;
-}
-
-/* Alertas customizados */
-.custom-alert {
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid;
-    margin: 1rem 0;
-}
-
-.alert-success {
-    background-color: rgba(16, 185, 129, 0.1);
-    border-left-color: var(--success-color);
-    color: #047857;
-}
-
-.alert-info {
-    background-color: rgba(59, 130, 246, 0.1);
-    border-left-color: var(--secondary-color);
-    color: #1d4ed8;
-}
-
-.alert-warning {
-    background-color: rgba(245, 158, 11, 0.1);
-    border-left-color: var(--accent-color);
-    color: #92400e;
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    border-top: 1px solid var(--border-color);
-    margin-top: 3rem;
 }
 
 /* Esconder elementos padrão do Streamlit */
@@ -317,94 +198,30 @@ def append_data(date, energy):
         st.error(f"🚨 **Erro ao salvar**: {str(e)}")
         return False
 
-# --- FUNÇÃO DE PREVISÃO COM MACHINE LEARNING ---
-@st.cache_data(ttl=3600)
-def generate_smart_predictions(df, days_ahead):
-    df_ml = df.copy()
-    df_ml = df_ml.set_index('Data')
-    
-    # Feature Engineering
-    df_ml['day_of_year'] = df_ml.index.dayofyear
-    df_ml['month'] = df_ml.index.month
-    df_ml['day_of_week'] = df_ml.index.dayofweek
-    df_ml['quarter'] = df_ml.index.quarter
-    df_ml['is_weekend'] = (df_ml.index.dayofweek >= 5).astype(int)
-    
-    X = df_ml[['day_of_year', 'month', 'day_of_week', 'quarter', 'is_weekend']]
-    y = df_ml['Energia Gerada (kWh)']
-    
-    # Treinamento do Modelo
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    
-    # Métricas de Performance
-    preds = model.predict(X_test)
-    r2 = r2_score(y_test, preds)
-    mae = mean_absolute_error(y_test, preds)
-    mape = np.mean(np.abs((y_test - preds) / y_test)) * 100
-    quality = 'Excelente' if r2 > 0.8 else 'Bom' if r2 > 0.6 else 'Moderado'
-    
-    ml_metrics = {'model_name': 'Random Forest', 'r2': r2, 'mae': mae, 'mape': mape, 'quality': quality}
-
-    # Gerar Datas Futuras
-    last_date = df['Data'].max()
-    future_dates = pd.to_datetime([last_date + timedelta(days=i) for i in range(1, days_ahead + 1)])
-    future_df = pd.DataFrame(index=future_dates)
-    future_df['day_of_year'] = future_df.index.dayofyear
-    future_df['month'] = future_df.index.month
-    future_df['day_of_week'] = future_df.index.dayofweek
-    future_df['quarter'] = future_df.index.quarter
-    future_df['is_weekend'] = (future_df.index.dayofweek >= 5).astype(int)
-    
-    # Previsões
-    future_predictions = model.predict(future_df)
-    
-    # Criar DataFrame de resultado
-    predictions_df = pd.DataFrame({
-        'Data': future_dates,
-        'Previsao': np.maximum(0, future_predictions) # Evitar previsões negativas
-    })
-    
-    # Intervalo de Confiança Simulado
-    std_error = np.std([tree.predict(X_test) for tree in model.estimators_], axis=0)
-    confidence_margin = 1.96 * np.mean(std_error)
-    predictions_df['Limite_Inferior'] = np.maximum(0, predictions_df['Previsao'] - confidence_margin)
-    predictions_df['Limite_Superior'] = predictions_df['Previsao'] + confidence_margin
-    
-    return predictions_df, ml_metrics
-
 # --- Formulário de Cadastro ---
-st.markdown("""
-<div class="section-header">
-    <span class="section-icon">☀️</span>
-    <h2 class="section-title">Registro de Geração</h2>
-</div>
-<div class="form-container">
-""", unsafe_allow_html=True)
+st.header("☀️ Registro de Geração")
+with st.container(border=True):
+    with st.form("entry_form", clear_on_submit=True):
+        col1, col2, col3 = st.columns([2, 2, 1])
+        with col1:
+            input_date = st.date_input("📅 Data da Geração", value=datetime.today(), format="DD/MM/YYYY")
+        with col2:
+            input_energy_str = st.text_input("⚡ Energia Gerada (kWh)", placeholder="Ex: 25,75")
+        with col3:
+            st.write("")
+            st.write("")
+            submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
 
-with st.form("entry_form", clear_on_submit=True):
-    col1, col2, col3 = st.columns([2, 2, 1])
-    with col1:
-        input_date = st.date_input("📅 Data da Geração", value=datetime.today(), format="DD/MM/YYYY")
-    with col2:
-        input_energy_str = st.text_input("⚡ Energia Gerada (kWh)", placeholder="Ex: 25,75")
-    with col3:
-        st.write("")
-        st.write("")
-        submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
-
-    if submitted:
-        if input_energy_str:
-            try:
-                energy_value = float(input_energy_str.replace(',', '.'))
-                if append_data(input_date, energy_value):
-                    st.success("✅ Dados salvos com sucesso!")
-            except ValueError:
-                st.error("⚠️ Formato inválido! Digite um número.")
-        else:
-            st.warning("💡 Preencha o valor da energia.")
-st.markdown("</div>", unsafe_allow_html=True)
+        if submitted:
+            if input_energy_str:
+                try:
+                    energy_value = float(input_energy_str.replace(',', '.'))
+                    if append_data(input_date, energy_value):
+                        st.success("✅ Dados salvos com sucesso!")
+                except ValueError:
+                    st.error("⚠️ Formato inválido! Digite um número.")
+            else:
+                st.warning("💡 Preencha o valor da energia.")
 
 # --- Análise de Dados ---
 df = load_data()
@@ -413,23 +230,16 @@ if df.empty:
     st.info("📊 Nenhum dado encontrado. Comece registrando sua primeira geração.")
 else:
     # --- Filtros ---
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-icon">🔍</span>
-        <h2 class="section-title">Filtros de Análise</h2>
-    </div>
-    <div class="filters-container">
-    """, unsafe_allow_html=True)
-    
-    filter_col1, filter_col2 = st.columns(2)
-    with filter_col1:
-        years = sorted(df['Data'].dt.year.unique(), reverse=True)
-        selected_year = st.selectbox("📅 Ano", options=years)
-    with filter_col2:
-        months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
-        month_names = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
-        selected_month_num = st.selectbox("📊 Mês", options=months, format_func=lambda x: month_names.get(x, ''))
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.header("🔍 Filtros de Análise")
+    with st.container(border=True):
+        filter_col1, filter_col2 = st.columns(2)
+        with filter_col1:
+            years = sorted(df['Data'].dt.year.unique(), reverse=True)
+            selected_year = st.selectbox("📅 Ano", options=years)
+        with filter_col2:
+            months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
+            month_names = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
+            selected_month_num = st.selectbox("📊 Mês", options=months, format_func=lambda x: month_names.get(x, ''))
 
     filtered_df = df[(df['Data'].dt.year == selected_year) & (df['Data'].dt.month == selected_month_num)]
     
@@ -438,34 +248,35 @@ else:
         total = filtered_df['Energia Gerada (kWh)'].sum()
         avg = filtered_df['Energia Gerada (kWh)'].mean()
         best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
+        worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
         
         st.header(f"Análise de {month_names.get(selected_month_num, '')} de {selected_year}")
-        metric_col1, metric_col2, metric_col3 = st.columns(3)
+        metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
         with metric_col1:
             st.metric("Total no Mês", f"{total:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."))
         with metric_col2:
             st.metric("Média Diária", f"{avg:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."))
         with metric_col3:
             st.metric("Melhor Dia", f"{best['Energia Gerada (kWh)']:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."), delta=best['Data'].strftime('%d/%m'))
+        with metric_col4:
+            st.metric("Pior Dia", f"{worst['Energia Gerada (kWh)']:,.2f} kWh".replace(",", "X").replace(".", ",").replace("X", "."), delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
 
         # --- Gráficos do Mês ---
-        col1, col2 = st.columns(2)
-        with col1:
-            bar_chart = alt.Chart(filtered_df).mark_bar(
-                color="#3b82f6",
-                width=20
-            ).encode(
-                x=alt.X('Data:T', title='Dia'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
-                tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado')]
-            ).properties(title="Produção Diária").configure(background='transparent')
-            st.altair_chart(bar_chart, use_container_width=True)
-        with col2:
-            filtered_df['Acumulado'] = filtered_df['Energia Gerada (kWh)'].cumsum()
-            area_chart = alt.Chart(filtered_df).mark_area(line={'color':'#10b981'}, color=alt.Gradient(gradient='linear', stops=[alt.GradientStop(color='#10b981', offset=0), alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)])).encode(
-                x=alt.X('Data:T', title='Dia'), y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
-                tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Acumulado:Q', title='Acumulado')]
-            ).properties(title="Geração Acumulada").configure(background='transparent')
-            st.altair_chart(area_chart, use_container_width=True)
+        st.subheader("Produção Diária vs. Acumulada")
+        bar_chart = alt.Chart(filtered_df).mark_bar(
+            color="#3b82f6"
+        ).encode(
+            x=alt.X('Data:T', title='Dia'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
+            tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado')]
+        ).properties(height=300).configure(background='transparent')
+        st.altair_chart(bar_chart, use_container_width=True)
+
+        filtered_df['Acumulado'] = filtered_df['Energia Gerada (kWh)'].cumsum()
+        area_chart = alt.Chart(filtered_df).mark_area(line={'color':'#10b981'}, color=alt.Gradient(gradient='linear', stops=[alt.GradientStop(color='#10b981', offset=0), alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)])).encode(
+            x=alt.X('Data:T', title='Dia'), y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
+            tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Acumulado:Q', title='Acumulado')]
+        ).properties(height=300).configure(background='transparent')
+        st.altair_chart(area_chart, use_container_width=True)
 
     # --- Análise Anual ---
     year_df_filtered = df[df['Data'].dt.year == selected_year].copy()
@@ -478,110 +289,56 @@ else:
         monthly_summary.rename(columns={'Data': 'Mês'}, inplace=True)
         monthly_summary['Nome Mês'] = monthly_summary['Mês'].apply(lambda m: month_names[m][:3])
         monthly_chart = alt.Chart(monthly_summary).mark_bar(
-            color="#f59e0b",
-            width=30
+            color="#f59e0b"
         ).encode(
             x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
             y=alt.Y('Energia Gerada (kWh):Q', title='Total (kWh)'),
             tooltip=[alt.Tooltip('Nome Mês', title='Mês'), alt.Tooltip('Energia Gerada (kWh):Q', title='Total Gerado')]
-        ).properties(title="Produção Mensal Total").configure(background='transparent')
+        ).properties(height=300).configure(background='transparent')
         st.altair_chart(monthly_chart, use_container_width=True)
         
         # --- HEATMAP ESTILO GITHUB ---
-        st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+        st.subheader(f"Calendário de Geração - {selected_year}")
         
-        # Filtrar dados apenas para o ano de 2025 para o heatmap
-        heatmap_data_2025 = df[df['Data'].dt.year == 2025].copy()
+        all_days_of_year = pd.date_range(start=f'{selected_year}-01-01', end=f'{selected_year}-12-31', freq='D')
+        all_days_df = pd.DataFrame({'Data': all_days_of_year})
         
-        # Criar um DataFrame com todos os dias do ano de 2025
-        all_days_of_2025 = pd.date_range(start='2025-01-01', end='2025-12-31', freq='D')
-        all_days_df = pd.DataFrame({'Data': all_days_of_2025})
-        
-        # Juntar com os dados existentes de 2025
-        heatmap_df = pd.merge(all_days_df, heatmap_data_2025, on='Data', how='left')
+        heatmap_df = pd.merge(all_days_df, year_df_filtered, on='Data', how='left')
         
         heatmap_df['day_of_week_num'] = heatmap_df['Data'].dt.dayofweek
         heatmap_df['week_of_year'] = heatmap_df['Data'].dt.isocalendar().week
+        heatmap_df['month_abbr'] = heatmap_df['Data'].dt.month.apply(lambda m: month_names.get(m, '')[:3])
         
+        # Lógica para exibir os meses no topo
+        month_labels = heatmap_df.groupby('month_abbr')['week_of_year'].min().reset_index()
+        # Ordenar os meses corretamente
+        month_order = [m[:3] for m in month_names.values()]
+        month_labels['month_cat'] = pd.Categorical(month_labels['month_abbr'], categories=month_order, ordered=True)
+        month_labels = month_labels.sort_values('month_cat')
+        
+        month_labels_dict = dict(zip(month_labels['week_of_year'], month_labels['month_abbr']))
+        label_expr = f"({month_labels_dict})[datum.value]"
+
         heatmap = alt.Chart(heatmap_df).mark_rect(
-            width=15, height=15, cornerRadius=3
+            width=15, height=15, cornerRadius=3, stroke='white', strokeWidth=2
         ).encode(
-            x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labels=False, ticks=False, domain=False)),
-            y=alt.Y('day_of_week_num:O', title='Dia da Semana', sort=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]")),
+            x=alt.X('week_of_year:O', title=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr=label_expr, labelAlign='left', labelOffset=10)),
+            y=alt.Y('day_of_week_num:O', title=None, sort=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]")),
             color=alt.condition(
                 'isValid(datum["Energia Gerada (kWh)"])',
                 alt.Color('Energia Gerada (kWh):Q', 
                           legend=alt.Legend(title="kWh", orient='bottom'), 
-                          scale=alt.Scale(scheme='greens', domain=[8, 25], clamp=True)),
-                alt.value('#f0f0f0') # Cor para dias sem dados
+                          scale=alt.Scale(scheme='greens')),
+                alt.value('#d3d3d3') # Cor para dias sem dados
             ),
             tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
         ).properties(
-            title="Calendário de Geração - 2025"
+            height=150
         ).configure(
             background='transparent'
         ).configure_view(
             strokeWidth=0
         )
         st.altair_chart(heatmap, use_container_width=True)
-
-
-        # --- SISTEMA DE PREVISÕES ---
-        if len(year_df_filtered) >= 30:
-            st.markdown("""
-            <div class="section-header">
-                <span class="section-icon">🔮</span>
-                <h2 class="section-title">Previsões Inteligentes</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            pred_col1, pred_col2 = st.columns([2, 1])
-            with pred_col2:
-                days_ahead = st.slider("📅 Dias para prever", 7, 60, 30)
-            
-            with st.spinner("📊 Analisando padrões e gerando previsões..."):
-                predictions_df, ml_metrics = generate_smart_predictions(year_df_filtered, days_ahead)
-
-            with pred_col2:
-                st.markdown(f"""
-                **🤖 Modelo:** {ml_metrics['model_name']}
-                **📊 Performance:**
-                - Precisão (R²): {ml_metrics['r2']:.1%}
-                - Erro Médio: {ml_metrics['mae']:.2f} kWh
-                """)
-
-            with pred_col1:
-                if not predictions_df.empty:
-                    historical_df = year_df_filtered.tail(30).copy()
-                    historical_df['Tipo'] = 'Histórico'
-                    historical_df['Previsao'] = historical_df['Energia Gerada (kWh)']
-                    historical_df['Limite_Inferior'] = historical_df['Energia Gerada (kWh)']
-                    historical_df['Limite_Superior'] = historical_df['Energia Gerada (kWh)']
-                    
-                    predictions_df['Tipo'] = 'Previsão'
-                    
-                    combined_df = pd.concat([historical_df, predictions_df], ignore_index=True)
-                    
-                    base = alt.Chart(combined_df)
-                    
-                    historical_line = base.transform_filter(alt.datum.Tipo == 'Histórico').mark_line(color='#3b82f6', strokeWidth=3).encode(
-                        x=alt.X('Data:T', title='Data'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
-                        tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Real')]
-                    )
-                    
-                    prediction_line = base.transform_filter(alt.datum.Tipo == 'Previsão').mark_line(color='#f59e0b', strokeWidth=3, strokeDash=[8, 4]).encode(
-                        x='Data:T', y='Previsao:Q',
-                        tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Previsao:Q', title='Previsão')]
-                    )
-                    
-                    confidence_band = base.transform_filter(alt.datum.Tipo == 'Previsão').mark_area(opacity=0.3, color='#f59e0b').encode(
-                        x='Data:T', y='Limite_Inferior:Q', y2='Limite_Superior:Q'
-                    )
-                    
-                    final_chart = (confidence_band + historical_line + prediction_line).properties(
-                        title=f"Previsão de Geração - Próximos {days_ahead} dias"
-                    ).configure(background='transparent').interactive()
-                    
-                    st.altair_chart(final_chart, use_container_width=True)
 
 st.markdown("</div>", unsafe_allow_html=True) # Fecha o main-container
