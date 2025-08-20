@@ -625,22 +625,12 @@ else:
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
                     ]
                 )
-                ).configure_view(
-                    stroke=None,
-                    fill='transparent'
-                ).configure(
-                    background='transparent'
-                ).configure_axis(
-                    labelFont='Nunito',
-                    titleFont='Nunito'
-                )
                 
                 # Linha da média
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
                 linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
                     color='red',
                     strokeWidth=2,
-                    strokeDash=[5, 5]
                 ).encode(
                     y=alt.Y('media:Q'),
                     tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
