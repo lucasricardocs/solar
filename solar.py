@@ -738,33 +738,36 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
+            # Datas
             start_date = datetime(selected_year, 1, 1)
             end_date = datetime(selected_year, 12, 31)
             all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
             heatmap_df = pd.DataFrame({'date': all_dates})
             
+            # Mesclar com dados reais
             year_data_heat = year_df.copy()
             year_data_heat['date'] = pd.to_datetime(year_data_heat['Data'])
             heatmap_df = pd.merge(
-                heatmap_df, 
-                year_data_heat[['date', 'Energia Gerada (kWh)']], 
-                on='date', 
+                heatmap_df,
+                year_data_heat[['date', 'Energia Gerada (kWh)']],
+                on='date',
                 how='left'
             ).fillna(0)
             
+            # Informações auxiliares
             heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
             heatmap_df['month'] = heatmap_df['date'].dt.month
             heatmap_df['week_num'] = heatmap_df['date'].dt.isocalendar().week
             heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
             heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 54
             
-            # --- PARTE 1: Gráfico dos quadradinhos ---
+            # --- GRID DO HEATMAP ---
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=3,               # <-- radius dos quadradinhos
-                stroke='#d3d3d3',            # <-- cor da borda
-                strokeWidth=2                 # <-- largura da borda
+                cornerRadius=3,        # canto arredondado
+                stroke='#d3d3d3',     # cor da borda
+                strokeWidth=1.5        # largura da borda
             ).encode(
-                x=alt.X('week_num:O', title=None, axis=None), 
+                x=alt.X('week_num:O', title=None, axis=None),
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
                     labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]"
                 )),
@@ -778,15 +781,17 @@ else:
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
             ).properties(
-                width=900,  # <-- largura total
-                height=150  # <-- altura total
+                width=900,  # largura total
+                height=150,
+                padding={"top": 10, "bottom": 10, "left": 10, "right": 10}  # padding interno
             ).configure_view(
                 strokeWidth=0
             )
             
-            # --- PARTE 2: Rótulos dos meses acima do primeiro dia do mês ---
+            # --- RÓTULOS DOS MESES ---
+            month_names = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
             month_starts = heatmap_df.groupby('month').first().reset_index()
-            month_starts['month_name'] = month_starts['month'].apply(lambda m: month_names[m][:3])
+            month_starts['month_name'] = month_starts['month'].apply(lambda m: month_names[m-1])
             
             month_labels_chart = alt.Chart(month_starts).mark_text(
                 align='center',
@@ -796,7 +801,7 @@ else:
                 color='#6b7280'
             ).encode(
                 x=alt.X('week_num:O', title=None, axis=None),
-                y=alt.value(-10),  # <-- posicionamento acima dos boxes
+                y=alt.value(-10),  # acima do grid
                 text='month_name:N'
             ).properties(height=20)
             
@@ -804,10 +809,10 @@ else:
             final_heatmap = alt.vconcat(
                 month_labels_chart,
                 heatmap_grid,
-                spacing=5  # <-- espaçamento vertical entre rótulos e grid
+                spacing=5  # espaço entre rótulos e grid
             )
             
-            st.altair_chart(final_heatmap, use_container_width=True) 
+            st.altair_chart(final_heatmap, use_container_width=True)
             st.divider()
 
             # --- Estatísticas do Ano ---
