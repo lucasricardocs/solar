@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# --- Estatísticas Anuais ---# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -492,21 +492,43 @@ else:
                     cornerRadiusTopRight=4,
                     size=30  # LARGURA DAS BARRAS - altere este valor (10-50)
                 ).encode(
-                    x=alt.X('Data:T', title='Data', axis=alt.Axis(format='%d/%m', labelAngle=-45)),
+                    x=alt.X(
+                        'Data:T', 
+                        title='Data', 
+                        axis=alt.Axis(
+                            format='%d/%m', 
+                            labelAngle=-45,
+                            tickCount='day'  # Uma marca por dia
+                        ),
+                        scale=alt.Scale(nice=False)
+                    ),
                     y=alt.Y('Energia Gerada (kWh):Q', title='Energia Gerada (kWh)'),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
                     ]
-                ).properties(
-                    width=800,  # LARGURA DO GRÁFICO - altere este valor
+                )
+                
+                # Linha da média
+                media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
+                linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
+                    color='red',
+                    strokeWidth=2,
+                    strokeDash=[5, 5]
+                ).encode(
+                    y=alt.Y('media:Q'),
+                    tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
+                )
+                
+                # Combinar gráfico
+                final_chart = (bar_chart + linha_media).properties(
                     height=400,
                     title=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}"
                 ).resolve_scale(
                     x='independent'
                 )
                 
-                st.altair_chart(bar_chart, use_container_width=True)
+                st.altair_chart(final_chart, use_container_width=True)
             
             with tab2:
                 # Gráfico acumulado
@@ -623,7 +645,8 @@ else:
                 lambda m: month_names[m][:3]
             )
             
-            monthly_chart = alt.Chart(monthly_summary).mark_bar(
+            # Gráfico de barras mensais
+            monthly_bars = alt.Chart(monthly_summary).mark_bar(
                 color="#f59e0b",
                 cornerRadiusTopLeft=4,
                 cornerRadiusTopRight=4,
@@ -636,8 +659,21 @@ else:
                     alt.Tooltip('Nome Mês:N', title='Mês'), 
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Total', format='.2f')
                 ]
-            ).properties(
-                width=800,  # LARGURA DO GRÁFICO MENSAL - altere este valor
+            )
+            
+            # Linha da média mensal
+            media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
+            linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
+                color='red',
+                strokeWidth=2,
+                strokeDash=[5, 5]
+            ).encode(
+                y=alt.Y('media:Q'),
+                tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
+            )
+            
+            # Combinar gráfico mensal
+            monthly_chart = (monthly_bars + linha_media_mensal).properties(
                 height=400,
                 title=f"Geração Mensal - {selected_year}"
             ).resolve_scale(
@@ -646,7 +682,74 @@ else:
             
             st.altair_chart(monthly_chart, use_container_width=True)
             
-            # --- Estatísticas Anuais ---
+            # --- Heatmap estilo GitHub ---
+            st.subheader(f"🗓️ Heatmap de Geração - {selected_year}")
+            
+            # Preparar dados para heatmap
+            start_date = datetime(selected_year, 1, 1)
+            end_date = datetime(selected_year, 12, 31)
+            all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
+            
+            # Criar DataFrame base
+            heatmap_df = pd.DataFrame({'date': all_dates})
+            heatmap_df['date_str'] = heatmap_df['date'].dt.strftime('%Y-%m-%d')
+            
+            # Preparar dados existentes
+            year_data_heat = year_df.copy()
+            year_data_heat['date_str'] = year_data_heat['Data'].dt.strftime('%Y-%m-%d')
+            year_data_heat = year_data_heat.groupby('date_str')['Energia Gerada (kWh)'].sum().reset_index()
+            
+            # Merge dos dados
+            heatmap_df = pd.merge(heatmap_df, year_data_heat, on='date_str', how='left')
+            heatmap_df['Energia Gerada (kWh)'] = heatmap_df['Energia Gerada (kWh)'].fillna(0)
+            
+            # Adicionar informações de calendário
+            heatmap_df['week'] = heatmap_df['date'].dt.isocalendar().week
+            heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
+            heatmap_df['month'] = heatmap_df['date'].dt.month
+            
+            # Ajustar semanas
+            min_week = heatmap_df['week'].min()
+            heatmap_df['week_adj'] = heatmap_df['week'] - min_week
+            
+            # Criar heatmap
+            heatmap = alt.Chart(heatmap_df).mark_rect(
+                stroke='#d3d3d3',
+                strokeWidth=1
+            ).encode(
+                x=alt.X(
+                    'week_adj:O',
+                    title=None,
+                    axis=alt.Axis(labels=False, ticks=False, domain=False)
+                ),
+                y=alt.Y(
+                    'day_of_week:O',
+                    title=None,
+                    axis=alt.Axis(
+                        labels=['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                        ticks=False,
+                        domain=False
+                    )
+                ),
+                color=alt.Color(
+                    'Energia Gerada (kWh):Q',
+                    title='kWh',
+                    scale=alt.Scale(
+                        scheme='greens',
+                        range=['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127']
+                    )
+                ),
+                tooltip=[
+                    alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
+                    alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
+                ]
+            ).properties(
+                width=650,
+                height=120,
+                title=f"Contribuições de Energia Solar - {selected_year}"
+            )
+            
+            st.altair_chart(heatmap, use_container_width=True)
             st.subheader("📈 Estatísticas do Ano")
             
             year_total = year_df['Energia Gerada (kWh)'].sum()
