@@ -726,7 +726,7 @@ else:
                     'day_of_week:O',
                     title=None,
                     axis=alt.Axis(
-                        labels=['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                        labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                         ticks=False,
                         domain=False
                     )
