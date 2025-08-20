@@ -783,7 +783,7 @@ else:
             month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
 
             month_labels = alt.Chart(month_centers).mark_text(
-                align='top', baseline='bottom', dy=-10, font='Nunito', fontSize=11, color='#6b7280'
+                align='center', baseline='bottom', dy=2, font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('median_week:O', title=None, axis=None),
                 text='month_name:N'
