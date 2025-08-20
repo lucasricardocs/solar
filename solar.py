@@ -9,8 +9,6 @@ from google.oauth2.service_account import Credentials
 import warnings
 import altair as alt
 import locale
-
-# --- NOVAS IMPORTAÇÕES PARA O CALPLOT ---
 import calplot
 import matplotlib.pyplot as plt
 
