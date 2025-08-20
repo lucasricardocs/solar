@@ -136,6 +136,7 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     animation: shadowPulse 2s infinite alternate;
+    height=150px;
 }
 
 @keyframes shadowPulse {
