@@ -761,7 +761,7 @@ else:
             ).encode(
                 x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
-                    labelExpr="['Seg', '', 'Qua', '', 'Sex', '', ''][datum.value]", # Exibe dias alternados
+                    labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'][datum.value]", # Exibe dias alternados
                     ticks=False, domain=False
                 )),
                 # 3. Cor condicional para dias vazios (cinza) e com dados (verde)
@@ -783,7 +783,7 @@ else:
             month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
 
             month_labels = alt.Chart(month_centers).mark_text(
-                align='center', baseline='bottom', dy=-10, font='Nunito', fontSize=11, color='#6b7280'
+                align='top', baseline='bottom', dy=-10, font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('median_week:O', title=None, axis=None),
                 text='month_name:N'
