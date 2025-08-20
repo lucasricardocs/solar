@@ -731,110 +731,110 @@ else:
             st.divider()
             
             # --- HEATMAP ATUALIZADO E CORRIGIDO ---
-st.markdown("""
-<div class="subheader-container teal">
-    <h3>🗓️ Heatmap de Geração Anual</h3>
-</div>
-""", unsafe_allow_html=True)
-
-start_date = datetime(selected_year, 1, 1)
-end_date = datetime(selected_year, 12, 31)
-all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
-heatmap_df = pd.DataFrame({'date': all_dates})
-
-year_data_heat = year_df.copy()
-year_data_heat['date'] = pd.to_datetime(year_data_heat['Data'])
-heatmap_df = pd.merge(heatmap_df, year_data_heat[['date', 'Energia Gerada (kWh)']], on='date', how='left').fillna(0)
-
-heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
-heatmap_df['month'] = heatmap_df['date'].dt.month
-
-# Correção da numeração de semanas - método mais robusto
-heatmap_df['week_of_year'] = heatmap_df['date'].dt.isocalendar().week
-heatmap_df['year_of_week'] = heatmap_df['date'].dt.isocalendar().year
-
-# Ajuste para semanas que pertencem ao ano anterior ou seguinte
-heatmap_df.loc[heatmap_df['month'] == 1, 'week_adjusted'] = heatmap_df['week_of_year']
-heatmap_df.loc[heatmap_df['month'] == 12, 'week_adjusted'] = heatmap_df['week_of_year']
-
-# Para garantir que todas as semanas tenham valores únicos
-min_week = heatmap_df['week_adjusted'].min()
-max_week = heatmap_df['week_adjusted'].max()
-week_range = list(range(min_week, max_week + 1))
-
-# Garantir que temos todos os dias da semana representados
-days_of_week = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-
-# Gráfico da grade de dias (parte de baixo)
-heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-    cornerRadius=3,
-    stroke='#ffffff',
-    strokeWidth=1.5
-).encode(
-    x=alt.X('week_adjusted:O', title=None, 
-            axis=alt.Axis(labels=False, ticks=False, domain=False),
-            scale=alt.Scale(domain=week_range)),
-    y=alt.Y('day_of_week:O', title=None, 
-            axis=alt.Axis(
-                values=list(range(7)),
-                labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
-                ticks=False, 
-                domain=False,
-                labelColor='#6b7280',
-                labelFontSize=11
-            ),
-            scale=alt.Scale(domain=list(range(7)))),
-    color=alt.condition(
-        alt.datum['Energia Gerada (kWh)'] > 0,
-        alt.Color('Energia Gerada (kWh):Q',
-                  scale=alt.Scale(scheme='greens', reverse=False),
-                  legend=alt.Legend(title="kWh Gerado")),
-        alt.value('#f8f9fa')
-    ),
-    tooltip=[
-        alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
-        alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
-    ]
-).properties(
-    width=800,  # Largura fixa para melhor controle
-    height=150  # Altura da grade
-)
-
-# Gráfico dos rótulos dos meses (parte de cima)
-month_centers = heatmap_df.groupby('month').agg(
-    median_week=('week_adjusted', 'median')
-).reset_index()
-month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
-
-month_labels_chart = alt.Chart(month_centers).mark_text(
-    align='center', 
-    baseline='middle', 
-    font='Nunito', 
-    fontSize=11, 
-    color='#6b7280'
-).encode(
-    x=alt.X('median_week:O', title=None, axis=None),
-    text='month_name:N'
-).properties(height=20)  # Altura da área dos rótulos
-
-# Combinação vertical dos gráficos de rótulos e grade
-final_heatmap = alt.vconcat(
-    month_labels_chart,
-    heatmap_grid,
-    spacing=1  # Espaçamento reduzido entre os componentes
-).properties(
-    title=f"Atividade de Geração Solar em {selected_year}"
-).resolve_scale(
-    x='shared'
-).configure_view(
-    strokeWidth=0
-).configure_title(
-    fontSize=16,
-    font='Nunito',
-    color='#1f2937'
-)
-
-st.altair_chart(final_heatmap, use_container_width=True)
+            st.markdown("""
+            <div class="subheader-container teal">
+                <h3>🗓️ Heatmap de Geração Anual</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            start_date = datetime(selected_year, 1, 1)
+            end_date = datetime(selected_year, 12, 31)
+            all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
+            heatmap_df = pd.DataFrame({'date': all_dates})
+            
+            year_data_heat = year_df.copy()
+            year_data_heat['date'] = pd.to_datetime(year_data_heat['Data'])
+            heatmap_df = pd.merge(heatmap_df, year_data_heat[['date', 'Energia Gerada (kWh)']], on='date', how='left').fillna(0)
+            
+            heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
+            heatmap_df['month'] = heatmap_df['date'].dt.month
+            
+            # Correção da numeração de semanas - método mais robusto
+            heatmap_df['week_of_year'] = heatmap_df['date'].dt.isocalendar().week
+            heatmap_df['year_of_week'] = heatmap_df['date'].dt.isocalendar().year
+            
+            # Ajuste para semanas que pertencem ao ano anterior ou seguinte
+            heatmap_df.loc[heatmap_df['month'] == 1, 'week_adjusted'] = heatmap_df['week_of_year']
+            heatmap_df.loc[heatmap_df['month'] == 12, 'week_adjusted'] = heatmap_df['week_of_year']
+            
+            # Para garantir que todas as semanas tenham valores únicos
+            min_week = heatmap_df['week_adjusted'].min()
+            max_week = heatmap_df['week_adjusted'].max()
+            week_range = list(range(min_week, max_week + 1))
+            
+            # Garantir que temos todos os dias da semana representados
+            days_of_week = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+            
+            # Gráfico da grade de dias (parte de baixo)
+            heatmap_grid = alt.Chart(heatmap_df).mark_rect(
+                cornerRadius=3,
+                stroke='#ffffff',
+                strokeWidth=1.5
+            ).encode(
+                x=alt.X('week_adjusted:O', title=None, 
+                        axis=alt.Axis(labels=False, ticks=False, domain=False),
+                        scale=alt.Scale(domain=week_range)),
+                y=alt.Y('day_of_week:O', title=None, 
+                        axis=alt.Axis(
+                            values=list(range(7)),
+                            labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
+                            ticks=False, 
+                            domain=False,
+                            labelColor='#6b7280',
+                            labelFontSize=11
+                        ),
+                        scale=alt.Scale(domain=list(range(7)))),
+                color=alt.condition(
+                    alt.datum['Energia Gerada (kWh)'] > 0,
+                    alt.Color('Energia Gerada (kWh):Q',
+                              scale=alt.Scale(scheme='greens', reverse=False),
+                              legend=alt.Legend(title="kWh Gerado")),
+                    alt.value('#f8f9fa')
+                ),
+                tooltip=[
+                    alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
+                    alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
+                ]
+            ).properties(
+                width=800,  # Largura fixa para melhor controle
+                height=150  # Altura da grade
+            )
+            
+            # Gráfico dos rótulos dos meses (parte de cima)
+            month_centers = heatmap_df.groupby('month').agg(
+                median_week=('week_adjusted', 'median')
+            ).reset_index()
+            month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
+            
+            month_labels_chart = alt.Chart(month_centers).mark_text(
+                align='center', 
+                baseline='middle', 
+                font='Nunito', 
+                fontSize=11, 
+                color='#6b7280'
+            ).encode(
+                x=alt.X('median_week:O', title=None, axis=None),
+                text='month_name:N'
+            ).properties(height=20)  # Altura da área dos rótulos
+            
+            # Combinação vertical dos gráficos de rótulos e grade
+            final_heatmap = alt.vconcat(
+                month_labels_chart,
+                heatmap_grid,
+                spacing=1  # Espaçamento reduzido entre os componentes
+            ).properties(
+                title=f"Atividade de Geração Solar em {selected_year}"
+            ).resolve_scale(
+                x='shared'
+            ).configure_view(
+                strokeWidth=0
+            ).configure_title(
+                fontSize=16,
+                font='Nunito',
+                color='#1f2937'
+            )
+            
+            st.altair_chart(final_heatmap, use_container_width=True)
             st.divider()
 
             # --- Estatísticas do Ano ---
