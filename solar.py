@@ -788,7 +788,7 @@ else:
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color(
                         'Energia Gerada (kWh):Q',
-                        scale=alt.Scale(scheme='spectral'),
+                        scale=alt.Scale(scheme='spectral'), domain=[10, 20],
                         legend=alt.Legend(title="kWh Gerado")
                     ),
                     alt.value('#eeeeee')
