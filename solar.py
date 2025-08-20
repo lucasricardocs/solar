@@ -195,12 +195,11 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     margin: 1rem 0;
 }
 
-.vega-embed {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
+./* Fundo transparente para todos os gráficos */
+        .stApp [data-testid="stVegaLiteChart"] > div,
+        .vega-embed.has-actions {
+            background-color: transparent !important;
+        }
 }
 
 /* Cards */
