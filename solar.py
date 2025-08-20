@@ -541,10 +541,14 @@ else:
             tab1, tab2, tab3 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📋 Dados"])
             
             with tab1:
+                # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO ---
                 bar_chart = alt.Chart(filtered_df).mark_bar(
                     color="#3b82f6",
                     cornerRadiusTopLeft=4,
-                    cornerRadiusTopRight=4
+                    cornerRadiusTopRight=4,
+                    stroke="#dcdcdc",       # <-- Borda adicionada
+                    strokeWidth=2,         # <-- Espessura da borda adicionada
+                    size=25                # <-- LARGURA DA BARRA (ajuste este valor como desejar)
                 ).encode(
                     x=alt.X(
                         'Data:T', 
@@ -733,27 +737,22 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # 1. Garante o ano completo de 01/Jan a 31/Dez
             start_date = datetime(selected_year, 1, 1)
             end_date = datetime(selected_year, 12, 31)
             all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
             heatmap_df = pd.DataFrame({'date': all_dates})
 
-            # Merge com dados existentes
             year_data_heat = year_df.copy()
             year_data_heat['date'] = pd.to_datetime(year_data_heat['Data'])
             heatmap_df = pd.merge(heatmap_df, year_data_heat[['date', 'Energia Gerada (kWh)']], on='date', how='left').fillna(0)
 
-            # Cálculos de calendário
-            heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek  # Seg=0, Dom=6
+            heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
             heatmap_df['month'] = heatmap_df['date'].dt.month
             
-            # Lógica robusta para calcular a semana do ano para o plot
             heatmap_df['week_num'] = heatmap_df['date'].dt.isocalendar().week
             heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
             heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 53
             
-            # 2. Cria os quadrados do heatmap
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
                 stroke='#ffffff',
@@ -761,16 +760,15 @@ else:
             ).encode(
                 x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
-                    labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'][datum.value]", # Exibe dias alternados
+                    labelExpr="['Seg', '', 'Qua', '', 'Sex', '', ''][datum.value]",
                     ticks=False, domain=False
                 )),
-                # 3. Cor condicional para dias vazios (cinza) e com dados (verde)
                 color=alt.condition(
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color('Energia Gerada (kWh):Q',
                               scale=alt.Scale(scheme='greens'),
                               legend=alt.Legend(title="kWh Gerado")),
-                    alt.value('#eeeeee')  # Cinza claro para dias sem geração
+                    alt.value('#eeeeee')
                 ),
                 tooltip=[
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
@@ -778,18 +776,16 @@ else:
                 ]
             )
 
-            # 4. Cria os rótulos dos meses
             month_centers = heatmap_df.groupby('month').agg(median_week=('week_num', 'median')).reset_index()
             month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
 
             month_labels = alt.Chart(month_centers).mark_text(
-                align='center', baseline='bottom', dy=2, font='Nunito', fontSize=11, color='#6b7280'
+                align='center', baseline='bottom', dy=-10, font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('median_week:O', title=None, axis=None),
                 text='month_name:N'
             )
 
-            # 5. Combina os gráficos e define as propriedades
             final_heatmap = (heatmap_grid + month_labels).properties(
                 height=170,
                 title=f"Atividade de Geração Solar em {selected_year}"
