@@ -77,21 +77,41 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
     max-width: 1200px;
 }
 
-/* Header */
+/* Header com gradiente azul claro para #dcdcdc */
 .header-section {
-    background: linear-gradient(135deg, var(--primary-color), #374151);
-    color: white;
+    background: linear-gradient(135deg, #e6f3ff, #dcdcdc);
+    color: #1f2937;
     padding: 2rem;
     border-radius: 12px;
+    border: 1px solid #d3d3d3;
     margin-bottom: 2rem;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.solar-icon {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.header-text {
+    text-align: left;
 }
 
 .header-title {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    background: linear-gradient(135deg, #1f2937, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -99,8 +119,86 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
 
 .header-subtitle {
     font-size: 1.1rem;
-    opacity: 0.9;
+    opacity: 0.8;
     font-weight: 400;
+    color: #1f2937;
+}
+
+/* Padrão para containers de subheaders */
+.subheader-container {
+    margin: 25px 0;
+    padding: 20px 25px;
+    background: #ffffff;
+    border-radius: 8px;
+    border-left: 5px solid;
+    border: 1px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    animation: shadowPulse 2s infinite alternate;
+}
+
+@keyframes shadowPulse {
+    0% {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    100% {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+}
+
+.subheader-container:hover {
+    transform: translateX(5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Diferentes cores para as bordas esquerdas dos subheaders */
+.subheader-container.blue {
+    border-left-color: #3498db;
+}
+
+.subheader-container.green {
+    border-left-color: #2ecc71;
+}
+
+.subheader-container.orange {
+    border-left-color: #f39c12;
+}
+
+.subheader-container.purple {
+    border-left-color: #9b59b6;
+}
+
+.subheader-container.red {
+    border-left-color: #e74c3c;
+}
+
+.subheader-container.teal {
+    border-left-color: #1abc9c;
+}
+
+.subheader-container.pink {
+    border-left-color: #e91e63;
+}
+
+.subheader-container.indigo {
+    border-left-color: #3f51b5;
+}
+
+/* Gráficos fora de containers com fundo transparente */
+.chart-container {
+    background: transparent !important;
+    border: 2px solid #dcdcdc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.vega-embed {
+    background: transparent !important;
+    border: 2px solid #dcdcdc !important;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
 /* Cards */
@@ -153,15 +251,6 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
 .stNumberInput > div > div:focus {
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Charts */
-.vega-embed {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid var(--border-light);
-    margin-bottom: 1rem;
 }
 
 /* Dataframe */
@@ -227,11 +316,19 @@ header {visibility: hidden;}
 if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
 
-# --- Header ---
+# --- Header com imagem solar ---
 st.markdown("""
 <div class="header-section">
-    <div class="header-title">⚡ SolarAnalytics Pro</div>
-    <div class="header-subtitle">Monitoramento Inteligente de Geração de Energia Solar</div>
+    <div class="header-content">
+        <img src="https://raw.githubusercontent.com/seuusuario/seurepositorio/main/solar.png" 
+             class="solar-icon" 
+             alt="Solar Icon"
+             onerror="this.style.display='none'">
+        <div class="header-text">
+            <div class="header-title">⚡ SolarAnalytics Pro</div>
+            <div class="header-subtitle">Monitoramento Inteligente de Geração de Energia Solar</div>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -383,7 +480,12 @@ def format_number_br(number, decimals=2):
     return f"{number:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # --- Formulário de Cadastro ---
-st.header("☀️ Registro de Geração")
+st.markdown("""
+<div class="subheader-container blue">
+    <h2>☀️ Registro de Geração</h2>
+</div>
+""", unsafe_allow_html=True)
+
 with st.form("entry_form", clear_on_submit=True):
     col1, col2, col3 = st.columns([2, 2, 1])
     
@@ -427,7 +529,11 @@ if df.empty:
     st.info("📊 **Nenhum dado encontrado**. Comece registrando sua primeira geração de energia solar!")
 else:
     # --- Filtros ---
-    st.header("🔍 Filtros de Análise")
+    st.markdown("""
+    <div class="subheader-container green">
+        <h2>🔍 Filtros de Análise</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 1, 2])
     
@@ -471,7 +577,11 @@ else:
             best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
             worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
             
-            st.header(f"📊 Análise de {month_names.get(selected_month_num, '')} de {selected_year}")
+            st.markdown(f"""
+            <div class="subheader-container orange">
+                <h2>📊 Análise de {month_names.get(selected_month_num, '')} de {selected_year}</h2>
+            </div>
+            """, unsafe_allow_html=True)
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -639,7 +749,11 @@ else:
         year_df = df[df['Data'].dt.year == selected_year].copy()
         
         if not year_df.empty:
-            st.header(f"📅 Resumo Anual de {selected_year}")
+            st.markdown(f"""
+            <div class="subheader-container purple">
+                <h2>📅 Resumo Anual de {selected_year}</h2>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Gráfico mensal
             monthly_summary = year_df.groupby(
@@ -693,7 +807,11 @@ else:
             st.altair_chart(monthly_chart, use_container_width=True)
             
             # --- Heatmap estilo GitHub ---
-            st.subheader(f"🗓️ Heatmap de Geração - {selected_year}")
+            st.markdown("""
+            <div class="subheader-container teal">
+                <h3>🗓️ Heatmap de Geração</h3>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Preparar dados para heatmap
             start_date = datetime(selected_year, 1, 1)
@@ -762,7 +880,11 @@ else:
             
             st.altair_chart(heatmap, use_container_width=True)
             
-            st.subheader("📈 Estatísticas do Ano")
+            st.markdown("""
+            <div class="subheader-container pink">
+                <h3>📈 Estatísticas do Ano</h3>
+            </div>
+            """, unsafe_allow_html=True)
             
             year_total = year_df['Energia Gerada (kWh)'].sum()
             year_avg = year_df['Energia Gerada (kWh)'].mean()
@@ -782,7 +904,11 @@ else:
 
 # --- Análise da Conta de Energia ---
 if not df.empty:
-    st.header("⚡ Análise da Conta de Energia Atual")
+    st.markdown("""
+    <div class="subheader-container indigo">
+        <h2>⚡ Análise da Conta de Energia Atual</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Dados da fatura (exemplo baseado no documento fornecido)
     conta_dados = {
@@ -817,182 +943,156 @@ if not df.empty:
     economia_perc = (economia_mensal / valor_sem_solar * 100) if valor_sem_solar > 0 else 0
     
     # Container para análise de performance
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                    color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">📊 Performance do Sistema Solar</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("🎯 Eficiência do Sistema", f"{performance_perc:.0f}%", 
-                     delta="Geração vs Consumo")
-        with col2:
-            st.metric("💸 Economia Mensal", f"R$ {format_number_br(economia_mensal)}", 
-                     delta=f"{economia_perc:.0f}% economia")
-        with col3:
-            st.metric("⚡ Excedente", f"{conta_dados['geracao_kwh'] - conta_dados['consumo_kwh']} kWh",
-                     delta="Créditos gerados")
+    st.markdown("""
+    <div class="subheader-container blue">
+        <h3>📊 Performance do Sistema Solar</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("🎯 Eficiência do Sistema", f"{performance_perc:.0f}%", 
+                 delta="Geração vs Consumo")
+    with col2:
+        st.metric("💸 Economia Mensal", f"R$ {format_number_br(economia_mensal)}", 
+                 delta=f"{economia_perc:.0f}% economia")
+    with col3:
+        st.metric("⚡ Excedente", f"{conta_dados['geracao_kwh'] - conta_dados['consumo_kwh']} kWh",
+                 delta="Créditos gerados")
     
     # Container para análise financeira
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                    color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">💰 Análise Financeira Detalhada</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Tabela de composição da conta
-        composicao_df = pd.DataFrame([
-            ["Consumo SCEE", f"{conta_dados['consumo_kwh']} kWh", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'])}", "Cobrança"],
-            ["Injeção SCEE", f"{conta_dados['consumo_kwh']} kWh", f"-R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'])}", "Desconto"],
-            ["Taxa de Injeção", f"{conta_dados['taxa_injecao_perc']}%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * conta_dados['taxa_injecao_perc'] / 100)}", "Nova cobrança"],
-            ["ICMS", f"{conta_dados['icms_perc']}%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * conta_dados['icms_perc'] / 100)}", "Imposto"],
-            ["Iluminação Pública", "Taxa fixa", f"R$ {format_number_br(conta_dados['iluminacao_publica'])}", "Municipal"],
-            ["TOTAL", "Valor final", f"R$ {format_number_br(conta_dados['valor_fatura'])}", "A pagar"]
-        ], columns=["Item", "Descrição", "Valor", "Tipo"])
-        
-        st.dataframe(composicao_df, use_container_width=True, hide_index=True)
+    st.markdown("""
+    <div class="subheader-container green">
+        <h3>💰 Análise Financeira Detalhada</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Tabela de composição da conta
+    composicao_df = pd.DataFrame([
+        ["Consumo SCEE", f"{conta_dados['consumo_kwh']} kWh", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'])}", "Cobrança"],
+        ["Injeção SCEE", f"{conta_dados['consumo_kwh']} kWh", f"-R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'])}", "Desconto"],
+        ["Taxa de Injeção", f"{conta_dados['taxa_injecao_perc']}%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * conta_dados['taxa_injecao_perc'] / 100)}", "Nova cobrança"],
+        ["ICMS", f"{conta_dados['icms_perc']}%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * conta_dados['icms_perc'] / 100)}", "Imposto"],
+        ["Iluminação Pública", "Taxa fixa", f"R$ {format_number_br(conta_dados['iluminacao_publica'])}", "Municipal"],
+        ["TOTAL", "Valor final", f"R$ {format_number_br(conta_dados['valor_fatura'])}", "A pagar"]
+    ], columns=["Item", "Descrição", "Valor", "Tipo"])
+    
+    st.dataframe(composicao_df, use_container_width=True, hide_index=True)
     
     # Container para impostos
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
-                    color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">📋 Detalhamento de Impostos</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        impostos_df = pd.DataFrame([
-            ["ICMS", "19%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19)}", "Sobre energia compensada"],
-            ["PIS/PASEP", "1,0554%", "R$ 0,00", "Isento na compensação"],
-            ["COFINS", "4,8687%", "R$ 0,00", "Isento na compensação"],
-            ["Taxa Injeção", "24,57%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457)}", "Nova regulamentação"]
-        ], columns=["Imposto/Taxa", "Alíquota", "Valor", "Observação"])
-        
-        st.dataframe(impostos_df, use_container_width=True, hide_index=True)
+    st.markdown("""
+    <div class="subheader-container orange">
+        <h3>📋 Detalhamento de Impostos</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    impostos_df = pd.DataFrame([
+        ["ICMS", "19%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19)}", "Sobre energia compensada"],
+        ["PIS/PASEP", "1,0554%", "R$ 0,00", "Isento na compensação"],
+        ["COFINS", "4,8687%", "R$ 0,00", "Isento na compensação"],
+        ["Taxa Injeção", "24,57%", f"R$ {format_number_br(conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457)}", "Nova regulamentação"]
+    ], columns=["Imposto/Taxa", "Alíquota", "Valor", "Observação"])
+    
+    st.dataframe(impostos_df, use_container_width=True, hide_index=True)
     
     # Container para nova regulamentação
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); 
-                    color: #333; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">⚖️ Nova Regulamentação (Lei 14.300/21)</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.warning("""
-        **Mudanças Importantes:**
-        - Taxa de 24,57% sobre energia injetada na rede
-        - ICMS de 19% sobre uso da infraestrutura elétrica
-        - Cobrança gradual implementada até 2028
-        - Mesmo com as taxas, economia de 87% ainda é mantida
-        """)
+    st.markdown("""
+    <div class="subheader-container red">
+        <h3>⚖️ Nova Regulamentação (Lei 14.300/21)</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.warning("""
+    **Mudanças Importantes:**
+    - Taxa de 24,57% sobre energia injetada na rede
+    - ICMS de 19% sobre uso da infraestrutura elétrica
+    - Cobrança gradual implementada até 2028
+    - Mesmo com as taxas, economia de 87% ainda é mantida
+    """)
     
     # Container para comparação e economia
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); 
-                    color: #333; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">💸 Comparativo de Economia</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("🚫 Sem Energia Solar", 
-                     f"R$ {format_number_br(valor_sem_solar)}", 
-                     delta=f"{conta_dados['geracao_kwh']} kWh × R$ {conta_dados['tarifa_scee']:.3f}")
-        with col2:
-            st.metric("⚡ Com Energia Solar", 
-                     f"R$ {format_number_br(conta_dados['valor_fatura'])}", 
-                     delta="Valor atual da fatura")
-        with col3:
-            st.metric("💰 Economia Mensal", 
-                     f"R$ {format_number_br(economia_mensal)}", 
-                     delta=f"{economia_perc:.0f}% de economia!", 
-                     delta_color="normal")
+    st.markdown("""
+    <div class="subheader-container teal">
+        <h3>💸 Comparativo de Economia</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("🚫 Sem Energia Solar", 
+                 f"R$ {format_number_br(valor_sem_solar)}", 
+                 delta=f"{conta_dados['geracao_kwh']} kWh × R$ {conta_dados['tarifa_scee']:.3f}")
+    with col2:
+        st.metric("⚡ Com Energia Solar", 
+                 f"R$ {format_number_br(conta_dados['valor_fatura'])}", 
+                 delta="Valor atual da fatura")
+    with col3:
+        st.metric("💰 Economia Mensal", 
+                 f"R$ {format_number_br(economia_mensal)}", 
+                 delta=f"{economia_perc:.0f}% de economia!", 
+                 delta_color="normal")
     
     # Gráfico de comparação
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                    color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">📊 Comparativo Visual: Com vs Sem Energia Solar</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Dados para o gráfico de comparação
-        comparacao_df = pd.DataFrame([
-            {"Situação": "Sem Solar", "Valor": valor_sem_solar, "Tipo": "Gasto Total"},
-            {"Situação": "Com Solar", "Valor": conta_dados['valor_fatura'], "Tipo": "Fatura Atual"},
-            {"Situação": "Economia", "Valor": economia_mensal, "Tipo": "Economia Mensal"}
-        ])
-        
-        comparacao_chart = alt.Chart(comparacao_df).mark_bar(
-            cornerRadiusTopLeft=8,
-            cornerRadiusTopRight=8,
-            size=100
-        ).encode(
-            x=alt.X('Situação:N', title='Cenário', axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])),
-            y=alt.Y('Valor:Q', title='Valor (R$)', axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])),
-            color=alt.Color('Situação:N', 
-                           scale=alt.Scale(range=['#ef4444', '#10b981', '#3b82f6']),
-                           legend=None),
-            tooltip=[
-                alt.Tooltip('Situação:N', title='Cenário'),
-                alt.Tooltip('Valor:Q', title='Valor', format='.2f'),
-                alt.Tooltip('Tipo:N', title='Descrição')
-            ]
-        ).properties(
-            height=400,
-            title=f"Comparativo Financeiro - {conta_dados['mes_referencia']}"
-        )
-        
-        st.altair_chart(comparacao_chart, use_container_width=True)
+    # Dados para o gráfico de comparação
+    comparacao_df = pd.DataFrame([
+        {"Situação": "Sem Solar", "Valor": valor_sem_solar, "Tipo": "Gasto Total"},
+        {"Situação": "Com Solar", "Valor": conta_dados['valor_fatura'], "Tipo": "Fatura Atual"},
+        {"Situação": "Economia", "Valor": economia_mensal, "Tipo": "Economia Mensal"}
+    ])
+    
+    comparacao_chart = alt.Chart(comparacao_df).mark_bar(
+        cornerRadiusTopLeft=8,
+        cornerRadiusTopRight=8,
+        size=100
+    ).encode(
+        x=alt.X('Situação:N', title='Cenário', axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])),
+        y=alt.Y('Valor:Q', title='Valor (R$)', axis=alt.Axis(labelFontSize=FONT_SIZES['chart_axis'])),
+        color=alt.Color('Situação:N', 
+                       scale=alt.Scale(range=['#ef4444', '#10b981', '#3b82f6']),
+                       legend=None),
+        tooltip=[
+            alt.Tooltip('Situação:N', title='Cenário'),
+            alt.Tooltip('Valor:Q', title='Valor', format='.2f'),
+            alt.Tooltip('Tipo:N', title='Descrição')
+        ]
+    ).properties(
+        height=400,
+        title=f"Comparativo Financeiro - {conta_dados['mes_referencia']}"
+    )
+    
+    st.altair_chart(comparacao_chart, use_container_width=True)
     
     # Gráfico de composição da fatura
-    with st.container():
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                    color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;">
-            <h3 style="margin-bottom: 0.5rem;">🥧 Composição da Fatura Atual</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Dados para o gráfico pizza
-        pizza_df = pd.DataFrame([
-            {"Componente": "Taxa Injeção", "Valor": conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457},
-            {"Componente": "ICMS", "Valor": conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19},
-            {"Componente": "Iluminação Pública", "Valor": conta_dados['iluminacao_publica']},
-            {"Componente": "Outros", "Valor": max(0, conta_dados['valor_fatura'] - 
-                                                 (conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457 + 
-                                                  conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19 + 
-                                                  conta_dados['iluminacao_publica']))}
-        ])
-        
-        pizza_chart = alt.Chart(pizza_df).mark_arc(
-            innerRadius=50,
-            outerRadius=120
-        ).encode(
-            theta=alt.Theta('Valor:Q', title='Valor'),
-            color=alt.Color('Componente:N', 
-                           scale=alt.Scale(range=['#ef4444', '#f59e0b', '#10b981', '#3b82f6'])),
-            tooltip=[
-                alt.Tooltip('Componente:N', title='Componente'),
-                alt.Tooltip('Valor:Q', title='Valor', format='.2f')
-            ]
-        ).properties(
-            height=300,
-            title=f"Composição da Fatura - {conta_dados['mes_referencia']}"
-        )
-        
-        st.altair_chart(pizza_chart, use_container_width=True)
+    # Dados para o gráfico pizza
+    pizza_df = pd.DataFrame([
+        {"Componente": "Taxa Injeção", "Valor": conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457},
+        {"Componente": "ICMS", "Valor": conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19},
+        {"Componente": "Iluminação Pública", "Valor": conta_dados['iluminacao_publica']},
+        {"Componente": "Outros", "Valor": max(0, conta_dados['valor_fatura'] - 
+                                             (conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.2457 + 
+                                              conta_dados['consumo_kwh'] * conta_dados['tarifa_scee'] * 0.19 + 
+                                              conta_dados['iluminacao_publica']))}
+    ])
+    
+    pizza_chart = alt.Chart(pizza_df).mark_arc(
+        innerRadius=50,
+        outerRadius=120
+    ).encode(
+        theta=alt.Theta('Valor:Q', title='Valor'),
+        color=alt.Color('Componente:N', 
+                       scale=alt.Scale(range=['#ef4444', '#f59e0b', '#10b981', '#3b82f6'])),
+        tooltip=[
+            alt.Tooltip('Componente:N', title='Componente'),
+            alt.Tooltip('Valor:Q', title='Valor', format='.2f')
+        ]
+    ).properties(
+        height=300,
+        title=f"Composição da Fatura - {conta_dados['mes_referencia']}"
+    )
+    
+    st.altair_chart(pizza_chart, use_container_width=True)
 
 # --- Footer ---
 st.divider()
