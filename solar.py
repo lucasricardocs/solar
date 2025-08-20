@@ -468,13 +468,13 @@ else:
             st.altair_chart(area_chart, use_container_width=True)
 
     # --- Análise Anual ---
-    year_df = df[df['Data'].dt.year == selected_year].copy()
-    if not year_df.empty:
+    year_df_filtered = df[df['Data'].dt.year == selected_year].copy()
+    if not year_df_filtered.empty:
         st.divider()
         st.header(f"Resumo Anual de {selected_year}")
         
         # Gráfico Mensal
-        monthly_summary = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
+        monthly_summary = year_df_filtered.groupby(year_df_filtered['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
         monthly_summary.rename(columns={'Data': 'Mês'}, inplace=True)
         monthly_summary['Nome Mês'] = monthly_summary['Mês'].apply(lambda m: month_names[m][:3])
         monthly_chart = alt.Chart(monthly_summary).mark_bar(
@@ -490,12 +490,15 @@ else:
         # --- HEATMAP ESTILO GITHUB ---
         st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
         
-        # Criar um DataFrame com todos os dias do ano selecionado
-        all_days_of_year = pd.date_range(start=f'{selected_year}-01-01', end=f'{selected_year}-12-31', freq='D')
-        all_days_df = pd.DataFrame({'Data': all_days_of_year})
+        # Filtrar dados apenas para o ano de 2025 para o heatmap
+        heatmap_data_2025 = df[df['Data'].dt.year == 2025].copy()
         
-        # Juntar com os dados existentes
-        heatmap_df = pd.merge(all_days_df, year_df, on='Data', how='left')
+        # Criar um DataFrame com todos os dias do ano de 2025
+        all_days_of_2025 = pd.date_range(start='2025-01-01', end='2025-12-31', freq='D')
+        all_days_df = pd.DataFrame({'Data': all_days_of_2025})
+        
+        # Juntar com os dados existentes de 2025
+        heatmap_df = pd.merge(all_days_df, heatmap_data_2025, on='Data', how='left')
         
         heatmap_df['day_of_week_num'] = heatmap_df['Data'].dt.dayofweek
         heatmap_df['week_of_year'] = heatmap_df['Data'].dt.isocalendar().week
@@ -514,7 +517,7 @@ else:
             ),
             tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
         ).properties(
-            title=f"Calendário de Geração - {selected_year}"
+            title="Calendário de Geração - 2025"
         ).configure(
             background='transparent'
         ).configure_view(
@@ -524,7 +527,7 @@ else:
 
 
         # --- SISTEMA DE PREVISÕES ---
-        if len(year_df) >= 30:
+        if len(year_df_filtered) >= 30:
             st.markdown("""
             <div class="section-header">
                 <span class="section-icon">🔮</span>
@@ -537,7 +540,7 @@ else:
                 days_ahead = st.slider("📅 Dias para prever", 7, 60, 30)
             
             with st.spinner("📊 Analisando padrões e gerando previsões..."):
-                predictions_df, ml_metrics = generate_smart_predictions(year_df, days_ahead)
+                predictions_df, ml_metrics = generate_smart_predictions(year_df_filtered, days_ahead)
 
             with pred_col2:
                 st.markdown(f"""
@@ -549,7 +552,7 @@ else:
 
             with pred_col1:
                 if not predictions_df.empty:
-                    historical_df = year_df.tail(30).copy()
+                    historical_df = year_df_filtered.tail(30).copy()
                     historical_df['Tipo'] = 'Histórico'
                     historical_df['Previsao'] = historical_df['Energia Gerada (kWh)']
                     historical_df['Limite_Inferior'] = historical_df['Energia Gerada (kWh)']
