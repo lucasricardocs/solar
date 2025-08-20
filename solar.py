@@ -791,7 +791,7 @@ else:
                         scale=alt.Scale(scheme='greens'),
                         legend=alt.Legend(title="kWh Gerado")
                     ),
-                    alt.value(#dcdcdc)
+                    alt.value('#eeeeee')
                 ),
                 tooltip=[
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
