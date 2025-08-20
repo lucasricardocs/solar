@@ -764,15 +764,15 @@ else:
             
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=1,
+                cornerRadius=2,
                 stroke='#a9a9a9',
-                strokeWidth=1
+                strokeWidth=2
             ).encode(
                 x=alt.X(
                     'week_num:O',
                     title=None,
                     axis=alt.Axis(labels=False, ticks=False, domain=False),
-                    scale=alt.Scale(padding=0.1)  # padding mínimo em X
+                    scale=alt.Scale(padding=0.2)  # padding mínimo em X
                 ),
                 y=alt.Y(
                     'day_of_week:O',
@@ -782,10 +782,10 @@ else:
                         ticks=False,
                         domain=False
                     ),
-                    scale=alt.Scale(padding=0.05)  # padding mínimo em Y
+                    scale=alt.Scale(padding=0.04)  # padding mínimo em Y
                 ),
                 color=alt.condition(
-                    alt.datum['Energia Gerada (kWh)'] > 10,
+                    alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color(
                         'Energia Gerada (kWh):Q',
                         scale=alt.Scale(scheme='greens'),
