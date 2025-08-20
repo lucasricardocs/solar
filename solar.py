@@ -780,7 +780,7 @@ else:
                     axis=alt.Axis(
                         labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                         ticks=False,
-                        domain=False
+                        domain=domain=[10, 20] 
                     ),
                     scale=alt.Scale(padding=0.04)  # padding mínimo em Y
                 ),
@@ -788,7 +788,7 @@ else:
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color(
                         'Energia Gerada (kWh):Q',
-                        scale=alt.Scale(scheme='spectral'), domain=[10, 20],
+                        scale=alt.Scale(scheme='spectral'),
                         legend=alt.Legend(title="kWh Gerado")
                     ),
                     alt.value('#eeeeee')
