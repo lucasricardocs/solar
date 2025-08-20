@@ -789,7 +789,7 @@ else:
                     alt.Color(
                         'Energia Gerada (kWh):Q',
                         scale=alt.Scale(
-                            scheme='spectral',
+                            scheme='lightgreyteal',
                             domainMin=10,  # força o mínimo da cor em 10
                             domainMax=20   # máximo em 20
                         ),
