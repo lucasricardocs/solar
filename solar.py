@@ -751,7 +751,7 @@ else:
             
             heatmap_df['week_num'] = heatmap_df['date'].dt.isocalendar().week
             heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
-            heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 54
+            heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 53
             
             # Gráfico da grade de dias (parte de baixo)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
