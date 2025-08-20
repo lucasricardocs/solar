@@ -453,18 +453,18 @@ else:
         with col1:
             bar_chart = alt.Chart(filtered_df).mark_bar(
                 color="#3b82f6",
-                size=20 # Aumenta a espessura das barras
+                width=20 # Aumenta a espessura das barras
             ).encode(
                 x=alt.X('Data:T', title='Dia'), y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
                 tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado')]
-            ).properties(title="Produção Diária").configure_view(stroke=None, fill='transparent')
+            ).properties(title="Produção Diária").configure(background='transparent')
             st.altair_chart(bar_chart, use_container_width=True)
         with col2:
             filtered_df['Acumulado'] = filtered_df['Energia Gerada (kWh)'].cumsum()
             area_chart = alt.Chart(filtered_df).mark_area(line={'color':'#10b981'}, color=alt.Gradient(gradient='linear', stops=[alt.GradientStop(color='#10b981', offset=0), alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)])).encode(
                 x=alt.X('Data:T', title='Dia'), y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
                 tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Acumulado:Q', title='Acumulado')]
-            ).properties(title="Geração Acumulada").configure_view(stroke=None, fill='transparent')
+            ).properties(title="Geração Acumulada").configure(background='transparent')
             st.altair_chart(area_chart, use_container_width=True)
 
     # --- Análise Anual ---
@@ -475,16 +475,42 @@ else:
         
         # Gráfico Mensal
         monthly_summary = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
-        monthly_summary['Nome Mês'] = monthly_summary['Data'].apply(lambda m: month_names[m][:3])
+        monthly_summary.rename(columns={'Data': 'Mês'}, inplace=True)
+        monthly_summary['Nome Mês'] = monthly_summary['Mês'].apply(lambda m: month_names[m][:3])
         monthly_chart = alt.Chart(monthly_summary).mark_bar(
             color="#f59e0b",
-            size=40 # Aumenta a espessura das barras
+            width=30 # Aumenta a espessura das barras
         ).encode(
             x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
             y=alt.Y('Energia Gerada (kWh):Q', title='Total (kWh)'),
             tooltip=[alt.Tooltip('Nome Mês', title='Mês'), alt.Tooltip('Energia Gerada (kWh):Q', title='Total Gerado')]
-        ).properties(title="Produção Mensal Total").configure_view(stroke=None, fill='transparent')
+        ).properties(title="Produção Mensal Total").configure(background='transparent')
         st.altair_chart(monthly_chart, use_container_width=True)
+        
+        # --- HEATMAP ESTILO GITHUB ---
+        st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+        heatmap_df = year_df.copy()
+        heatmap_df['day_of_week_num'] = heatmap_df['Data'].dt.dayofweek
+        heatmap_df['week_of_year'] = heatmap_df['Data'].dt.isocalendar().week
+        
+        days_order = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+        
+        heatmap = alt.Chart(heatmap_df).mark_rect(
+            width=15, height=15, cornerRadius=3
+        ).encode(
+            x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labels=False, ticks=False, domain=False)),
+            y=alt.Y('day_of_week_num:O', title='Dia da Semana', sort=None, axis=alt.Axis(labels=True, ticks=False, domain=False, labelExpr="['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][datum.value]")),
+            color=alt.Color('Energia Gerada (kWh):Q', legend=alt.Legend(title="kWh", orient='bottom'), scale=alt.Scale(scheme='greens')),
+            tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
+        ).properties(
+            title=f"Calendário de Geração - {selected_year}"
+        ).configure(
+            background='transparent'
+        ).configure_view(
+            strokeWidth=0
+        )
+        st.altair_chart(heatmap, use_container_width=True)
+
 
         # --- SISTEMA DE PREVISÕES ---
         if len(year_df) >= 30:
@@ -540,7 +566,7 @@ else:
                     
                     final_chart = (confidence_band + historical_line + prediction_line).properties(
                         title=f"Previsão de Geração - Próximos {days_ahead} dias"
-                    ).configure_view(stroke=None, fill='transparent').interactive()
+                    ).configure(background='transparent').interactive()
                     
                     st.altair_chart(final_chart, use_container_width=True)
 
