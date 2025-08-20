@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=Fa
 
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'Solardaily' # Nome da sua aba na planilha
+WORKSHEET_NAME = 'solardaily' # Nome da sua aba na planilha
 
 # --- Configuração da Página ---
 st.set_page_config(
