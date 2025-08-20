@@ -731,29 +731,38 @@ else:
             st.divider()
             
             # --- HEATMAP ATUALIZADO ---
+            # --- HEATMAP ATUALIZADO ---
             st.markdown("""
             <div class="subheader-container teal">
                 <h3>🗓️ Heatmap de Geração Anual</h3>
             </div>
             """, unsafe_allow_html=True)
-
+            
+            # Criação do calendário do ano inteiro
             start_date = datetime(selected_year, 1, 1)
             end_date = datetime(selected_year, 12, 31)
             all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
             heatmap_df = pd.DataFrame({'date': all_dates})
-
+            
+            # Dados de geração
             year_data_heat = year_df.copy()
             year_data_heat['date'] = pd.to_datetime(year_data_heat['Data'])
-            heatmap_df = pd.merge(heatmap_df, year_data_heat[['date', 'Energia Gerada (kWh)']], on='date', how='left').fillna(0)
-
+            heatmap_df = pd.merge(
+                heatmap_df,
+                year_data_heat[['date', 'Energia Gerada (kWh)']],
+                on='date', how='left'
+            ).fillna(0)
+            
+            # Colunas auxiliares
             heatmap_df['day_of_week'] = heatmap_df['date'].dt.dayofweek
             heatmap_df['month'] = heatmap_df['date'].dt.month
-            
             heatmap_df['week_num'] = heatmap_df['date'].dt.isocalendar().week
-            heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
-            heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 53
             
-            # Gráfico da grade de dias (parte de baixo)
+            # Ajustes para semanas quebradas
+            heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
+            heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 54
+            
+            # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
                 stroke='#ffffff',
@@ -761,7 +770,6 @@ else:
             ).encode(
                 x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
-                    # --- ATUALIZADO: Mostra todos os dias da semana ---
                     labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                     ticks=False, domain=False
                 )),
@@ -776,20 +784,21 @@ else:
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
-            ).properties(height=150) # Altura da grade
-
-            # Gráfico dos rótulos dos meses (parte de cima)
-            month_centers = heatmap_df.groupby('month').agg(median_week=('week_num', 'median')).reset_index()
-            month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
-
-            month_labels_chart = alt.Chart(month_centers).mark_text(
-                align='center', baseline='middle', font='Nunito', fontSize=11, color='#6b7280'
+            ).properties(height=150)
+            
+            # Rótulos dos meses acima do primeiro dia de cada mês
+            month_starts = heatmap_df.groupby('month').agg(first_week=('week_num', 'min')).reset_index()
+            month_starts['month_name'] = month_starts['month'].apply(lambda m: month_names[m][:3])
+            
+            month_labels_chart = alt.Chart(month_starts).mark_text(
+                align='left', baseline='bottom', dx=5,
+                font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
-                x=alt.X('median_week:O', title=None, axis=None),
+                x=alt.X('first_week:O', title=None, axis=None),
                 text='month_name:N'
-            ).properties(height=20) # Altura da área dos rótulos
-
-            # --- ATUALIZADO: Combinação vertical dos gráficos de rótulos e grade ---
+            ).properties(height=20)
+            
+            # Combinação final
             final_heatmap = alt.vconcat(
                 month_labels_chart,
                 heatmap_grid,
@@ -802,7 +811,8 @@ else:
                 strokeWidth=0
             )
             
-            st.altair_chart(final_heatmap, use_container_width=True)
+            # Exibe no Streamlit
+            st.altair_chart(final_heatmap, use_container_width=True) 
             st.divider()
 
             # --- Estatísticas do Ano ---
