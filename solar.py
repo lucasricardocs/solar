@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import numpy as np
 import streamlit as st
 import gspread
 from datetime import datetime
@@ -142,13 +143,13 @@ with st.form("entry_form", clear_on_submit=True):
         if input_energy_str:
             try:
                 energy_value = float(input_energy_str.replace(',', '.'))
-                if energy_value > 0:
+                if energy_value >= 0: # Permite registrar dias com 0 kWh
                     if append_data(input_date, energy_value):
                         st.success("Dados salvos com sucesso!")
                     else:
                         st.error("Falha ao salvar os dados.")
                 else:
-                    st.warning("A energia gerada deve ser maior que zero.")
+                    st.warning("A energia gerada não pode ser negativa.")
             except ValueError:
                 st.error("Valor de energia inválido. Por favor, insira um número (ex: 20 ou 20,13).")
         else:
@@ -193,7 +194,7 @@ else:
 
         st.write("") # Espaçamento
 
-        # --- Gráficos ---
+        # --- Gráficos do Mês ---
         col1, col2 = st.columns(2)
         with col1:
             bar_chart = alt.Chart(filtered_df).mark_bar(
@@ -202,7 +203,7 @@ else:
                 x=alt.X('Data:T', title='Dia', axis=alt.Axis(format='%d', grid=False, labelAngle=0)),
                 y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)', axis=alt.Axis(grid=False)),
                 tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
-            ).properties(title="Produção Diária").configure_view(stroke=None).configure_axis(
+            ).properties(title="Produção Diária").configure_view(stroke=None, fill='transparent').configure_axis(
                 labelColor='#333', titleColor='#333'
             ).configure_title(color='#333').interactive()
             st.altair_chart(bar_chart, use_container_width=True)
@@ -220,29 +221,102 @@ else:
                 x=alt.X('Data:T', title='Dia', axis=alt.Axis(format='%d', grid=False, labelAngle=0)),
                 y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)', axis=alt.Axis(grid=False)),
                 tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Acumulado:Q', title='Acumulado', format=',.2f')]
-            ).properties(title="Geração Mensal Acumulada").configure_view(stroke=None).configure_axis(
+            ).properties(title="Geração Mensal Acumulada").configure_view(stroke=None, fill='transparent').configure_axis(
                 labelColor='#333', titleColor='#333'
             ).configure_title(color='#333').interactive()
             st.altair_chart(area_chart, use_container_width=True)
 
         st.divider()
-        st.header(f"Mapa de Calor da Geração de {selected_year}")
-        year_df = df[df['Data'].dt.year == selected_year].copy()
-        year_df['day_of_week'] = year_df['Data'].dt.day_name()
-        year_df['week_of_year'] = year_df['Data'].dt.isocalendar().week
+        st.header(f"Resumo Anual de {selected_year}")
 
-        heatmap = alt.Chart(year_df).mark_rect().encode(
-            x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labelAngle=0)),
-            y=alt.Y('day_of_week:O', title='Dia da Semana', sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-            color=alt.Color('Energia Gerada (kWh):Q',
-                legend=alt.Legend(title="Energia (kWh)"),
-                # Define a nova escala de cores: de vermelho claro, passando por amarelo, até verde escuro
-                scale=alt.Scale(range=['#ffcdd2', '#fff9c4', '#2e7d32'])
-            ),
-            tooltip=[alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format=',.2f')]
-        ).properties(title=f"Geração Diária em {selected_year}").configure_view(stroke=None).configure_axis(
+        year_df = df[df['Data'].dt.year == selected_year].copy()
+        
+        # --- Gráfico de Produção Mensal do Ano ---
+        monthly_summary = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
+        monthly_summary['Nome Mês'] = monthly_summary['Data'].apply(lambda m: month_names[m][:3])
+        
+        monthly_bar_chart = alt.Chart(monthly_summary).mark_bar(
+            cornerRadiusTopLeft=5, cornerRadiusTopRight=5, color="#007BFF"
+        ).encode(
+            x=alt.X('Nome Mês:N', title='Mês', sort=[m[:3] for m in month_names.values()]),
+            y=alt.Y('Energia Gerada (kWh):Q', title='Total de Energia (kWh)'),
+            tooltip=[alt.Tooltip('Nome Mês', title='Mês'), alt.Tooltip('Energia Gerada (kWh):Q', title='Total Gerado', format=',.2f')]
+        ).properties(title="Produção Mensal Total").configure_view(stroke=None, fill='transparent').configure_axis(
             labelColor='#333', titleColor='#333'
-        ).configure_title(color='#333').configure_legend(labelColor='#333', titleColor='#333')
+        ).configure_title(color='#333').interactive()
+        st.altair_chart(monthly_bar_chart, use_container_width=True)
+
+        # --- ADAPTAÇÃO DO GRÁFICO DE CALOR ---
+        # 1. Preparação dos dados e variáveis para o novo formato
+        heatmap_df = year_df.copy()
+        heatmap_df.rename(columns={
+            'Data': 'dates',
+            'Energia Gerada (kWh)': 'values',
+            'day_name': 'days',
+            'isocalendar': 'weeks'
+        }, inplace=True)
+        heatmap_df['days'] = heatmap_df['dates'].dt.day_name()
+        heatmap_df['weeks'] = heatmap_df['dates'].dt.isocalendar().week
+
+        # Prepara os rótulos dos meses para o eixo X
+        month_labels = heatmap_df.groupby(heatmap_df['dates'].dt.month)['weeks'].min().reset_index()
+        month_labels['month_abbr'] = month_labels['dates'].apply(lambda m: month_names[m][:3])
+        expr_map = dict(zip(month_labels['weeks'], month_labels['month_abbr']))
+        expr = f"({expr_map})[datum.value]"
+
+        # Variáveis de configuração do gráfico
+        days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        domain = [heatmap_df['values'].min(), heatmap_df['values'].max()]
+        range_ = ['#ffcdd2', '#fff9c4', '#2e7d32']
+
+        # 2. Construção do gráfico com a estrutura solicitada
+        heatmap = alt.Chart(heatmap_df).mark_rect(
+            cornerRadius=5,
+        ).encode(
+            y=alt.Y(
+                'days:N',
+                sort=days_order,
+                axis=alt.Axis(
+                    tickSize=0,
+                    title='',
+                    domain=False,
+                    labelFontSize=10
+                )
+            ),
+            x=alt.X(
+                'weeks:O', 
+                axis=alt.Axis(
+                    tickSize=0,
+                    domain=False,
+                    title='',
+                    labelExpr=expr,
+                    labelAngle=0,
+                    labelFontSize=10
+                )
+            ),
+            color=alt.Color(
+                'values:Q',
+                legend=None,
+                scale=alt.Scale(domain=domain, range=range_)
+            ),
+            tooltip=[
+                alt.Tooltip('dates:T', title='Data', format='%d/%m/%Y'),
+                alt.Tooltip('values:Q', title='Gerado', format=',.2f')
+            ]
+        ).properties(
+            title=f"Mapa de Calor da Geração Diária em {selected_year}",
+        ).configure_scale(
+            rectBandPaddingInner=0.1,
+        ).configure_mark(
+            strokeOpacity=0,
+            strokeWidth=0,
+            filled=True
+        ).configure_axis(
+            grid=False
+        ).configure_view(
+            stroke=None,
+            fill='transparent'
+        )
         st.altair_chart(heatmap, use_container_width=True)
     else:
         st.info("Nenhum dado para exibir para o período selecionado.")
