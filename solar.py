@@ -431,7 +431,7 @@ else:
             cornerRadiusTopLeft=3,
             cornerRadiusTopRight=3
         ).encode(
-            x=alt.X('Data:T', title='Dia', scale=alt.Scale(paddingInner=0.1)),
+            x=alt.X('Data:T', title='Dia', scale=alt.Scale(paddingInner=1)),
             y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)'),
             tooltip=[
                 alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
