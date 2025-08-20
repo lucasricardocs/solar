@@ -828,6 +828,22 @@ else:
                 <h3>🗓️ Heatmap de Geração</h3>
             </div>
             """, unsafe_allow_html=True)
+
+            st.markdown("""
+                <style>
+                    .subheader-container {
+                        color: black;
+                        padding: 0.8rem 1.2rem;
+                        border-radius: 50px; /* <<< bordas arredondadas */
+                        margin-bottom: 1rem;
+                    }
+                    .subheader-container h3 {
+                        margin: 0;
+                        font-size: 1.1rem;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
             
             # Preparar dados para heatmap
             start_date = datetime(selected_year, 1, 1)
