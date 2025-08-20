@@ -546,9 +546,9 @@ else:
                     color="#3b82f6",
                     cornerRadiusTopLeft=4,
                     cornerRadiusTopRight=4,
-                    stroke="#dcdcdc",       # <-- Borda adicionada
-                    strokeWidth=2,         # <-- Espessura da borda adicionada
-                    size=25                # <-- LARGURA DA BARRA (ajuste este valor como desejar)
+                    stroke="#dcdcdc",
+                    strokeWidth=2,
+                    size=25
                 ).encode(
                     x=alt.X(
                         'Data:T', 
@@ -753,6 +753,7 @@ else:
             heatmap_df.loc[(heatmap_df['week_num'] >= 52) & (heatmap_df['month'] == 1), 'week_num'] = 0
             heatmap_df.loc[(heatmap_df['week_num'] == 1) & (heatmap_df['month'] == 12), 'week_num'] = 53
             
+            # Gráfico da grade de dias (parte de baixo)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
                 cornerRadius=3,
                 stroke='#ffffff',
@@ -760,7 +761,8 @@ else:
             ).encode(
                 x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
-                    labelExpr="['Seg', '', 'Qua', '', 'Sex', '', ''][datum.value]",
+                    # --- ATUALIZADO: Mostra todos os dias da semana ---
+                    labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                     ticks=False, domain=False
                 )),
                 color=alt.condition(
@@ -774,21 +776,28 @@ else:
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
-            )
+            ).properties(height=150) # Altura da grade
 
+            # Gráfico dos rótulos dos meses (parte de cima)
             month_centers = heatmap_df.groupby('month').agg(median_week=('week_num', 'median')).reset_index()
             month_centers['month_name'] = month_centers['month'].apply(lambda m: month_names[m][:3])
 
-            month_labels = alt.Chart(month_centers).mark_text(
-                align='center', baseline='bottom', dy=-10, font='Nunito', fontSize=11, color='#6b7280'
+            month_labels_chart = alt.Chart(month_centers).mark_text(
+                align='center', baseline='middle', font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('median_week:O', title=None, axis=None),
                 text='month_name:N'
-            )
+            ).properties(height=20) # Altura da área dos rótulos
 
-            final_heatmap = (heatmap_grid + month_labels).properties(
-                height=170,
+            # --- ATUALIZADO: Combinação vertical dos gráficos de rótulos e grade ---
+            final_heatmap = alt.vconcat(
+                month_labels_chart,
+                heatmap_grid,
+                spacing=5
+            ).properties(
                 title=f"Atividade de Geração Solar em {selected_year}"
+            ).resolve_scale(
+                x='shared'
             ).configure_view(
                 strokeWidth=0
             )
