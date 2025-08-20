@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=Fa
 
 # --- Constantes de Configuração ---
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
-WORKSHEET_NAME = 'solardaily' # Nome da sua aba na planilha
+WORKSHEET_NAME = 'Solardaily' # Nome da sua aba na planilha
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -21,38 +21,38 @@ st.set_page_config(
     page_icon="☀️"
 )
 
-# --- Estilo CSS Customizado ---
+# --- Estilo CSS Customizado (Tema Claro) ---
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.comcom/css2?family=Poppins:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 html, body, [class*="st-"] {
     font-family: 'Poppins', sans-serif;
 }
 .stApp {
-    background-color: #1a1a1a;
-    color: #ffffff;
+    background-color: #F0F2F6; /* Fundo claro */
+    color: #333333; /* Texto escuro */
 }
 [data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
-    border: 1px solid #2e2e2e;
+    border: 1px solid #E0E0E0;
     border-radius: 10px;
     padding: 20px;
-    background-color: #262730;
+    background-color: #FFFFFF; /* Containers brancos */
 }
 .stButton>button {
     border-radius: 8px;
-    border: 1px solid #00b894;
-    background-color: #00b894;
+    border: 1px solid #007BFF;
+    background-color: #007BFF;
     color: white;
 }
 .stButton>button:hover {
-    border: 1px solid #00a383;
-    background-color: #00a383;
+    border: 1px solid #0056b3;
+    background-color: #0056b3;
 }
 [data-testid="stSidebar"] {
-    background-color: #262730;
+    background-color: #FFFFFF;
 }
 h1, h2, h3 {
-    color: #00b894;
+    color: #007BFF; /* Azul como cor de destaque */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -87,6 +87,12 @@ def load_data():
         return pd.DataFrame()
     
     df = pd.DataFrame(data)
+
+    # CORREÇÃO DO ERRO: Verifica se as colunas esperadas existem
+    if 'data' not in df.columns or 'gerado' not in df.columns:
+        st.error("Erro: A planilha deve conter as colunas 'data' e 'gerado'. Verifique os nomes das colunas na sua planilha.")
+        return pd.DataFrame()
+
     # Renomeia as colunas da sua planilha para as que o app espera
     df.rename(columns={'data': 'Data', 'gerado': 'Energia Gerada (kWh)'}, inplace=True)
     
@@ -167,32 +173,32 @@ else:
         col1, col2 = st.columns(2)
         with col1:
             bar_chart = alt.Chart(filtered_df).mark_bar(
-                cornerRadiusTopLeft=5, cornerRadiusTopRight=5, color="#00b894"
+                cornerRadiusTopLeft=5, cornerRadiusTopRight=5, color="#007BFF"
             ).encode(
                 x=alt.X('Data:T', title='Dia', axis=alt.Axis(format='%d', grid=False, labelAngle=0)),
                 y=alt.Y('Energia Gerada (kWh):Q', title='Energia (kWh)', axis=alt.Axis(grid=False)),
                 tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format='.2f')]
-            ).properties(title="Produção Diária").configure_view(fill='transparent').configure_axis(
-                labelColor='white', titleColor='white'
-            ).configure_title(color='white').interactive()
+            ).properties(title="Produção Diária").configure_view(stroke=None).configure_axis(
+                labelColor='#333', titleColor='#333'
+            ).configure_title(color='#333').interactive()
             st.altair_chart(bar_chart, use_container_width=True)
 
         with col2:
             filtered_df['Acumulado'] = filtered_df['Energia Gerada (kWh)'].cumsum()
             area_chart = alt.Chart(filtered_df).mark_area(
-                line={'color':'#00b894'},
+                line={'color':'#007BFF'},
                 color=alt.Gradient(
                     gradient='linear',
-                    stops=[alt.GradientStop(color='#00b894', offset=0), alt.GradientStop(color='rgba(0,184,148,0)', offset=1)],
+                    stops=[alt.GradientStop(color='#007BFF', offset=0), alt.GradientStop(color='rgba(0,123,255,0)', offset=1)],
                     x1=1, x2=1, y1=1, y2=0
                 )
             ).encode(
                 x=alt.X('Data:T', title='Dia', axis=alt.Axis(format='%d', grid=False, labelAngle=0)),
                 y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)', axis=alt.Axis(grid=False)),
                 tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')]
-            ).properties(title="Geração Mensal Acumulada").configure_view(fill='transparent').configure_axis(
-                labelColor='white', titleColor='white'
-            ).configure_title(color='white').interactive()
+            ).properties(title="Geração Mensal Acumulada").configure_view(stroke=None).configure_axis(
+                labelColor='#333', titleColor='#333'
+            ).configure_title(color='#333').interactive()
             st.altair_chart(area_chart, use_container_width=True)
 
         st.divider()
@@ -204,11 +210,11 @@ else:
         heatmap = alt.Chart(year_df).mark_rect().encode(
             x=alt.X('week_of_year:O', title='Semana do Ano', axis=alt.Axis(labelAngle=0)),
             y=alt.Y('day_of_week:O', title='Dia da Semana', sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-            color=alt.Color('Energia Gerada (kWh):Q', legend=alt.Legend(title="Energia (kWh)"), scale=alt.Scale(scheme='greens')),
+            color=alt.Color('Energia Gerada (kWh):Q', legend=alt.Legend(title="Energia (kWh)"), scale=alt.Scale(scheme='blues')),
             tooltip=[alt.Tooltip('Data:T', title='Data'), alt.Tooltip('Energia Gerada (kWh):Q', title='Gerado', format='.2f')]
-        ).properties(title=f"Geração Diária em {selected_year}").configure_view(fill='transparent').configure_axis(
-            labelColor='white', titleColor='white'
-        ).configure_title(color='white').configure_legend(labelColor='white', titleColor='white')
+        ).properties(title=f"Geração Diária em {selected_year}").configure_view(stroke=None).configure_axis(
+            labelColor='#333', titleColor='#333'
+        ).configure_title(color='#333').configure_legend(labelColor='#333', titleColor='#333')
         st.altair_chart(heatmap, use_container_width=True)
     else:
         st.info("Nenhum dado para exibir para o período selecionado.")
