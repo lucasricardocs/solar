@@ -40,7 +40,7 @@ st.set_page_config(
 # --- Estilo CSS Profissional e Limpo ---
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
 
 :root {
     --primary-color: #1f2937;
@@ -52,8 +52,12 @@ st.markdown("""
     --border-light: #e2e8f0;
 }
 
-html, body, [class*="st-"] {
-    font-family: 'Inter', sans-serif;
+* {
+    font-family: 'Nunito', sans-serif !important;
+}
+
+html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6, label, input, button, select, textarea {
+    font-family: 'Nunito', sans-serif !important;
 }
 
 .stApp {
@@ -485,7 +489,8 @@ else:
                 bar_chart = alt.Chart(filtered_df).mark_bar(
                     color="#3b82f6",
                     cornerRadiusTopLeft=4,
-                    cornerRadiusTopRight=4
+                    cornerRadiusTopRight=4,
+                    size=30  # LARGURA DAS BARRAS - altere este valor (10-50)
                 ).encode(
                     x=alt.X('Data:T', title='Data', axis=alt.Axis(format='%d/%m', labelAngle=-45)),
                     y=alt.Y('Energia Gerada (kWh):Q', title='Energia Gerada (kWh)'),
@@ -494,9 +499,12 @@ else:
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
                     ]
                 ).properties(
+                    width=800,  # LARGURA DO GRÁFICO - altere este valor
                     height=400,
                     title=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}"
-                ).interactive()
+                ).resolve_scale(
+                    x='independent'
+                )
                 
                 st.altair_chart(bar_chart, use_container_width=True)
             
@@ -527,7 +535,7 @@ else:
                 ).properties(
                     height=400,
                     title=f"Geração Acumulada - {month_names.get(selected_month_num, '')} {selected_year}"
-                ).interactive()
+                )
                 
                 st.altair_chart(area_chart, use_container_width=True)
             
@@ -618,7 +626,8 @@ else:
             monthly_chart = alt.Chart(monthly_summary).mark_bar(
                 color="#f59e0b",
                 cornerRadiusTopLeft=4,
-                cornerRadiusTopRight=4
+                cornerRadiusTopRight=4,
+                size=40  # LARGURA DAS BARRAS MENSAIS - altere este valor (10-60)
             ).encode(
                 x=alt.X('Nome Mês:N', title='Mês', 
                        sort=[m[:3] for m in month_names.values()]),
@@ -628,9 +637,12 @@ else:
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Total', format='.2f')
                 ]
             ).properties(
+                width=800,  # LARGURA DO GRÁFICO MENSAL - altere este valor
                 height=400,
                 title=f"Geração Mensal - {selected_year}"
-            ).interactive()
+            ).resolve_scale(
+                x='independent'
+            )
             
             st.altair_chart(monthly_chart, use_container_width=True)
             
