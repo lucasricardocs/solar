@@ -764,9 +764,9 @@ else:
             
             # Heatmap (retângulos dos dias)
             heatmap_grid = alt.Chart(heatmap_df).mark_rect(
-                cornerRadius=3,
+                cornerRadius=5,
                 stroke='#ffffff',
-                strokeWidth=1.5
+                strokeWidth=2
             ).encode(
                 x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
@@ -784,14 +784,14 @@ else:
                     alt.Tooltip('date:T', title='Data', format='%d/%m/%Y'),
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f')
                 ]
-            ).properties(height=300)
+            ).properties(height=400)
             
             # Rótulos dos meses acima do primeiro dia de cada mês
             month_starts = heatmap_df.groupby('month').agg(first_week=('week_num', 'min')).reset_index()
             month_starts['month_name'] = month_starts['month'].apply(lambda m: month_names[m][:3])
             
             month_labels_chart = alt.Chart(month_starts).mark_text(
-                align='left', baseline='bottom', dx=5,
+                align='left', baseline='bottom', dx=3, dy=-2
                 font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('first_week:O', title=None, axis=None),
