@@ -98,8 +98,8 @@ html, body, [class*="st-"], .stApp, .main, div, p, span, h1, h2, h3, h4, h5, h6,
 }
 
 .solar-icon {
-    width: 60px;
-    height: 60px;
+    width: 200px;
+    height: 200px;
     flex-shrink: 0;
 }
 
