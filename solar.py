@@ -768,11 +768,15 @@ else:
                 stroke='#ffffff',
                 strokeWidth=2
             ).encode(
-                x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False)),
+                x=alt.X('week_num:O', title=None, axis=alt.Axis(labels=False, ticks=False, domain=False),
+                scale=alt.Scale(padding=1)
+                       )
                 y=alt.Y('day_of_week:O', title=None, axis=alt.Axis(
                     labelExpr="['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][datum.value]",
                     ticks=False, domain=False
-                )),
+                ),
+                scale=alt.Scale(padding=1)       
+                ),
                 color=alt.condition(
                     alt.datum['Energia Gerada (kWh)'] > 0,
                     alt.Color('Energia Gerada (kWh):Q',
@@ -791,7 +795,7 @@ else:
             month_starts['month_name'] = month_starts['month'].apply(lambda m: month_names[m][:3])
             
             month_labels_chart = alt.Chart(month_starts).mark_text(
-                align='left', baseline='bottom', dx=3, dy=-2
+                align='left', baseline='bottom', dx=3
                 font='Nunito', fontSize=11, color='#6b7280'
             ).encode(
                 x=alt.X('first_week:O', title=None, axis=None),
