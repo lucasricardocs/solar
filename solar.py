@@ -153,6 +153,7 @@ html, body, [class*="st-"], .stApp, .main {
     font-weight: 600;
     margin: 0;
 }
+
 .subheader-container h3 {
     font-size: 1.1rem;
     font-weight: 600;
@@ -175,7 +176,6 @@ html, body, [class*="st-"], .stApp, .main {
 .subheader-container.purple { border-left-color: #9b59b6; }
 .subheader-container.pink { border-left-color: #e91e63; }
 .subheader-container.teal { border-left-color: #1abc9c; }
-
 
 /* Cards com stroke */
 [data-testid="metric-container"] {
@@ -207,6 +207,7 @@ html, body, [class*="st-"], .stApp, .main {
     font-weight: 600;
     display: inline-block;
 }
+
 .status-connected { background-color: #10B98120; color: #10B981; }
 .status-disconnected { background-color: #EF444420; color: #EF4444; }
 
@@ -214,10 +215,8 @@ html, body, [class*="st-"], .stApp, .main {
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
-
 </style>
 """, unsafe_allow_html=True)
-
 
 # --- TEMA DOS GRÁFICOS ---
 def configure_altair_theme():
@@ -271,7 +270,6 @@ def configure_altair_theme():
 
 # Aplica o tema aos gráficos
 configure_altair_theme()
-
 
 # --- Inicialização do Session State ---
 if 'edit_mode' not in st.session_state:
@@ -339,6 +337,7 @@ def connect_to_gsheets():
         return None
 
 sheet = connect_to_gsheets()
+
 if sheet:
     st.sidebar.markdown(
         '<span class="status-badge status-connected">✅ Conectado</span>', 
@@ -476,6 +475,7 @@ with st.form("entry_form", clear_on_submit=True):
 
 # --- Análise de Dados ---
 df = load_data()
+
 if df.empty:
     st.info("📊 **Nenhum dado encontrado**. Comece registrando sua primeira geração de energia solar!")
 else:
@@ -516,7 +516,6 @@ else:
             else:
                 # Se o mês atual não tem dados, seleciona o mais recente que tem
                 month_index = len(months) - 1
-
             selected_month_num = st.selectbox(
                 "📊 Mês", 
                 options=months, 
@@ -632,7 +631,6 @@ else:
                 
                 st.altair_chart(area_chart, use_container_width=True)
                 st.divider()
-
             with tab3:
                 # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
                 year_df = df[df['Data'].dt.year == selected_year].copy()
@@ -677,6 +675,9 @@ else:
                 
                 # Acumulado até o mês selecionado
                 acumulado_ate_mes = year_df[year_df['Data'] <= end_of_month]['Energia Gerada (kWh)'].sum()
+                
+                # Total do ano
+                total_year = year_df['Energia Gerada (kWh)'].sum()
                 
                 # Projeção anual baseada na média mensal
                 meses_completos = len(year_df.groupby(year_df['Data'].dt.month))
@@ -916,86 +917,146 @@ else:
             # Exibe no Streamlit
             st.altair_chart(final_heatmap, use_container_width=True)
             st.divider()
-
-            # --- Estatísticas Expandidas do Ano ---
+            
+            # --- Análise de Viabilidade Econômica ---
             st.markdown("""
             <div class="subheader-container pink">
-                <h3>📈 Estatísticas Avançadas do Ano</h3>
+                <h3>💰 Análise de Viabilidade Econômica</h3>
             </div>
             """, unsafe_allow_html=True)
             
+            # Parâmetros do sistema solar
+            INVESTIMENTO_INICIAL = 15000  # R$ 15.000 à vista
+            VIDA_UTIL_SISTEMA = 25  # 25 anos
+            GASTO_MENSAL_MEDIO = 350  # 350 kWh/mês
+            TARIFA_ENERGIA = 0.85  # R$ 0,85 por kWh (média Brasil 2025)
+            DATA_INSTALACAO = datetime(2025, 5, 1)  # Maio de 2025
+            
+            # Cálculos básicos
             year_total = year_df['Energia Gerada (kWh)'].sum()
-            year_avg = year_df['Energia Gerada (kWh)'].mean()
-            year_max = year_df['Energia Gerada (kWh)'].max()
-            year_min = year_df['Energia Gerada (kWh)'].min()
-            year_std = year_df['Energia Gerada (kWh)'].std()
             
-            # Calculando estatísticas adicionais úteis
-            dias_com_dados = len(year_df)
-            dias_no_ano = 365 if selected_year % 4 != 0 else 366
-            cobertura_dados = (dias_com_dados / dias_no_ano) * 100
+            # Economia mensal e anual baseada na geração
+            economia_mensal_kwh = year_total / 12 if year_total > 0 else 0
+            economia_mensal_reais = economia_mensal_kwh * TARIFA_ENERGIA
+            economia_anual_reais = economia_mensal_reais * 12
             
-            # Taxa de crescimento (comparação com mês anterior quando possível)
-            monthly_data = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum()
-            if len(monthly_data) >= 2:
-                ultimo_mes = monthly_data.iloc[-1]
-                penultimo_mes = monthly_data.iloc[-2]
-                taxa_crescimento = ((ultimo_mes - penultimo_mes) / penultimo_mes) * 100 if penultimo_mes > 0 else 0
-            else:
-                taxa_crescimento = 0
-                
-            # Eficiência média (baseada em valor teórico de 20 kWh/dia como referência)
-            eficiencia_teorica = year_avg / 20 * 100 if year_avg > 0 else 0
+            # Percentual de compensação do consumo
+            compensacao_consumo = min((economia_mensal_kwh / GASTO_MENSAL_MEDIO) * 100, 100) if GASTO_MENSAL_MEDIO > 0 else 0
             
-            # Economia de CO2 estimada (1 kWh solar evita ~0.4kg CO2)
-            economia_co2 = year_total * 0.4
+            # Payback simples (anos)
+            payback_simples = INVESTIMENTO_INICIAL / economia_anual_reais if economia_anual_reais > 0 else 0
             
-            # Valor econômico estimado (R$ 0,65 por kWh como média)
-            valor_economico = year_total * 0.65
+            # Economia total em 25 anos (valor presente)
+            economia_total_25_anos = economia_anual_reais * VIDA_UTIL_SISTEMA
             
-            col1, col2, col3, col4 = st.columns(4)
+            # ROI (Return on Investment)
+            roi_percentual = ((economia_total_25_anos - INVESTIMENTO_INICIAL) / INVESTIMENTO_INICIAL) * 100 if INVESTIMENTO_INICIAL > 0 else 0
             
-            with col1:
-                st.metric("🏆 Total do Ano", f"{format_number_br(year_total)} kWh")
-                st.metric("📊 Média Diária", f"{format_number_br(year_avg)} kWh")
+            # Tempo decorrido desde instalação
+            hoje = datetime.now()
+            meses_funcionamento = max(1, (hoje.year - DATA_INSTALACAO.year) * 12 + (hoje.month - DATA_INSTALACAO.month))
             
-            with col2:
-                st.metric("⚡ Pico Máximo", f"{format_number_br(year_max)} kWh")
-                st.metric("📉 Mínimo", f"{format_number_br(year_min)} kWh")
+            # Valor já economizado
+            valor_ja_economizado = (meses_funcionamento * economia_mensal_reais)
+            percentual_recuperado = (valor_ja_economizado / INVESTIMENTO_INICIAL) * 100
             
-            with col3:
-                st.metric("📈 Taxa de Crescimento", f"{taxa_crescimento:+.1f}%")
-                st.metric("📋 Cobertura de Dados", f"{cobertura_dados:.1f}%")
-            
-            with col4:
-                st.metric("🌍 CO₂ Evitado", f"{format_number_br(economia_co2)} kg")
-                st.metric("💰 Economia Est.", f"R$ {format_number_br(valor_economico)}")
-            
-            # Estatísticas adicionais em uma segunda linha
-            st.markdown("##### 🔍 Análises Complementares")
+            # TIR estimada (aproximação simples)
+            tir_anual = (economia_anual_reais / INVESTIMENTO_INICIAL) * 100
             
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                st.metric("📊 Desvio Padrão", f"{format_number_br(year_std)} kWh")
+                st.metric("💰 Economia Mensal", f"R$ {format_number_br(economia_mensal_reais)}")
+                st.metric("📊 Economia Anual", f"R$ {format_number_br(economia_anual_reais)}")
             
             with col2:
-                # Melhor e pior mês
-                monthly_totals = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum()
-                melhor_mes_num = monthly_totals.idxmax()
-                melhor_mes_nome = month_names[melhor_mes_num][:3]
-                st.metric("⭐ Melhor Mês", f"{melhor_mes_nome}")
+                st.metric("⏱️ Payback Simples", f"{payback_simples:.1f} anos")
+                st.metric("📈 ROI (25 anos)", f"{roi_percentual:.1f}%")
             
             with col3:
-                pior_mes_num = monthly_totals.idxmin()
-                pior_mes_nome = month_names[pior_mes_num][:3]
-                st.metric("📉 Pior Mês", f"{pior_mes_nome}")
+                st.metric("⚡ Compensação", f"{compensacao_consumo:.1f}%")
+                st.metric("🎯 TIR Estimada", f"{tir_anual:.1f}% a.a.")
             
             with col4:
-                # Consistência (% de dias com geração > média)
-                dias_acima_media = len(year_df[year_df['Energia Gerada (kWh)'] > year_avg])
-                consistencia = (dias_acima_media / len(year_df)) * 100
-                st.metric("🎯 Consistência", f"{consistencia:.1f}%")
+                st.metric("💵 Já Economizado", f"R$ {format_number_br(valor_ja_economizado)}")
+                st.metric("🔄 Investimento Recuperado", f"{percentual_recuperado:.1f}%")
+            
+            # Gráfico de Fluxo de Caixa Projetado
+            st.markdown("##### 📈 Fluxo de Caixa Projetado (25 anos)")
+            
+            # Criando dados para o gráfico de fluxo de caixa
+            anos = list(range(0, VIDA_UTIL_SISTEMA + 1))
+            fluxo_caixa_acumulado = [-INVESTIMENTO_INICIAL]  # Ano 0: investimento inicial
+            
+            for ano in range(1, VIDA_UTIL_SISTEMA + 1):
+                # Degradação dos painéis (0.5% ao ano)
+                fator_degradacao = (1 - 0.005) ** ano
+                economia_ano = economia_anual_reais * fator_degradacao
+                fluxo_caixa_acumulado.append(fluxo_caixa_acumulado[-1] + economia_ano)
+            
+            fluxo_df = pd.DataFrame({
+                'Ano': anos,
+                'Fluxo de Caixa Acumulado': fluxo_caixa_acumulado
+            })
+            
+            # Gráfico de linha para fluxo de caixa
+            fluxo_chart = alt.Chart(fluxo_df).mark_line(
+                color='#10b981',
+                strokeWidth=3,
+                point={'filled': True, 'size': 50}
+            ).encode(
+                x=alt.X('Ano:O', title=''),
+                y=alt.Y('Fluxo de Caixa Acumulado:Q', title=''),
+                tooltip=[
+                    alt.Tooltip('Ano:O', title='Ano'),
+                    alt.Tooltip('Fluxo de Caixa Acumulado:Q', title='Acumulado', format=',.0f')
+                ]
+            )
+            
+            # Linha do zero (break-even)
+            linha_zero = alt.Chart(pd.DataFrame({'zero': [0]})).mark_rule(
+                color='red',
+                strokeWidth=2,
+                strokeDash=[5, 5]
+            ).encode(
+                y=alt.Y('zero:Q'),
+                tooltip=alt.value('Break-even')
+            )
+            
+            fluxo_final = (fluxo_chart + linha_zero).properties(
+                height=350,
+                title=''
+            )
+            
+            st.altair_chart(fluxo_final, use_container_width=True)
+            
+            # Análises Complementares
+            st.markdown("##### 🔍 Indicadores de Performance")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                # VPL simplificado (sem desconto)
+                vpl_simples = economia_total_25_anos - INVESTIMENTO_INICIAL
+                st.metric("💎 VPL Simples", f"R$ {format_number_br(vpl_simples)}")
+            
+            with col2:
+                # Economia vs custo da energia da rede
+                custo_energia_rede_25_anos = GASTO_MENSAL_MEDIO * 12 * TARIFA_ENERGIA * VIDA_UTIL_SISTEMA
+                economia_vs_rede = economia_total_25_anos / custo_energia_rede_25_anos * 100 if custo_energia_rede_25_anos > 0 else 0
+                st.metric("🔋 Economia vs Rede", f"{economia_vs_rede:.1f}%")
+            
+            with col3:
+                # Produtividade do sistema (kWh/kW instalado aproximado)
+                # Assumindo ~10kW de potência instalada para R$ 15k
+                potencia_estimada = 10  # kW
+                produtividade_anual = (year_total / potencia_estimada) if potencia_estimada > 0 else 0
+                st.metric("⚡ Produtividade", f"{format_number_br(produtividade_anual)} kWh/kW.ano")
+            
+            with col4:
+                # Tempo restante para payback
+                tempo_restante_payback = max(0, payback_simples - (meses_funcionamento / 12))
+                st.metric("⏳ Restam p/ Payback", f"{tempo_restante_payback:.1f} anos")
 
 # --- Footer ---
 st.divider()
