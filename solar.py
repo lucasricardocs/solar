@@ -29,18 +29,6 @@ except:
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
 WORKSHEET_NAME = 'solardaily'
 
-# Dados da fatura para cálculos (precisa estar antes das funções que os usam)
-tarifa_energia = 0.653688  # R$/kWh
-icms = 0.19  # 19%
-pis_pasep = 0.010554  # 1,0554%
-cofins = 0.048687  # 4,8687%
-contrib_ilum_publica = 8.38  # R$ fixo
-taxa_disponibilidade = 30.96  # R$ fixo monofásico
-consumo_medio_mensal = 300  # kWh
-multiplicador_impostos = 1 + icms + pis_pasep + cofins
-custo_kwh_com_impostos = tarifa_energia * multiplicador_impostos
-custo_mensal_sem_solar = (consumo_medio_mensal * custo_kwh_com_impostos) + contrib_ilum_publica + taxa_disponibilidade
-
 # --- Configuração da Página ---
 st.set_page_config(
     layout="wide",
@@ -701,7 +689,6 @@ else:
                 with col1:
                     st.metric("📊 Acumulado até o Mês", f"{format_number_br(acumulado_ate_mes)} kWh")
                 with col2:
-                    total_year = year_df['Energia Gerada (kWh)'].sum()
                     st.metric("📈 Total do Ano", f"{format_number_br(total_year)} kWh")
                 with col3:
                     st.metric("🎯 Projeção Anual", f"{format_number_br(projecao_anual)} kWh")
@@ -957,21 +944,14 @@ else:
             else:
                 taxa_crescimento = 0
                 
-            # Eficiência média (baseada no padrão residencial de 15-20 kWh/dia)
-            eficiencia_teorica = year_avg / 17.5 * 100 if year_avg > 0 else 0
+            # Eficiência média (baseada em valor teórico de 20 kWh/dia como referência)
+            eficiencia_teorica = year_avg / 20 * 100 if year_avg > 0 else 0
             
             # Economia de CO2 estimada (1 kWh solar evita ~0.4kg CO2)
             economia_co2 = year_total * 0.4
             
-            # Valor econômico estimado (baseado no custo real com impostos)
-            valor_economico = year_total * custo_kwh_com_impostos
-            
-            # Economia anual considerando consumo médio de 300 kWh/mês
-            economia_anual_sem_solar = custo_mensal_sem_solar * 12
-            economia_liquida_anual = economia_anual_sem_solar - (taxa_disponibilidade * 12) - (contrib_ilum_publica * 12)
-            
-            # Estimativa de créditos excedentes (baseado no padrão da fatura: 211/464 = 45,5%)
-            creditos_estimados = year_total * 0.455
+            # Valor econômico estimado (R$ 0,65 por kWh como média)
+            valor_economico = year_total * 0.65
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -989,7 +969,7 @@ else:
             
             with col4:
                 st.metric("🌍 CO₂ Evitado", f"{format_number_br(economia_co2)} kg")
-                st.metric("💰 Economia Real", f"R$ {format_number_br(valor_economico)}")
+                st.metric("💰 Economia Est.", f"R$ {format_number_br(valor_economico)}")
             
             # Estatísticas adicionais em uma segunda linha
             st.markdown("##### 🔍 Análises Complementares")
@@ -998,11 +978,8 @@ else:
             
             with col1:
                 st.metric("📊 Desvio Padrão", f"{format_number_br(year_std)} kWh")
-                st.metric("⚡ Créditos Est.", f"{format_number_br(creditos_estimados)} kWh")
             
             with col2:
-                # Economia potencial anual (se consumisse 300 kWh/mês sem solar)
-                st.metric("💸 Custo sem Solar/Ano", f"R$ {format_number_br(economia_anual_sem_solar)}")
                 # Melhor e pior mês
                 monthly_totals = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum()
                 melhor_mes_num = monthly_totals.idxmax()
@@ -1020,51 +997,12 @@ else:
                 consistencia = (dias_acima_media / len(year_df)) * 100
                 st.metric("🎯 Consistência", f"{consistencia:.1f}%")
 
-# --- Info Box com dados da fatura e cálculos reais ---
-st.markdown("""
-<div class="subheader-container blue">
-    <h3>💰 Análise Financeira Baseada na Fatura Real</h3>
-</div>
-""", unsafe_allow_html=True)
-
-# Mostra os componentes de custo
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("##### 🏷️ Composição Tarifária")
-    st.metric("⚡ Tarifa Base", f"R$ {format_number_br(tarifa_energia, 6)}/kWh")
-    st.metric("📊 ICMS", f"{icms*100:.0f}%")
-    st.metric("🏛️ PIS/PASEP", f"{pis_pasep*100:.4f}%")
-    st.metric("🏛️ COFINS", f"{cofins*100:.4f}%")
-
-with col2:
-    st.markdown("##### 💰 Custos Fixos Mensais")
-    st.metric("💡 Contrib. Ilum. Pública", f"R$ {format_number_br(contrib_ilum_publica)}")
-    st.metric("🔌 Taxa Disponibilidade", f"R$ {format_number_br(taxa_disponibilidade)}")
-    st.metric("⚡ Total kWh + Impostos", f"R$ {format_number_br(custo_kwh_com_impostos, 6)}/kWh")
-    st.metric("📊 Custo Mensal Total", f"R$ {format_number_br(custo_mensal_sem_solar)}")
-
-st.divider()
-
-# Dados reais da fatura julho/2025
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("🏠 Geração Julho", "464 kWh", help="Energia gerada no sistema solar")
-with col2:
-    st.metric("📊 Consumo Julho", "253 kWh", help="Energia consumida da rede")
-with col3:
-    st.metric("⚡ Excedente", "211 kWh", help="Energia injetada na rede (créditos)")
-with col4:
-    st.metric("💰 Fatura Julho", "R$ 39,34", help="Valor final após compensação SCEE")
-
 # --- Footer ---
 st.divider()
 st.markdown(f"""
 <div style="text-align: center; color: var(--text-secondary); padding: 0.1rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
-    <p>💡 Baseado na Fatura Equatorial Energia | Tarifa + Impostos: R$ {format_number_br(custo_kwh_com_impostos, 6)}/kWh</p>
-    <p>📊 Consumo médio referência: 300 kWh/mês | Custo sem solar: R$ {format_number_br(custo_mensal_sem_solar)}/mês</p>
 </div>
 """, unsafe_allow_html=True)
 
