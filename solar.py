@@ -138,7 +138,7 @@ html, body, [class*="st-"], .stApp, .main {
     padding: 12px 20px; /* Padding reduzido */
     background: #ffffff;
     border-radius: 8px;
-    border-left: 5px solid;
+    border-left: 20px solid;
     border: 1px solid #d3d3d3;
     stroke: #d3d3d3;
     stroke-width: 0.5;
