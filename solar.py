@@ -72,17 +72,15 @@ html, body, [class*="st-"], .stApp, .main {
 .header-section {
     background: linear-gradient(135deg, #e6f3ff, #f0f0f0);
     color: #1f2937;
-    padding: 1rem 2rem; /* Padding reduzido de 2rem para 1rem */
+    padding: 1rem 2rem;
     border-radius: 12px;
-    border: 5px solid #d3d3d3; /* Borda aumentada de 1px para 5px */
-    stroke: #d3d3d3;
-    stroke-width: 0.5;
+    border: 1px solid #d3d3d3;  /* Borda reduzida para 1px */
     margin-bottom: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    height: 120px; /* Altura reduzida de 250px para 120px */
+    height: 120px;
     animation: headerPulse 6s ease-in-out infinite alternate;
 }
 
@@ -100,12 +98,12 @@ html, body, [class*="st-"], .stApp, .main {
 .header-content {
     display: flex;
     align-items: center;
-    gap: 1rem; /* Gap reduzido de 1.5rem para 1rem */
+    gap: 1rem;
 }
 
 .solar-icon {
-    width: 100px; /* Tamanho reduzido de 250px para 100px */
-    height: 100px; /* Tamanho reduzido de 250px para 100px */
+    width: 100px;
+    height: 100px;
     flex-shrink: 0;
 }
 
@@ -114,56 +112,34 @@ html, body, [class*="st-"], .stApp, .main {
 }
 
 .header-title {
-    font-size: 1.8rem; /* Tamanho reduzido de 2.5rem para 1.8rem */
+    font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 0.2rem; /* Margem reduzida de 0.5rem para 0.2rem */
+    margin-bottom: 0.2rem;
     background: linear-gradient(135deg, #1f2937, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.1; /* Altura da linha reduzida */
+    line-height: 1.1;
 }
 
 .header-subtitle {
-    font-size: 0.95rem; /* Tamanho reduzido de 1.1rem para 0.95rem */
+    font-size: 0.95rem;
     opacity: 0.8;
     font-weight: 400;
     color: #1f2937;
-    margin: 0; /* Remove margem extra */
-    line-height: 1.2; /* Altura da linha reduzida */
+    margin: 0;
+    line-height: 1.2;
 }
 
-/* Padrão para containers de subheaders (MAIORES) */
+/* Padrão para containers de subheaders - BORDA LATERAL ESQUERDA APENAS */
 .subheader-container {
     margin: 20px 0;
-    padding: 12px 20px; /* Padding reduzido */
+    padding: 12px 20px;
     background: #ffffff;
     border-radius: 8px;
-    border-left: 8px solid; /* Borda lateral aumentada de 20px para 8px (mais visível) */
-    border: 5px solid #d3d3d3; /* Borda geral aumentada de 1px para 5px */
-    stroke: #d3d3d3;
-    stroke-width: 2; /* Stroke aumentado de 0.5 para 2 */
+    border-left: 4px solid;  /* Apenas borda lateral esquerda com 4px */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    animation: shadowPulse 5s infinite alternate;
-}
-
-/* Ajuste do tamanho da fonte dos títulos dentro dos containers */
-.subheader-container h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.subheader-container h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-@keyframes shadowPulse {
-    0% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
-    100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); }
 }
 
 .subheader-container:hover {
@@ -178,23 +154,32 @@ html, body, [class*="st-"], .stApp, .main {
 .subheader-container.pink { border-left-color: #e91e63; }
 .subheader-container.teal { border-left-color: #1abc9c; }
 
-/* Cards com stroke mais visível */
+/* Ajuste do tamanho da fonte dos títulos dentro dos containers */
+.subheader-container h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.subheader-container h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Cards com borda mínima */
 [data-testid="metric-container"] {
     background: #ffffff;
-    border: 3px solid #d3d3d3; /* Borda aumentada de 1px para 3px */
-    stroke: #d3d3d3;
-    stroke-width: 1.5; /* Stroke aumentado de 0.5 para 1.5 */
+    border: 1px solid #d3d3d3;  /* Borda reduzida para 1px */
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Forms com stroke mais visível */
+/* Forms com borda mínima */
 .stForm {
     background: white;
-    border: 4px solid #d3d3d3; /* Borda aumentada de 1px para 4px */
-    stroke: #d3d3d3;
-    stroke-width: 2; /* Stroke aumentado de 0.5 para 2 */
+    border: 1px solid #d3d3d3;  /* Borda reduzida para 1px */
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -215,7 +200,7 @@ html, body, [class*="st-"], .stApp, .main {
 /* Explicações dos indicadores econômicos */
 .economic-explanation {
     background: #f8f9fa;
-    border: 2px solid #e9ecef;
+    border: 1px solid #e9ecef;  /* Borda reduzida para 1px */
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
@@ -265,7 +250,7 @@ def configure_altair_theme():
             },
             "title": {
                 "font": font,
-                "fontSize": 0,  # Remove títulos dos gráficos
+                "fontSize": 0,
                 "fontWeight": 0,
                 "anchor": "middle",
                 "color": "transparent"
@@ -274,15 +259,15 @@ def configure_altair_theme():
                 "labelFont": font,
                 "titleFont": font,
                 "labelFontSize": 11,
-                "titleFontSize": 0,  # Remove títulos dos eixos
+                "titleFontSize": 0,
                 "gridColor": "#e2e8f0",
                 "domain": False,
                 "tickColor": "#6b7280",
                 "labelColor": "#6b7280",
-                "titleColor": "transparent",  # Torna títulos transparentes
+                "titleColor": "transparent",
                 "titleFontWeight": 0,
                 "labelFontWeight": 400,
-                "title": None  # Remove completamente os títulos
+                "title": None
             },
             "legend": {
                 "labelFont": font,
@@ -394,7 +379,7 @@ def load_data():
         df.columns = [col.lower().strip() for col in df.columns]
         
         if 'data' not in df.columns or 'gerado' not in df.columns:
-            st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' y 'gerado'.")
+            st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' e 'gerado'.")
             return pd.DataFrame()
         
         df.rename(columns={
@@ -596,16 +581,16 @@ else:
                     cornerRadiusTopLeft=3,
                     cornerRadiusTopRight=3,
                     stroke="black",
-                    strokeWidth=2,
+                    strokeWidth=1,  # Reduzido para 1px
                     size=35
                 ).encode(
                     x=alt.X(
                         'Data:T', 
-                        title='',  # Remove título do eixo X
+                        title='',
                         axis=alt.Axis(format='%d', labelAngle=0, tickCount='day'),
                         scale=alt.Scale(nice=False)
                     ),
-                    y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
+                    y=alt.Y('Energia Gerada (kWh):Q', title=''),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
@@ -615,7 +600,7 @@ else:
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
                 linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
                     color='red',
-                    strokeWidth=4,
+                    strokeWidth=2,  # Reduzido para 2px
                 ).encode(
                     y=alt.Y('media:Q'),
                     tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
@@ -623,7 +608,7 @@ else:
                 
                 final_chart = (bar_chart + linha_media).properties(
                     height=400,
-                    title=''  # Remove título do gráfico
+                    title=''
                 )
                 
                 st.altair_chart(final_chart, use_container_width=True)
@@ -646,8 +631,8 @@ else:
                     ),
                     interpolate='monotone'
                 ).encode(
-                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
-                    y=alt.Y('Acumulado:Q', title=''),  # Remove título do eixo Y
+                    x=alt.X('Data:T', title=''),
+                    y=alt.Y('Acumulado:Q', title=''),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'),
@@ -655,7 +640,7 @@ else:
                     ]
                 ).properties(
                     height=400,
-                    title=''  # Remove título do gráfico
+                    title=''
                 )
                 
                 st.altair_chart(area_chart, use_container_width=True)
@@ -681,8 +666,8 @@ else:
                     ),
                     interpolate='monotone'
                 ).encode(
-                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
-                    y=alt.Y('Acumulado Anual:Q', title=''),  # Remove título do eixo Y
+                    x=alt.X('Data:T', title=''),
+                    y=alt.Y('Acumulado Anual:Q', title=''),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
@@ -690,7 +675,7 @@ else:
                     ]
                 ).properties(
                     height=400,
-                    title=''  # Remove título do gráfico
+                    title=''
                 )
                 
                 st.altair_chart(area_chart_annual, use_container_width=True)
@@ -815,15 +800,15 @@ else:
             cornerRadiusTopLeft=2,
             cornerRadiusTopRight=2,
             stroke="black",
-            strokeWidth=2,
+            strokeWidth=1,  # Reduzido para 1px
             size=50
         ).encode(
             x=alt.X(
                 'Nome Mês:N', 
-                title='',  # Remove título do eixo X
+                title='',
                 sort=[m[:3] for m in month_names.values()]
             ),
-            y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
+            y=alt.Y('Energia Gerada (kWh):Q', title=''),
             tooltip=[
                 alt.Tooltip('Nome Mês:N', title='Mês'), 
                 alt.Tooltip('Energia Gerada (kWh):Q', title='Total', format='.2f')
@@ -833,7 +818,7 @@ else:
         media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
         linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
             color='red',
-            strokeWidth=4,
+            strokeWidth=2,  # Reduzido para 2px
         ).encode(
             y=alt.Y('media:Q'),
             tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
@@ -841,7 +826,7 @@ else:
         
         monthly_chart = (monthly_bars + linha_media_mensal).properties(
             height=400,
-            title=''  # Remove título do gráfico
+            title=''
         )
         
         st.altair_chart(monthly_chart, use_container_width=True)
@@ -882,13 +867,13 @@ else:
         heatmap_grid = alt.Chart(heatmap_df).mark_rect(
             cornerRadius=2,
             stroke='#d3d3d3',
-            strokeWidth=1
+            strokeWidth=0.5  # Reduzido para 0.5px
         ).encode(
             x=alt.X(
                 'week_num:O',
                 title=None,
                 axis=alt.Axis(labels=False, ticks=False, domain=False),
-                scale=alt.Scale(padding=0.02)  # padding mínimo em X
+                scale=alt.Scale(padding=0.02)
             ),
             y=alt.Y(
                 'day_of_week:O',
@@ -898,7 +883,7 @@ else:
                     ticks=False,
                     domain=False 
                 ),
-                scale=alt.Scale(padding=0.04)  # padding mínimo em Y
+                scale=alt.Scale(padding=0.04)
             ),
             color=alt.condition(
                 alt.datum['Energia Gerada (kWh)'] > 0,
@@ -906,8 +891,8 @@ else:
                     'Energia Gerada (kWh):Q',
                     scale=alt.Scale(
                         scheme='yellowgreen',
-                        domainMin=10,  # força o mínimo da cor em 10
-                        domainMax=20   # máximo em 20
+                        domainMin=10,
+                        domainMax=20
                     ),
                     legend=alt.Legend(title="kWh Gerado")
                 ),
@@ -937,7 +922,7 @@ else:
             heatmap_grid,
             spacing=25
         ).properties(
-            title=''  # Remove título do heatmap
+            title=''
         ).resolve_scale(
             x='shared'
         ).configure_view(
@@ -1052,7 +1037,7 @@ else:
         # Gráfico de linha para fluxo de caixa
         fluxo_chart = alt.Chart(fluxo_df).mark_line(
             color='#10b981',
-            strokeWidth=3,
+            strokeWidth=2,  # Reduzido para 2px
             point={'filled': True, 'size': 50}
         ).encode(
             x=alt.X('Ano:O', title=''),
@@ -1066,7 +1051,7 @@ else:
         # Linha do zero (break-even)
         linha_zero = alt.Chart(pd.DataFrame({'zero': [0]})).mark_rule(
             color='red',
-            strokeWidth=2,
+            strokeWidth=1,  # Reduzido para 1px
             strokeDash=[5, 5]
         ).encode(
             y=alt.Y('zero:Q'),
