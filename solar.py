@@ -573,12 +573,12 @@ else:
                     cornerRadiusTopRight=3,
                     stroke="black",
                     strokeWidth=2,
-                    size=40
+                    size=35
                 ).encode(
                     x=alt.X(
                         'Data:T', 
                         title='',  # Remove título do eixo X
-                        axis=alt.Axis(format='%d/%m', labelAngle=-45, tickCount='day'),
+                        axis=alt.Axis(format='%d', labelAngle=0, tickCount='day'),
                         scale=alt.Scale(nice=False)
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
@@ -785,8 +785,11 @@ else:
             
             monthly_bars = alt.Chart(monthly_summary).mark_bar(
                 color="#f59e0b",
-                cornerRadiusTopLeft=4,
-                cornerRadiusTopRight=4,
+                cornerRadiusTopLeft=2,
+                cornerRadiusTopRight=2,
+                stroke="black",
+                strokeWidth=2,
+                size=50
             ).encode(
                 x=alt.X(
                     'Nome Mês:N', 
