@@ -486,7 +486,7 @@ else:
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 1, 2])
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         # Lógica para pré-selecionar o ano atual
@@ -525,10 +525,6 @@ else:
             )
         else:
             st.info("Nenhum dado disponível para este ano")
-            
-    with col3:
-        total_year = df[df['Data'].dt.year == selected_year]['Energia Gerada (kWh)'].sum()
-        st.metric(f"📈 Total em {selected_year}", f"{format_number_br(total_year)} kWh")
     
     if selected_month_num is not None:
         filtered_df = df[
