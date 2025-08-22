@@ -546,7 +546,7 @@ else:
                     color="green",
                     cornerRadiusTopLeft=3,
                     cornerRadiusTopRight=3,
-                    stroke="#d3d3d3",
+                    stroke="black",
                     strokeWidth=2,
                     size=40
                 ).encode(
@@ -566,7 +566,7 @@ else:
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
                 linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
                     color='red',
-                    strokeWidth=2,
+                    strokeWidth=4,
                 ).encode(
                     y=alt.Y('media:Q'),
                     tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
@@ -778,8 +778,7 @@ else:
             media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
             linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
                 color='red',
-                strokeWidth=2,
-                strokeDash=[5, 5]
+                strokeWidth=4,
             ).encode(
                 y=alt.Y('media:Q'),
                 tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
@@ -920,7 +919,7 @@ else:
 # --- Footer ---
 st.divider()
 st.markdown(f"""
-<div style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.9rem;">
+<div style="text-align: center; color: var(--text-secondary); padding: 0.5rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
