@@ -73,7 +73,7 @@ html, body, [class*="st-"], .stApp, .main {
     color: #1f2937;
     padding: 1rem 2rem; /* Padding reduzido de 2rem para 1rem */
     border-radius: 12px;
-    border: 1px solid #d3d3d3;
+    border: 5px solid #d3d3d3; /* Borda aumentada de 1px para 5px */
     stroke: #d3d3d3;
     stroke-width: 0.5;
     margin-bottom: 2rem;
@@ -132,16 +132,16 @@ html, body, [class*="st-"], .stApp, .main {
     line-height: 1.2; /* Altura da linha reduzida */
 }
 
-/* Padrão para containers de subheaders (MENORES) */
+/* Padrão para containers de subheaders (MAIORES) */
 .subheader-container {
     margin: 20px 0;
     padding: 12px 20px; /* Padding reduzido */
     background: #ffffff;
     border-radius: 8px;
-    border-left: 20px solid;
-    border: 1px solid #d3d3d3;
+    border-left: 8px solid; /* Borda lateral aumentada de 20px para 8px (mais visível) */
+    border: 5px solid #d3d3d3; /* Borda geral aumentada de 1px para 5px */
     stroke: #d3d3d3;
-    stroke-width: 0.5;
+    stroke-width: 2; /* Stroke aumentado de 0.5 para 2 */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     animation: shadowPulse 5s infinite alternate;
@@ -177,23 +177,23 @@ html, body, [class*="st-"], .stApp, .main {
 .subheader-container.pink { border-left-color: #e91e63; }
 .subheader-container.teal { border-left-color: #1abc9c; }
 
-/* Cards com stroke */
+/* Cards com stroke mais visível */
 [data-testid="metric-container"] {
     background: #ffffff;
-    border: 1px solid #d3d3d3;
+    border: 3px solid #d3d3d3; /* Borda aumentada de 1px para 3px */
     stroke: #d3d3d3;
-    stroke-width: 0.5;
+    stroke-width: 1.5; /* Stroke aumentado de 0.5 para 1.5 */
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Forms com stroke */
+/* Forms com stroke mais visível */
 .stForm {
     background: white;
-    border: 1px solid #d3d3d3;
+    border: 4px solid #d3d3d3; /* Borda aumentada de 1px para 4px */
     stroke: #d3d3d3;
-    stroke-width: 0.5;
+    stroke-width: 2; /* Stroke aumentado de 0.5 para 2 */
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -210,6 +210,34 @@ html, body, [class*="st-"], .stApp, .main {
 
 .status-connected { background-color: #10B98120; color: #10B981; }
 .status-disconnected { background-color: #EF444420; color: #EF4444; }
+
+/* Explicações dos indicadores econômicos */
+.economic-explanation {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.economic-explanation h4 {
+    color: #343a40;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.economic-explanation ul {
+    margin: 0.5rem 0;
+    padding-left: 1.2rem;
+}
+
+.economic-explanation li {
+    margin-bottom: 0.3rem;
+}
 
 /* Hide Streamlit elements */
 #MainMenu {visibility: hidden;}
@@ -629,40 +657,6 @@ else:
                     title=''  # Remove título do gráfico
                 )
                 
-                st.altair_chart(area_chart, use_container_width=True)
-                st.divider()
-            with tab3:
-                # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
-                year_df = df[df['Data'].dt.year == selected_year].copy()
-                year_df_sorted = year_df.sort_values('Data').copy()
-                year_df_sorted['Acumulado Anual'] = year_df_sorted['Energia Gerada (kWh)'].cumsum()
-                
-                # Gráfico de área para acumulado anual
-                area_chart_annual = alt.Chart(year_df_sorted).mark_area(
-                    line={'color':'#8b5cf6'},
-                    color=alt.Gradient(
-                        gradient='linear',
-                        stops=[alt.GradientStop(color='white', offset=0),
-                               alt.GradientStop(color='#8b5cf6', offset=1)],
-                        x1=1,
-                        x2=1,
-                        y1=1,
-                        y2=0
-                    ),
-                    interpolate='monotone'
-                ).encode(
-                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
-                    y=alt.Y('Acumulado Anual:Q', title=''),  # Remove título do eixo Y
-                    tooltip=[
-                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
-                        alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
-                        alt.Tooltip('Acumulado Anual:Q', title='Acumulado no Ano', format='.2f')
-                    ]
-                ).properties(
-                    height=400,
-                    title=''  # Remove título do gráfico
-                )
-                
                 st.altair_chart(area_chart_annual, use_container_width=True)
                 
                 # Métricas do acumulado anual
@@ -925,11 +919,11 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-            # Parâmetros do sistema solar
+            # Parâmetros do sistema solar (ATUALIZADOS com seus dados reais)
             INVESTIMENTO_INICIAL = 15000  # R$ 15.000 à vista
             VIDA_UTIL_SISTEMA = 25  # 25 anos
-            GASTO_MENSAL_MEDIO = 350  # 350 kWh/mês
-            TARIFA_ENERGIA = 0.85  # R$ 0,85 por kWh (média Brasil 2025)
+            GASTO_MENSAL_MEDIO = 363.88  # Seu consumo médio real dos últimos 24 meses
+            TARIFA_ENERGIA = 0.95552617  # Seu custo unitário real dos últimos 24 meses
             DATA_INSTALACAO = datetime(2025, 5, 1)  # Maio de 2025
             
             # Cálculos básicos
@@ -980,6 +974,26 @@ else:
             with col4:
                 st.metric("💵 Já Economizado", f"R$ {format_number_br(valor_ja_economizado)}")
                 st.metric("🔄 Investimento Recuperado", f"{percentual_recuperado:.1f}%")
+            
+            # --- EXPLICAÇÕES DOS INDICADORES ECONÔMICOS ---
+            st.markdown("""
+            <div class="economic-explanation">
+                <h4>📚 Entenda os Indicadores Econômicos:</h4>
+                <ul>
+                    <li><strong>💰 Economia Mensal/Anual:</strong> Valor em reais que você economiza na conta de luz com a energia solar gerada</li>
+                    <li><strong>⏱️ Payback Simples:</strong> Tempo necessário para recuperar o investimento inicial através das economias geradas</li>
+                    <li><strong>📈 ROI (Return on Investment):</strong> Retorno total do investimento em 25 anos, considerando toda a economia gerada</li>
+                    <li><strong>⚡ Compensação:</strong> Percentual do seu consumo mensal que é compensado pela geração solar</li>
+                    <li><strong>🎯 TIR (Taxa Interna de Retorno):</strong> Rentabilidade anual do investimento em energia solar</li>
+                    <li><strong>💵 Já Economizado:</strong> Valor total economizado desde a instalação do sistema</li>
+                    <li><strong>🔄 Investimento Recuperado:</strong> Percentual do investimento inicial já recuperado através das economias</li>
+                    <li><strong>💎 VPL (Valor Presente Líquido):</strong> Diferença entre o valor economizado e o investimento inicial em 25 anos</li>
+                    <li><strong>🔋 Economia vs Rede:</strong> Percentual de economia em relação ao custo total da energia da rede elétrica</li>
+                    <li><strong>⚡ Produtividade:</strong> Quantidade de energia gerada por kW de potência instalada por ano</li>
+                    <li><strong>⏳ Restam p/ Payback:</strong> Tempo restante para completar o retorno do investimento</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Gráfico de Fluxo de Caixa Projetado
             st.markdown("##### 📈 Fluxo de Caixa Projetado (25 anos)")
@@ -1083,3 +1097,37 @@ if st.session_state.edit_mode:
     if st.sidebar.button("❌ Sair do Modo Edição"):
         st.session_state.edit_mode = False
         st.rerun()
+                
+                st.altair_chart(area_chart, use_container_width=True)
+                st.divider()
+            with tab3:
+                # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
+                year_df = df[df['Data'].dt.year == selected_year].copy()
+                year_df_sorted = year_df.sort_values('Data').copy()
+                year_df_sorted['Acumulado Anual'] = year_df_sorted['Energia Gerada (kWh)'].cumsum()
+                
+                # Gráfico de área para acumulado anual
+                area_chart_annual = alt.Chart(year_df_sorted).mark_area(
+                    line={'color':'#8b5cf6'},
+                    color=alt.Gradient(
+                        gradient='linear',
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='#8b5cf6', offset=1)],
+                        x1=1,
+                        x2=1,
+                        y1=1,
+                        y2=0
+                    ),
+                    interpolate='monotone'
+                ).encode(
+                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
+                    y=alt.Y('Acumulado Anual:Q', title=''),  # Remove título do eixo Y
+                    tooltip=[
+                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                        alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
+                        alt.Tooltip('Acumulado Anual:Q', title='Acumulado no Ano', format='.2f')
+                    ]
+                ).properties(
+                    height=400,
+                    title=''  # Remove título do gráfico
+                )
