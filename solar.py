@@ -1165,3 +1165,4 @@ st.rerun()
                 height=400,
                 title=''  # Remove título do gráfico
             )
+```
