@@ -978,21 +978,18 @@ else:
         # TIR estimada (aproximação simples)
         tir_anual = (economia_anual_reais / INVESTIMENTO_INICIAL) * 100
         
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3 = st.columns(3)
         
         with col1:
             st.metric("💰 Economia Mensal", f"R$ {format_number_br(economia_mensal_reais)}")
             st.metric("📊 Economia Anual", f"R$ {format_number_br(economia_anual_reais)}")
+            st.metric("⏱️ Payback Simples", f"{payback_simples:.1f} anos")
         
         with col2:
-            st.metric("⏱️ Payback Simples", f"{payback_simples:.1f} anos")
             st.metric("📈 ROI (25 anos)", f"{roi_percentual:.1f}%")
-        
-        with col3:
             st.metric("⚡ Compensação", f"{compensacao_consumo:.1f}%")
             st.metric("🎯 TIR Estimada", f"{tir_anual:.1f}% a.a.")
-        
-        with col4:
+        with col3:
             st.metric("💵 Já Economizado", f"R$ {format_number_br(valor_ja_economizado)}")
             st.metric("🔄 Investimento Recuperado", f"{percentual_recuperado:.1f}%")
         
