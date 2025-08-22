@@ -124,7 +124,7 @@ html, body, [class*="st-"], .stApp, .main {
     border-left: 5px solid;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    animation: shadowPulse 2s infinite alternate;
+    animation: shadowPulse 5s infinite alternate;
 }
 
 /* Ajuste do tamanho da fonte dos títulos dentro dos containers */
@@ -159,7 +159,7 @@ html, body, [class*="st-"], .stApp, .main {
 
 /* Cards */
 [data-testid="metric-container"] {
-    background: white;
+    background: #d3d3d3;
     border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 1rem;
@@ -919,7 +919,7 @@ else:
 # --- Footer ---
 st.divider()
 st.markdown(f"""
-<div style="text-align: center; color: var(--text-secondary); padding: 0.5rem; font-size: 0.9rem;">
+<div style="text-align: center; color: var(--text-secondary); padding: 0.1rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
