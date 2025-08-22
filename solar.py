@@ -1100,6 +1100,7 @@ if st.session_state.edit_mode:
                 
                 st.altair_chart(area_chart, use_container_width=True)
                 st.divider()
+            
             with tab3:
                 # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
                 year_df = df[df['Data'].dt.year == selected_year].copy()
