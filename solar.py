@@ -124,7 +124,7 @@ html, body, [class*="st-"], .stApp, .main {
     border-left: 5px solid;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    animation: shadowPulse 5s infinite alternate;
+    animation: shadowPulse 2s infinite alternate;
 }
 
 /* Ajuste do tamanho da fonte dos títulos dentro dos containers */
@@ -159,7 +159,7 @@ html, body, [class*="st-"], .stApp, .main {
 
 /* Cards */
 [data-testid="metric-container"] {
-    background: #d3d3d3;
+    background: white;
     border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 1rem;
@@ -543,12 +543,12 @@ else:
             with tab1:
                 # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO ---
                 bar_chart = alt.Chart(filtered_df).mark_bar(
-                    color="green",
-                    cornerRadiusTopLeft=3,
-                    cornerRadiusTopRight=3,
-                    stroke="black",
-                    strokeWidth=2,
-                    size=40
+                    color="#10b981",
+                    cornerRadiusTopLeft=4,
+                    cornerRadiusTopRight=4,
+                    stroke="white",
+                    strokeWidth=1,
+                    size=35
                 ).encode(
                     x=alt.X(
                         'Data:T', 
@@ -565,8 +565,9 @@ else:
                 
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
                 linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
-                    color='red',
-                    strokeWidth=4,
+                    color='#ef4444',
+                    strokeWidth=2,
+                    strokeDash=[8, 4]
                 ).encode(
                     y=alt.Y('media:Q'),
                     tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
@@ -585,11 +586,11 @@ else:
                 filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
                 
                 area_chart = alt.Chart(filtered_df_sorted).mark_area(
-                    line={'color':'darkgreen'},
+                    line={'color':'#10b981', 'strokeWidth': 2},
                     color=alt.Gradient(
                         gradient='linear',
-                        stops=[alt.GradientStop(color='white', offset=0),
-                               alt.GradientStop(color='darkgreen', offset=1)],
+                        stops=[alt.GradientStop(color='rgba(16, 185, 129, 0.1)', offset=0),
+                               alt.GradientStop(color='rgba(16, 185, 129, 0.6)', offset=1)],
                         x1=1,
                         x2=1,
                         y1=1,
@@ -620,11 +621,11 @@ else:
                 
                 # Gráfico de área para acumulado anual
                 area_chart_annual = alt.Chart(year_df_sorted).mark_area(
-                    line={'color':'#8b5cf6'},
+                    line={'color':'#3b82f6', 'strokeWidth': 2},
                     color=alt.Gradient(
                         gradient='linear',
-                        stops=[alt.GradientStop(color='white', offset=0),
-                               alt.GradientStop(color='#8b5cf6', offset=1)],
+                        stops=[alt.GradientStop(color='rgba(59, 130, 246, 0.1)', offset=0),
+                               alt.GradientStop(color='rgba(59, 130, 246, 0.6)', offset=1)],
                         x1=1,
                         x2=1,
                         y1=1,
@@ -778,7 +779,8 @@ else:
             media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
             linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
                 color='red',
-                strokeWidth=4,
+                strokeWidth=2,
+                strokeDash=[5, 5]
             ).encode(
                 y=alt.Y('media:Q'),
                 tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
@@ -919,7 +921,7 @@ else:
 # --- Footer ---
 st.divider()
 st.markdown(f"""
-<div style="text-align: center; color: var(--text-secondary); padding: 0.1rem; font-size: 0.9rem;">
+<div style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
