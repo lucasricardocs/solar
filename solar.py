@@ -67,30 +67,44 @@ html, body, [class*="st-"], .stApp, .main {
     max-width: 1200px;
 }
 
-/* Header com gradiente */
+/* Header com altura reduzida e animação */
 .header-section {
     background: linear-gradient(135deg, #e6f3ff, #f0f0f0);
     color: #1f2937;
-    padding: 2rem;
+    padding: 1rem 2rem; /* Padding reduzido de 2rem para 1rem */
     border-radius: 12px;
     border: 1px solid #d3d3d3;
+    stroke: #d3d3d3;
+    stroke-width: 0.5;
     margin-bottom: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    height: 250px;
+    height: 120px; /* Altura reduzida de 250px para 120px */
+    animation: headerPulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes headerPulse {
+    0% { 
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        transform: scale(1);
+    }
+    100% { 
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        transform: scale(1.01);
+    }
 }
 
 .header-content {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem; /* Gap reduzido de 1.5rem para 1rem */
 }
 
 .solar-icon {
-    width: 250px;
-    height: 250px;
+    width: 100px; /* Tamanho reduzido de 250px para 100px */
+    height: 100px; /* Tamanho reduzido de 250px para 100px */
     flex-shrink: 0;
 }
 
@@ -99,20 +113,23 @@ html, body, [class*="st-"], .stApp, .main {
 }
 
 .header-title {
-    font-size: 2.5rem;
+    font-size: 1.8rem; /* Tamanho reduzido de 2.5rem para 1.8rem */
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem; /* Margem reduzida de 0.5rem para 0.2rem */
     background: linear-gradient(135deg, #1f2937, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    line-height: 1.1; /* Altura da linha reduzida */
 }
 
 .header-subtitle {
-    font-size: 1.1rem;
+    font-size: 0.95rem; /* Tamanho reduzido de 1.1rem para 0.95rem */
     opacity: 0.8;
     font-weight: 400;
     color: #1f2937;
+    margin: 0; /* Remove margem extra */
+    line-height: 1.2; /* Altura da linha reduzida */
 }
 
 /* Padrão para containers de subheaders (MENORES) */
@@ -122,9 +139,12 @@ html, body, [class*="st-"], .stApp, .main {
     background: #ffffff;
     border-radius: 8px;
     border-left: 5px solid;
+    border: 1px solid #d3d3d3;
+    stroke: #d3d3d3;
+    stroke-width: 0.5;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    animation: shadowPulse 2s infinite alternate;
+    animation: shadowPulse 5s infinite alternate;
 }
 
 /* Ajuste do tamanho da fonte dos títulos dentro dos containers */
@@ -157,19 +177,23 @@ html, body, [class*="st-"], .stApp, .main {
 .subheader-container.teal { border-left-color: #1abc9c; }
 
 
-/* Cards */
+/* Cards com stroke */
 [data-testid="metric-container"] {
-    background: white;
-    border: 1px solid var(--border-light);
+    background: #ffffff;
+    border: 1px solid #d3d3d3;
+    stroke: #d3d3d3;
+    stroke-width: 0.5;
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Forms */
+/* Forms com stroke */
 .stForm {
     background: white;
-    border: 1px solid var(--border-light);
+    border: 1px solid #d3d3d3;
+    stroke: #d3d3d3;
+    stroke-width: 0.5;
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -213,23 +237,24 @@ def configure_altair_theme():
             },
             "title": {
                 "font": font,
-                "fontSize": 18,
-                "fontWeight": 700,
+                "fontSize": 0,  # Remove títulos dos gráficos
+                "fontWeight": 0,
                 "anchor": "middle",
-                "color": "#1f2937"
+                "color": "transparent"
             },
             "axis": {
                 "labelFont": font,
                 "titleFont": font,
                 "labelFontSize": 11,
-                "titleFontSize": 13,
+                "titleFontSize": 0,  # Remove títulos dos eixos
                 "gridColor": "#e2e8f0",
                 "domain": False,
                 "tickColor": "#6b7280",
                 "labelColor": "#6b7280",
-                "titleColor": "#1f2937",
-                "titleFontWeight": 600,
-                "labelFontWeight": 400
+                "titleColor": "transparent",  # Torna títulos transparentes
+                "titleFontWeight": 0,
+                "labelFontWeight": 400,
+                "title": None  # Remove completamente os títulos
             },
             "legend": {
                 "labelFont": font,
@@ -541,22 +566,22 @@ else:
             tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📅 Acumulada Anual", "📋 Dados"])
             
             with tab1:
-                # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO ---
+                # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO (SEM TÍTULOS) ---
                 bar_chart = alt.Chart(filtered_df).mark_bar(
-                    color="#10b981",
-                    cornerRadiusTopLeft=4,
-                    cornerRadiusTopRight=4,
-                    stroke="white",
-                    strokeWidth=1,
-                    size=35
+                    color="green",
+                    cornerRadiusTopLeft=3,
+                    cornerRadiusTopRight=3,
+                    stroke="black",
+                    strokeWidth=2,
+                    size=40
                 ).encode(
                     x=alt.X(
                         'Data:T', 
-                        title='Data',
+                        title='',  # Remove título do eixo X
                         axis=alt.Axis(format='%d/%m', labelAngle=-45, tickCount='day'),
                         scale=alt.Scale(nice=False)
                     ),
-                    y=alt.Y('Energia Gerada (kWh):Q', title='Energia Gerada (kWh)'),
+                    y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
@@ -565,9 +590,8 @@ else:
                 
                 media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
                 linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
-                    color='#ef4444',
-                    strokeWidth=2,
-                    strokeDash=[8, 4]
+                    color='red',
+                    strokeWidth=4,
                 ).encode(
                     y=alt.Y('media:Q'),
                     tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
@@ -575,7 +599,7 @@ else:
                 
                 final_chart = (bar_chart + linha_media).properties(
                     height=400,
-                    title=f"Geração Diária - {month_names.get(selected_month_num, '')} {selected_year}"
+                    title=''  # Remove título do gráfico
                 )
                 
                 st.altair_chart(final_chart, use_container_width=True)
@@ -586,11 +610,11 @@ else:
                 filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
                 
                 area_chart = alt.Chart(filtered_df_sorted).mark_area(
-                    line={'color':'#10b981', 'strokeWidth': 2},
+                    line={'color':'darkgreen'},
                     color=alt.Gradient(
                         gradient='linear',
-                        stops=[alt.GradientStop(color='rgba(16, 185, 129, 0.1)', offset=0),
-                               alt.GradientStop(color='rgba(16, 185, 129, 0.6)', offset=1)],
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='darkgreen', offset=1)],
                         x1=1,
                         x2=1,
                         y1=1,
@@ -598,8 +622,8 @@ else:
                     ),
                     interpolate='monotone'
                 ).encode(
-                    x=alt.X('Data:T', title='Data'),
-                    y=alt.Y('Acumulado:Q', title='Energia Acumulada (kWh)'),
+                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
+                    y=alt.Y('Acumulado:Q', title=''),  # Remove título do eixo Y
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'),
@@ -607,7 +631,7 @@ else:
                     ]
                 ).properties(
                     height=400,
-                    title=f"Geração Acumulada - {month_names.get(selected_month_num, '')} {selected_year}"
+                    title=''  # Remove título do gráfico
                 )
                 
                 st.altair_chart(area_chart, use_container_width=True)
@@ -621,11 +645,11 @@ else:
                 
                 # Gráfico de área para acumulado anual
                 area_chart_annual = alt.Chart(year_df_sorted).mark_area(
-                    line={'color':'#3b82f6', 'strokeWidth': 2},
+                    line={'color':'#8b5cf6'},
                     color=alt.Gradient(
                         gradient='linear',
-                        stops=[alt.GradientStop(color='rgba(59, 130, 246, 0.1)', offset=0),
-                               alt.GradientStop(color='rgba(59, 130, 246, 0.6)', offset=1)],
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='#8b5cf6', offset=1)],
                         x1=1,
                         x2=1,
                         y1=1,
@@ -633,8 +657,8 @@ else:
                     ),
                     interpolate='monotone'
                 ).encode(
-                    x=alt.X('Data:T', title='Data'),
-                    y=alt.Y('Acumulado Anual:Q', title='Energia Acumulada Anual (kWh)'),
+                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
+                    y=alt.Y('Acumulado Anual:Q', title=''),  # Remove título do eixo Y
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
@@ -642,7 +666,7 @@ else:
                     ]
                 ).properties(
                     height=400,
-                    title=f"Geração Acumulada Anual - {selected_year}"
+                    title=''  # Remove título do gráfico
                 )
                 
                 st.altair_chart(area_chart_annual, use_container_width=True)
@@ -766,10 +790,10 @@ else:
             ).encode(
                 x=alt.X(
                     'Nome Mês:N', 
-                    title='Mês', 
+                    title='',  # Remove título do eixo X
                     sort=[m[:3] for m in month_names.values()]
                 ),
-                y=alt.Y('Energia Gerada (kWh):Q', title='Total Mensal (kWh)'),
+                y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
                 tooltip=[
                     alt.Tooltip('Nome Mês:N', title='Mês'), 
                     alt.Tooltip('Energia Gerada (kWh):Q', title='Total', format='.2f')
@@ -779,8 +803,7 @@ else:
             media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
             linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
                 color='red',
-                strokeWidth=2,
-                strokeDash=[5, 5]
+                strokeWidth=4,
             ).encode(
                 y=alt.Y('media:Q'),
                 tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
@@ -788,7 +811,7 @@ else:
             
             monthly_chart = (monthly_bars + linha_media_mensal).properties(
                 height=400,
-                title=f"Geração Mensal - {selected_year}"
+                title=''  # Remove título do gráfico
             )
             
             st.altair_chart(monthly_chart, use_container_width=True)
@@ -884,7 +907,7 @@ else:
                 heatmap_grid,
                 spacing=25
             ).properties(
-                title=f"Atividade de Geração Solar em {selected_year}"
+                title=''  # Remove título do heatmap
             ).resolve_scale(
                 x='shared'
             ).configure_view(
@@ -895,10 +918,10 @@ else:
             st.altair_chart(final_heatmap, use_container_width=True)
             st.divider()
 
-            # --- Estatísticas do Ano ---
+            # --- Estatísticas Expandidas do Ano ---
             st.markdown("""
             <div class="subheader-container pink">
-                <h3>📈 Estatísticas do Ano</h3>
+                <h3>📈 Estatísticas Avançadas do Ano</h3>
             </div>
             """, unsafe_allow_html=True)
             
@@ -906,22 +929,79 @@ else:
             year_avg = year_df['Energia Gerada (kWh)'].mean()
             year_max = year_df['Energia Gerada (kWh)'].max()
             year_min = year_df['Energia Gerada (kWh)'].min()
+            year_std = year_df['Energia Gerada (kWh)'].std()
+            
+            # Calculando estatísticas adicionais úteis
+            dias_com_dados = len(year_df)
+            dias_no_ano = 365 if selected_year % 4 != 0 else 366
+            cobertura_dados = (dias_com_dados / dias_no_ano) * 100
+            
+            # Taxa de crescimento (comparação com mês anterior quando possível)
+            monthly_data = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum()
+            if len(monthly_data) >= 2:
+                ultimo_mes = monthly_data.iloc[-1]
+                penultimo_mes = monthly_data.iloc[-2]
+                taxa_crescimento = ((ultimo_mes - penultimo_mes) / penultimo_mes) * 100 if penultimo_mes > 0 else 0
+            else:
+                taxa_crescimento = 0
+                
+            # Eficiência média (baseada em valor teórico de 20 kWh/dia como referência)
+            eficiencia_teorica = year_avg / 20 * 100 if year_avg > 0 else 0
+            
+            # Economia de CO2 estimada (1 kWh solar evita ~0.4kg CO2)
+            economia_co2 = year_total * 0.4
+            
+            # Valor econômico estimado (R$ 0,65 por kWh como média)
+            valor_economico = year_total * 0.65
             
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 st.metric("🏆 Total do Ano", f"{format_number_br(year_total)} kWh")
-            with col2:
                 st.metric("📊 Média Diária", f"{format_number_br(year_avg)} kWh")
-            with col3:
+            
+            with col2:
                 st.metric("⚡ Pico Máximo", f"{format_number_br(year_max)} kWh")
-            with col4:
                 st.metric("📉 Mínimo", f"{format_number_br(year_min)} kWh")
+            
+            with col3:
+                st.metric("📈 Taxa de Crescimento", f"{taxa_crescimento:+.1f}%")
+                st.metric("📋 Cobertura de Dados", f"{cobertura_dados:.1f}%")
+            
+            with col4:
+                st.metric("🌍 CO₂ Evitado", f"{format_number_br(economia_co2)} kg")
+                st.metric("💰 Economia Est.", f"R$ {format_number_br(valor_economico)}")
+            
+            # Estatísticas adicionais em uma segunda linha
+            st.markdown("##### 🔍 Análises Complementares")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("📊 Desvio Padrão", f"{format_number_br(year_std)} kWh")
+            
+            with col2:
+                # Melhor e pior mês
+                monthly_totals = year_df.groupby(year_df['Data'].dt.month)['Energia Gerada (kWh)'].sum()
+                melhor_mes_num = monthly_totals.idxmax()
+                melhor_mes_nome = month_names[melhor_mes_num][:3]
+                st.metric("⭐ Melhor Mês", f"{melhor_mes_nome}")
+            
+            with col3:
+                pior_mes_num = monthly_totals.idxmin()
+                pior_mes_nome = month_names[pior_mes_num][:3]
+                st.metric("📉 Pior Mês", f"{pior_mes_nome}")
+            
+            with col4:
+                # Consistência (% de dias com geração > média)
+                dias_acima_media = len(year_df[year_df['Energia Gerada (kWh)'] > year_avg])
+                consistencia = (dias_acima_media / len(year_df)) * 100
+                st.metric("🎯 Consistência", f"{consistencia:.1f}%")
 
 # --- Footer ---
 st.divider()
 st.markdown(f"""
-<div style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.9rem;">
+<div style="text-align: center; color: var(--text-secondary); padding: 0.1rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
