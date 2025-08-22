@@ -537,8 +537,8 @@ else:
                 st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh",
                           delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
             
-            # --- Abas de Análise ---
-            tab1, tab2, tab3 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📋 Dados"])
+            # --- Abas de Análise ATUALIZADAS ---
+            tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📅 Acumulada Anual", "📋 Dados"])
             
             with tab1:
                 # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO ---
@@ -585,14 +585,15 @@ else:
                 filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
                 
                 area_chart = alt.Chart(filtered_df_sorted).mark_area(
-                    line={'color':'#10b981', 'strokeWidth': 3}, 
+                    line={'color':'darkgreen'},
                     color=alt.Gradient(
-                        gradient='linear', 
-                        stops=[
-                            alt.GradientStop(color='#10b981', offset=0), 
-                            alt.GradientStop(color='rgba(16, 185, 129, 0)', offset=1)
-                        ],
-                        x1=1, x2=1, y1=1, y2=0
+                        gradient='linear',
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='darkgreen', offset=1)],
+                        x1=1,
+                        x2=1,
+                        y1=1,
+                        y2=0
                     ),
                     interpolate='monotone'
                 ).encode(
@@ -610,8 +611,70 @@ else:
                 
                 st.altair_chart(area_chart, use_container_width=True)
                 st.divider()
-            
+
             with tab3:
+                # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
+                year_df = df[df['Data'].dt.year == selected_year].copy()
+                year_df_sorted = year_df.sort_values('Data').copy()
+                year_df_sorted['Acumulado Anual'] = year_df_sorted['Energia Gerada (kWh)'].cumsum()
+                
+                # Gráfico de área para acumulado anual
+                area_chart_annual = alt.Chart(year_df_sorted).mark_area(
+                    line={'color':'#8b5cf6'},
+                    color=alt.Gradient(
+                        gradient='linear',
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='#8b5cf6', offset=1)],
+                        x1=1,
+                        x2=1,
+                        y1=1,
+                        y2=0
+                    ),
+                    interpolate='monotone'
+                ).encode(
+                    x=alt.X('Data:T', title='Data'),
+                    y=alt.Y('Acumulado Anual:Q', title='Energia Acumulada Anual (kWh)'),
+                    tooltip=[
+                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                        alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
+                        alt.Tooltip('Acumulado Anual:Q', title='Acumulado no Ano', format='.2f')
+                    ]
+                ).properties(
+                    height=400,
+                    title=f"Geração Acumulada Anual - {selected_year}"
+                )
+                
+                st.altair_chart(area_chart_annual, use_container_width=True)
+                
+                # Métricas do acumulado anual
+                col1, col2, col3 = st.columns(3)
+                
+                # Calcula até a data atual do mês/ano selecionado
+                current_date = datetime(selected_year, selected_month_num, 1)
+                end_of_month = datetime(selected_year, selected_month_num, 
+                                      pd.Timestamp(selected_year, selected_month_num, 1).days_in_month)
+                
+                # Acumulado até o mês selecionado
+                acumulado_ate_mes = year_df[year_df['Data'] <= end_of_month]['Energia Gerada (kWh)'].sum()
+                
+                # Projeção anual baseada na média mensal
+                meses_completos = len(year_df.groupby(year_df['Data'].dt.month))
+                if meses_completos > 0:
+                    media_mensal = acumulado_ate_mes / meses_completos
+                    projecao_anual = media_mensal * 12
+                else:
+                    projecao_anual = 0
+                
+                with col1:
+                    st.metric("📊 Acumulado até o Mês", f"{format_number_br(acumulado_ate_mes)} kWh")
+                with col2:
+                    st.metric("📈 Total do Ano", f"{format_number_br(total_year)} kWh")
+                with col3:
+                    st.metric("🎯 Projeção Anual", f"{format_number_br(projecao_anual)} kWh")
+                
+                st.divider()
+            
+            with tab4:
                 display_df = filtered_df.copy()
                 display_df['Data_str'] = display_df['Data'].dt.strftime('%d/%m/%Y')
                 display_df['Energia_str'] = display_df['Energia Gerada (kWh)'].apply(lambda x: format_number_br(x))
@@ -730,7 +793,6 @@ else:
             st.altair_chart(monthly_chart, use_container_width=True)
             st.divider()
             
-            # --- HEATMAP ATUALIZADO ---
             # --- HEATMAP ATUALIZADO ---
             st.markdown("""
             <div class="subheader-container teal">
