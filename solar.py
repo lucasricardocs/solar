@@ -12,41 +12,34 @@ import altair as alt
 import locale
 
 # Ignora avisos futuros do pandas
-
-warnings.filterwarnings(‘ignore’, category=FutureWarning, message=’.*observed=False.*’)
+warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=False.*')
 
 # Configuração do Altair para melhor performance
-
-alt.data_transformers.enable(‘json’)
+alt.data_transformers.enable('json')
 
 # Tenta configurar a localidade para português
-
 try:
-locale.setlocale(locale.LC_TIME, ‘pt_BR.UTF-8’)
+    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 except:
-try:
-locale.setlocale(locale.LC_TIME, ‘pt_BR’)
-except:
-pass
+    try:
+        locale.setlocale(locale.LC_TIME, 'pt_BR')
+    except:
+        pass
 
 # — Constantes de Configuração —
-
-SPREADSHEET_ID = ‘1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY’
-WORKSHEET_NAME = ‘solardaily’
+SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
+WORKSHEET_NAME = 'solardaily'
 
 # — Configuração da Página —
-
 st.set_page_config(
-layout=“wide”,
-page_title=“SolarAnalytics Pro | Dashboard Energia Solar”,
-page_icon=“⚡”,
-initial_sidebar_state=“collapsed”
+    layout="wide",
+    page_title="SolarAnalytics Pro | Dashboard Energia Solar",
+    page_icon="⚡",
+    initial_sidebar_state="collapsed"
 )
 
 # — CSS —
-
-st.markdown(”””
-
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
 
@@ -252,75 +245,67 @@ html, body, [class*="st-"], .stApp, .main {
 footer {visibility: hidden;}
 header {visibility: hidden;}
 </style>
-
-“””, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # — TEMA DOS GRÁFICOS —
-
 def configure_altair_theme():
-“”“Configura um tema global para todos os gráficos Altair.”””
-font = “Nunito”
-
-```
-# Desativa o tema padrão para começar do zero
-alt.themes.enable('none')
-
-# Registra e ativa o tema customizado
-alt.themes.register("custom_theme", lambda: {
-    "config": {
-        "background": "transparent",
-        "view": {
-            "fill": "transparent",
-            "strokeWidth": 0
-        },
-        "title": {
-            "font": font,
-            "fontSize": 0,  # Remove títulos dos gráficos
-            "fontWeight": 0,
-            "anchor": "middle",
-            "color": "transparent"
-        },
-        "axis": {
-            "labelFont": font,
-            "titleFont": font,
-            "labelFontSize": 11,
-            "titleFontSize": 0,  # Remove títulos dos eixos
-            "gridColor": "#e2e8f0",
-            "domain": False,
-            "tickColor": "#6b7280",
-            "labelColor": "#6b7280",
-            "titleColor": "transparent",  # Torna títulos transparentes
-            "titleFontWeight": 0,
-            "labelFontWeight": 400,
-            "title": None  # Remove completamente os títulos
-        },
-        "legend": {
-            "labelFont": font,
-            "titleFont": font,
-            "labelFontSize": 11,
-            "titleFontSize": 12,
-            "titleFontWeight": 600,
-            "labelColor": "#6b7280",
-            "titleColor": "#1f2937"
+    """Configura um tema global para todos os gráficos Altair."""
+    font = "Nunito"
+    
+    # Desativa o tema padrão para começar do zero
+    alt.themes.enable('none')
+    
+    # Registra e ativa o tema customizado
+    alt.themes.register("custom_theme", lambda: {
+        "config": {
+            "background": "transparent",
+            "view": {
+                "fill": "transparent",
+                "strokeWidth": 0
+            },
+            "title": {
+                "font": font,
+                "fontSize": 0,  # Remove títulos dos gráficos
+                "fontWeight": 0,
+                "anchor": "middle",
+                "color": "transparent"
+            },
+            "axis": {
+                "labelFont": font,
+                "titleFont": font,
+                "labelFontSize": 11,
+                "titleFontSize": 0,  # Remove títulos dos eixos
+                "gridColor": "#e2e8f0",
+                "domain": False,
+                "tickColor": "#6b7280",
+                "labelColor": "#6b7280",
+                "titleColor": "transparent",  # Torna títulos transparentes
+                "titleFontWeight": 0,
+                "labelFontWeight": 400,
+                "title": None  # Remove completamente os títulos
+            },
+            "legend": {
+                "labelFont": font,
+                "titleFont": font,
+                "labelFontSize": 11,
+                "titleFontSize": 12,
+                "titleFontWeight": 600,
+                "labelColor": "#6b7280",
+                "titleColor": "#1f2937"
+            }
         }
-    }
-})
-alt.themes.enable("custom_theme")
-```
+    })
+    alt.themes.enable("custom_theme")
 
 # Aplica o tema aos gráficos
-
 configure_altair_theme()
 
 # — Inicialização do Session State —
-
-if ‘edit_mode’ not in st.session_state:
-st.session_state.edit_mode = False
+if 'edit_mode' not in st.session_state:
+    st.session_state.edit_mode = False
 
 # — Header —
-
-st.markdown(”””
-
+st.markdown("""
 <div class="header-section">
     <div class="header-content">
         <img src="https://raw.githubusercontent.com/lucasricardocs/solar/refs/heads/main/solar.png" 
@@ -336,453 +321,476 @@ st.markdown(”””
 """, unsafe_allow_html=True)
 
 # — Conexão com Google Sheets —
-
-@st.cache_resource(show_spinner=“🔌 Conectando ao Google Sheets…”)
+@st.cache_resource(show_spinner="🔌 Conectando ao Google Sheets…")
 def connect_to_gsheets():
-“”“Conecta ao Google Sheets com tratamento robusto de erros”””
-try:
-scopes = [
-‘https://spreadsheets.google.com/feeds’,
-‘https://www.googleapis.com/auth/drive’
-]
-creds_dict = st.secrets[“gcp_service_account”]
-creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-client = gspread.authorize(creds)
-
-```
-    spreadsheet = client.open_by_key(SPREADSHEET_ID)
-    sheet = spreadsheet.worksheet(WORKSHEET_NAME)
-    
+    """Conecta ao Google Sheets com tratamento robusto de erros"""
     try:
-        headers = sheet.row_values(1)
-        if not headers:
-            st.error("⚠️ **Erro**: A planilha está vazia ou sem cabeçalhos.")
+        scopes = [
+            'https://spreadsheets.google.com/feeds',
+            'https://www.googleapis.com/auth/drive'
+        ]
+        creds_dict = st.secrets["gcp_service_account"]
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        client = gspread.authorize(creds)
+
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
+        sheet = spreadsheet.worksheet(WORKSHEET_NAME)
+        
+        try:
+            headers = sheet.row_values(1)
+            if not headers:
+                st.error("⚠️ **Erro**: A planilha está vazia ou sem cabeçalhos.")
+                return None
+                
+            headers_lower = [h.lower().strip() for h in headers]
+            if 'data' not in headers_lower or 'gerado' not in headers_lower:
+                st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' e 'gerado'.")
+                st.info("💡 **Dica**: Certifique-se de que a primeira linha da planilha contém os cabeçalhos 'data' e 'gerado'.")
+                return None
+        except Exception as e:
+            st.error(f"❌ **Erro ao verificar cabeçalhos**: {str(e)}")
             return None
-            
-        headers_lower = [h.lower().strip() for h in headers]
-        if 'data' not in headers_lower or 'gerado' not in headers_lower:
-            st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' e 'gerado'.")
-            st.info("💡 **Dica**: Certifique-se de que a primeira linha da planilha contém os cabeçalhos 'data' e 'gerado'.")
-            return None
-    except Exception as e:
-        st.error(f"❌ **Erro ao verificar cabeçalhos**: {str(e)}")
+        
+        return sheet
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error("📋 **Planilha não encontrada**: Verifique se o SPREADSHEET_ID está correto e se você tem permissão de acesso.")
         return None
-    
-    return sheet
-except gspread.exceptions.SpreadsheetNotFound:
-    st.error("📋 **Planilha não encontrada**: Verifique se o SPREADSHEET_ID está correto e se você tem permissão de acesso.")
-    return None
-except gspread.exceptions.WorksheetNotFound:
-    st.error(f"📊 **Aba não encontrada**: A aba '{WORKSHEET_NAME}' não existe na planilha.")
-    return None
-except KeyError:
-    st.error("🔑 **Erro de Credenciais**: Configuração do Google Sheets não encontrada no st.secrets.")
-    return None
-except Exception as e:
-    st.error(f"🚨 **Erro de Conexão**: {str(e)}")
-    return None
-```
+    except gspread.exceptions.WorksheetNotFound:
+        st.error(f"📊 **Aba não encontrada**: A aba '{WORKSHEET_NAME}' não existe na planilha.")
+        return None
+    except KeyError:
+        st.error("🔑 **Erro de Credenciais**: Configuração do Google Sheets não encontrada no st.secrets.")
+        return None
+    except Exception as e:
+        st.error(f"🚨 **Erro de Conexão**: {str(e)}")
+        return None
 
 sheet = connect_to_gsheets()
 
 if sheet:
-st.sidebar.markdown(
-‘<span class="status-badge status-connected">✅ Conectado</span>’,
-unsafe_allow_html=True
-)
+    st.sidebar.markdown(
+        '<span class="status-badge status-connected">✅ Conectado</span>',
+        unsafe_allow_html=True
+    )
 else:
-st.sidebar.markdown(
-‘<span class="status-badge status-disconnected">❌ Erro de conexão</span>’,
-unsafe_allow_html=True
-)
-st.error(“⚠️ **Sistema Offline**: Não foi possível conectar ao Google Sheets.”)
-st.stop()
+    st.sidebar.markdown(
+        '<span class="status-badge status-disconnected">❌ Erro de conexão</span>',
+        unsafe_allow_html=True
+    )
+    st.error("⚠️ **Sistema Offline**: Não foi possível conectar ao Google Sheets.")
+    st.stop()
 
 # — Funções de Dados —
-
-@st.cache_data(ttl=300, show_spinner=“📊 Carregando dados…”)
+@st.cache_data(ttl=300, show_spinner="📊 Carregando dados…")
 def load_data():
-“”“Carrega e processa os dados da planilha”””
-try:
-values = sheet.get_all_values()
+    """Carrega e processa os dados da planilha"""
+    try:
+        values = sheet.get_all_values()
 
-```
-    if len(values) < 2: 
+        if len(values) < 2: 
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(values[1:], columns=values[0])
+        df.columns = [col.lower().strip() for col in df.columns]
+        
+        if 'data' not in df.columns or 'gerado' not in df.columns:
+            st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' y 'gerado'.")
+            return pd.DataFrame()
+        
+        df.rename(columns={
+            'data': 'Data', 
+            'gerado': 'Energia Gerada (kWh)'
+        }, inplace=True)
+        
+        df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
+        if df['Data'].isna().any():
+            df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
+        
+        df['Energia Gerada (kWh)'] = df['Energia Gerada (kWh)'].astype(str).str.replace(',', '.', regex=False)
+        df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
+        
+        df.dropna(subset=['Data', 'Energia Gerada (kWh)'], inplace=True)
+        df = df[df['Energia Gerada (kWh)'] >= 0]
+        df = df.sort_values(by='Data').drop_duplicates(subset=['Data'], keep='last')
+        
+        return df.reset_index(drop=True)
+        
+    except Exception as e:
+        st.error(f"🚨 **Erro ao carregar dados**: {str(e)}")
         return pd.DataFrame()
-    
-    df = pd.DataFrame(values[1:], columns=values[0])
-    df.columns = [col.lower().strip() for col in df.columns]
-    
-    if 'data' not in df.columns or 'gerado' not in df.columns:
-        st.error("⚠️ **Erro de Configuração**: A planilha deve conter as colunas 'data' e 'gerado'.")
-        return pd.DataFrame()
-    
-    df.rename(columns={
-        'data': 'Data', 
-        'gerado': 'Energia Gerada (kWh)'
-    }, inplace=True)
-    
-    df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
-    if df['Data'].isna().any():
-        df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
-    
-    df['Energia Gerada (kWh)'] = df['Energia Gerada (kWh)'].astype(str).str.replace(',', '.', regex=False)
-    df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
-    
-    df.dropna(subset=['Data', 'Energia Gerada (kWh)'], inplace=True)
-    df = df[df['Energia Gerada (kWh)'] >= 0]
-    df = df.sort_values(by='Data').drop_duplicates(subset=['Data'], keep='last')
-    
-    return df.reset_index(drop=True)
-    
-except Exception as e:
-    st.error(f"🚨 **Erro ao carregar dados**: {str(e)}")
-    return pd.DataFrame()
-```
 
 def append_data(date, energy):
-“”“Adiciona um novo registro à planilha”””
-try:
-formatted_date = date.strftime(’%d/%m/%Y’)
-energy_str = str(energy).replace(’.’, ‘,’)
-sheet.append_row([formatted_date, energy_str], value_input_option=‘USER_ENTERED’)
-st.cache_data.clear()
-return True
-except Exception as e:
-st.error(f”🚨 **Erro ao salvar**: {str(e)}”)
-return False
+    """Adiciona um novo registro à planilha"""
+    try:
+        formatted_date = date.strftime('%d/%m/%Y')
+        energy_str = str(energy).replace('.', ',')
+        sheet.append_row([formatted_date, energy_str], value_input_option='USER_ENTERED')
+        st.cache_data.clear()
+        return True
+    except Exception as e:
+        st.error(f"🚨 **Erro ao salvar**: {str(e)}")
+        return False
 
 def update_data(row_index, date, energy):
-“”“Atualiza um registro existente”””
-try:
-formatted_date = date.strftime(’%d/%m/%Y’)
-energy_str = str(energy).replace(’.’, ‘,’)
-sheet.update_cell(row_index + 2, 1, formatted_date)
-sheet.update_cell(row_index + 2, 2, energy_str)
-st.cache_data.clear()
-return True
-except Exception as e:
-st.error(f”🚨 **Erro ao atualizar**: {str(e)}”)
-return False
+    """Atualiza um registro existente"""
+    try:
+        formatted_date = date.strftime('%d/%m/%Y')
+        energy_str = str(energy).replace('.', ',')
+        sheet.update_cell(row_index + 2, 1, formatted_date)
+        sheet.update_cell(row_index + 2, 2, energy_str)
+        st.cache_data.clear()
+        return True
+    except Exception as e:
+        st.error(f"🚨 **Erro ao atualizar**: {str(e)}")
+        return False
 
 def delete_data(row_index):
-“”“Exclui um registro da planilha”””
-try:
-sheet.delete_rows(row_index + 2)
-st.cache_data.clear()
-return True
-except Exception as e:
-st.error(f”🚨 **Erro ao excluir**: {str(e)}”)
-return False
+    """Exclui um registro da planilha"""
+    try:
+        sheet.delete_rows(row_index + 2)
+        st.cache_data.clear()
+        return True
+    except Exception as e:
+        st.error(f"🚨 **Erro ao excluir**: {str(e)}")
+        return False
 
 def format_number_br(number, decimals=2):
-“”“Formata números no padrão brasileiro”””
-return f”{number:,.{decimals}f}”.replace(”,”, “X”).replace(”.”, “,”).replace(“X”, “.”)
+    """Formata números no padrão brasileiro"""
+    return f"{number:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # — Formulário de Cadastro —
-
-st.markdown(”””
-
+st.markdown("""
 <div class="subheader-container blue">
     <h2>☀️ Registro de Geração</h2>
 </div>
 """, unsafe_allow_html=True)
 
-with st.form(“entry_form”, clear_on_submit=True):
-col1, col2, col3 = st.columns([2, 2, 1])
-
-```
-with col1:
-    input_date = st.date_input(
-        "📅 Data da Geração", 
-        value=datetime.today(),
-        format="DD/MM/YYYY"
-    )
+with st.form("entry_form", clear_on_submit=True):
+    col1, col2, col3 = st.columns([2, 2, 1])
     
-with col2:
-    input_energy = st.number_input(
-        "⚡ Energia Gerada (kWh)",
-        min_value=0.0,
-        max_value=999.9,
-        step=0.1,
-        format="%.2f"
-    )
-    
-with col3:
-    st.write("")
-    st.write("")
-    submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
+    with col1:
+        input_date = st.date_input(
+            "📅 Data da Geração", 
+            value=datetime.today(),
+            format="DD/MM/YYYY"
+        )
+        
+    with col2:
+        input_energy = st.number_input(
+            "⚡ Energia Gerada (kWh)",
+            min_value=0.0,
+            max_value=999.9,
+            step=0.1,
+            format="%.2f"
+        )
+        
+    with col3:
+        st.write("")
+        st.write("")
+        submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
 
-if submitted:
-    if input_energy > 0:
-        with st.spinner("💾 Salvando dados..."):
-            if append_data(input_date, input_energy):
-                st.success("✅ Dados salvos com sucesso!")
-                st.balloons()
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("❌ Falha ao salvar os dados.")
-    else:
-        st.warning("💡 Digite um valor maior que zero.")
-```
+    if submitted:
+        if input_energy > 0:
+            with st.spinner("💾 Salvando dados..."):
+                if append_data(input_date, input_energy):
+                    st.success("✅ Dados salvos com sucesso!")
+                    st.balloons()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Falha ao salvar os dados.")
+        else:
+            st.warning("💡 Digite um valor maior que zero.")
 
 # — Análise de Dados —
-
 df = load_data()
 
 if df.empty:
-st.info(“📊 **Nenhum dado encontrado**. Comece registrando sua primeira geração de energia solar!”)
+    st.info("📊 **Nenhum dado encontrado**. Comece registrando sua primeira geração de energia solar!")
 else:
-# — Filtros —
-st.markdown(”””
-<div class="subheader-container green">
-<h2>🔍 Filtros de Análise</h2>
-</div>
-“””, unsafe_allow_html=True)
+    # — Filtros —
+    st.markdown("""
+    <div class="subheader-container green">
+        <h2>🔍 Filtros de Análise</h2>
+    </div>
+    """, unsafe_allow_html=True)
 
-```
-col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([1, 1])
 
-with col1:
-    # Lógica para pré-selecionar o ano atual
-    years = sorted(df['Data'].dt.year.unique(), reverse=True)
-    current_year = datetime.now().year
-    year_index = 0 # Padrão: ano mais recente nos dados
-    if current_year in years:
-        year_index = years.index(current_year)
+    with col1:
+        # Lógica para pré-selecionar o ano atual
+        years = sorted(df['Data'].dt.year.unique(), reverse=True)
+        current_year = datetime.now().year
+        year_index = 0 # Padrão: ano mais recente nos dados
+        if current_year in years:
+            year_index = years.index(current_year)
+            
+        selected_year = st.selectbox("📅 Ano", options=years, index=year_index)
         
-    selected_year = st.selectbox("📅 Ano", options=years, index=year_index)
-    
-with col2:
-    # Lógica para pré-selecionar o mês atual
-    months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
-    month_names = {
-        1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 
-        5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 
-        9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
-    }
-    
-    selected_month_num = None
-    if months:
-        current_month = datetime.now().month
-        month_index = 0 # Padrão: primeiro mês disponível
-        if current_month in months:
-            month_index = months.index(current_month)
-        else:
-            # Se o mês atual não tem dados, seleciona o mais recente que tem
-            month_index = len(months) - 1
-        selected_month_num = st.selectbox(
-            "📊 Mês", 
-            options=months, 
-            format_func=lambda x: month_names.get(x, ''),
-            index=month_index
-        )
-    else:
-        st.info("Nenhum dado disponível para este ano")
-
-if selected_month_num is not None:
-    filtered_df = df[
-        (df['Data'].dt.year == selected_year) & 
-        (df['Data'].dt.month == selected_month_num)
-    ].copy()
-    
-    if not filtered_df.empty:
-        # --- Métricas do Mês ---
-        total = filtered_df['Energia Gerada (kWh)'].sum()
-        avg = filtered_df['Energia Gerada (kWh)'].mean()
-        best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
-        worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
+    with col2:
+        # Lógica para pré-selecionar o mês atual
+        months = sorted(df[df['Data'].dt.year == selected_year]['Data'].dt.month.unique())
+        month_names = {
+            1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 
+            5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 
+            9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
+        }
         
-        st.markdown(f"""
-        <div class="subheader-container orange">
-            <h2>📊 Análise de {month_names.get(selected_month_num, '')} de {selected_year}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("🔋 Total no Mês", f"{format_number_br(total)} kWh")
-        with col2:
-            st.metric("📈 Média Diária", f"{format_number_br(avg)} kWh")
-        with col3:
-            st.metric("⭐ Melhor Dia", f"{format_number_br(best['Energia Gerada (kWh)'])} kWh", 
-                      delta=best['Data'].strftime('%d/%m'))
-        with col4:
-            st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh",
-                      delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
-        
-        # --- Abas de Análise ATUALIZADAS ---
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📅 Acumulada Anual", "📋 Dados"])
-        
-        with tab1:
-            # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO (SEM TÍTULOS) ---
-            bar_chart = alt.Chart(filtered_df).mark_bar(
-                color="green",
-                cornerRadiusTopLeft=3,
-                cornerRadiusTopRight=3,
-                stroke="black",
-                strokeWidth=2,
-                size=35
-            ).encode(
-                x=alt.X(
-                    'Data:T', 
-                    title='',  # Remove título do eixo X
-                    axis=alt.Axis(format='%d', labelAngle=0, tickCount='day'),
-                    scale=alt.Scale(nice=False)
-                ),
-                y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
-                tooltip=[
-                    alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
-                    alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
-                ]
-            )
-            
-            media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
-            linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
-                color='red',
-                strokeWidth=4,
-            ).encode(
-                y=alt.Y('media:Q'),
-                tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
-            )
-            
-            final_chart = (bar_chart + linha_media).properties(
-                height=400,
-                title=''  # Remove título do gráfico
-            )
-            
-            st.altair_chart(final_chart, use_container_width=True)
-            st.divider()
-        
-        with tab2:
-            filtered_df_sorted = filtered_df.sort_values('Data').copy()
-            filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
-            
-            area_chart = alt.Chart(filtered_df_sorted).mark_area(
-                line={'color':'darkgreen'},
-                color=alt.Gradient(
-                    gradient='linear',
-                    stops=[alt.GradientStop(color='white', offset=0),
-                           alt.GradientStop(color='darkgreen', offset=1)],
-                    x1=1,
-                    x2=1,
-                    y1=1,
-                    y2=0
-                ),
-                interpolate='monotone'
-            ).encode(
-                x=alt.X('Data:T', title=''),  # Remove título do eixo X
-                y=alt.Y('Acumulado:Q', title=''),  # Remove título do eixo Y
-                tooltip=[
-                    alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
-                    alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'),
-                    alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')
-                ]
-            ).properties(
-                height=400,
-                title=''  # Remove título do gráfico
-            )
-            
-            st.altair_chart(area_chart_annual, use_container_width=True)
-            
-            # Métricas do acumulado anual
-            col1, col2, col3 = st.columns(3)
-            
-            # Calcula até a data atual do mês/ano selecionado
-            current_date = datetime(selected_year, selected_month_num, 1)
-            end_of_month = datetime(selected_year, selected_month_num, 
-                                  pd.Timestamp(selected_year, selected_month_num, 1).days_in_month)
-            
-            # Acumulado até o mês selecionado
-            acumulado_ate_mes = year_df[year_df['Data'] <= end_of_month]['Energia Gerada (kWh)'].sum()
-            
-            # Total do ano
-            total_year = year_df['Energia Gerada (kWh)'].sum()
-            
-            # Projeção anual baseada na média mensal
-            meses_completos = len(year_df.groupby(year_df['Data'].dt.month))
-            if meses_completos > 0:
-                media_mensal = acumulado_ate_mes / meses_completos
-                projecao_anual = media_mensal * 12
+        selected_month_num = None
+        if months:
+            current_month = datetime.now().month
+            month_index = 0 # Padrão: primeiro mês disponível
+            if current_month in months:
+                month_index = months.index(current_month)
             else:
-                projecao_anual = 0
-            
-            with col1:
-                st.metric("📊 Acumulado até o Mês", f"{format_number_br(acumulado_ate_mes)} kWh")
-            with col2:
-                st.metric("📈 Total do Ano", f"{format_number_br(total_year)} kWh")
-            with col3:
-                st.metric("🎯 Projeção Anual", f"{format_number_br(projecao_anual)} kWh")
-            
-            st.divider()
+                # Se o mês atual não tem dados, seleciona o mais recente que tem
+                month_index = len(months) - 1
+            selected_month_num = st.selectbox(
+                "📊 Mês", 
+                options=months, 
+                format_func=lambda x: month_names.get(x, ''),
+                index=month_index
+            )
+        else:
+            st.info("Nenhum dado disponível para este ano")
+
+    if selected_month_num is not None:
+        filtered_df = df[
+            (df['Data'].dt.year == selected_year) & 
+            (df['Data'].dt.month == selected_month_num)
+        ].copy()
         
-        with tab4:
-            display_df = filtered_df.copy()
-            display_df['Data_str'] = display_df['Data'].dt.strftime('%d/%m/%Y')
-            display_df['Energia_str'] = display_df['Energia Gerada (kWh)'].apply(lambda x: format_number_br(x))
+        if not filtered_df.empty:
+            # --- Métricas do Mês ---
+            total = filtered_df['Energia Gerada (kWh)'].sum()
+            avg = filtered_df['Energia Gerada (kWh)'].mean()
+            best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
+            worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
             
-            col1, col2 = st.columns([3, 1])
+            st.markdown(f"""
+            <div class="subheader-container orange">
+                <h2>📊 Análise de {month_names.get(selected_month_num, '')} de {selected_year}</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                st.dataframe(
-                    display_df[['Data_str', 'Energia_str']].rename(columns={
-                        'Data_str': 'Data',
-                        'Energia_str': 'Energia Gerada (kWh)'
-                    }),
-                    use_container_width=True,
-                    hide_index=True
-                )
-            
+                st.metric("🔋 Total no Mês", f"{format_number_br(total)} kWh")
             with col2:
-                if st.button("✏️ Editar Registros", use_container_width=True):
-                    st.session_state.edit_mode = not st.session_state.edit_mode
+                st.metric("📈 Média Diária", f"{format_number_br(avg)} kWh")
+            with col3:
+                st.metric("⭐ Melhor Dia", f"{format_number_br(best['Energia Gerada (kWh)'])} kWh", 
+                          delta=best['Data'].strftime('%d/%m'))
+            with col4:
+                st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh",
+                          delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
             
-            if st.session_state.edit_mode:
-                st.divider()
-                st.subheader("✏️ Editar Registros")
+            # --- Abas de Análise ATUALIZADAS ---
+            tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📅 Acumulada Anual", "📋 Dados"])
+            
+            with tab1:
+                # --- GRÁFICO DE GERAÇÃO DIÁRIA ATUALIZADO (SEM TÍTULOS) ---
+                bar_chart = alt.Chart(filtered_df).mark_bar(
+                    color="green",
+                    cornerRadiusTopLeft=3,
+                    cornerRadiusTopRight=3,
+                    stroke="black",
+                    strokeWidth=2,
+                    size=35
+                ).encode(
+                    x=alt.X(
+                        'Data:T', 
+                        title='',  # Remove título do eixo X
+                        axis=alt.Axis(format='%d', labelAngle=0, tickCount='day'),
+                        scale=alt.Scale(nice=False)
+                    ),
+                    y=alt.Y('Energia Gerada (kWh):Q', title=''),  # Remove título do eixo Y
+                    tooltip=[
+                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
+                        alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
+                    ]
+                )
                 
-                if len(filtered_df) > 0:
-                    selected_index = st.selectbox(
-                        "Selecione o registro", 
-                        options=range(len(filtered_df)),
-                        format_func=lambda x: f"{filtered_df.iloc[x]['Data'].strftime('%d/%m/%Y')} - {format_number_br(filtered_df.iloc[x]['Energia Gerada (kWh)'])} kWh"
+                media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
+                linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
+                    color='red',
+                    strokeWidth=4,
+                ).encode(
+                    y=alt.Y('media:Q'),
+                    tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
+                )
+                
+                final_chart = (bar_chart + linha_media).properties(
+                    height=400,
+                    title=''  # Remove título do gráfico
+                )
+                
+                st.altair_chart(final_chart, use_container_width=True)
+                st.divider()
+            
+            with tab2:
+                filtered_df_sorted = filtered_df.sort_values('Data').copy()
+                filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
+                
+                area_chart = alt.Chart(filtered_df_sorted).mark_area(
+                    line={'color':'darkgreen'},
+                    color=alt.Gradient(
+                        gradient='linear',
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='darkgreen', offset=1)],
+                        x1=1,
+                        x2=1,
+                        y1=1,
+                        y2=0
+                    ),
+                    interpolate='monotone'
+                ).encode(
+                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
+                    y=alt.Y('Acumulado:Q', title=''),  # Remove título do eixo Y
+                    tooltip=[
+                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                        alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'),
+                        alt.Tooltip('Acumulado:Q', title='Acumulado', format='.2f')
+                    ]
+                ).properties(
+                    height=400,
+                    title=''  # Remove título do gráfico
+                )
+                
+                st.altair_chart(area_chart, use_container_width=True)
+                st.divider()
+            
+            with tab3:
+                # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
+                year_df = df[df['Data'].dt.year == selected_year].copy()
+                year_df_sorted = year_df.sort_values('Data').copy()
+                year_df_sorted['Acumulado Anual'] = year_df_sorted['Energia Gerada (kWh)'].cumsum()
+                
+                # Gráfico de área para acumulado anual
+                area_chart_annual = alt.Chart(year_df_sorted).mark_area(
+                    line={'color':'#8b5cf6'},
+                    color=alt.Gradient(
+                        gradient='linear',
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='#8b5cf6', offset=1)],
+                        x1=1,
+                        x2=1,
+                        y1=1,
+                        y2=0
+                    ),
+                    interpolate='monotone'
+                ).encode(
+                    x=alt.X('Data:T', title=''),  # Remove título do eixo X
+                    y=alt.Y('Acumulado Anual:Q', title=''),  # Remove título do eixo Y
+                    tooltip=[
+                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
+                        alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
+                        alt.Tooltip('Acumulado Anual:Q', title='Acumulado no Ano', format='.2f')
+                    ]
+                ).properties(
+                    height=400,
+                    title=''  # Remove título do gráfico
+                )
+                
+                st.altair_chart(area_chart_annual, use_container_width=True)
+                
+                # Métricas do acumulado anual
+                col1, col2, col3 = st.columns(3)
+                
+                # Calcula até a data atual do mês/ano selecionado
+                current_date = datetime(selected_year, selected_month_num, 1)
+                end_of_month = datetime(selected_year, selected_month_num, 
+                                      pd.Timestamp(selected_year, selected_month_num, 1).days_in_month)
+                
+                # Acumulado até o mês selecionado
+                acumulado_ate_mes = year_df[year_df['Data'] <= end_of_month]['Energia Gerada (kWh)'].sum()
+                
+                # Total do ano
+                total_year = year_df['Energia Gerada (kWh)'].sum()
+                
+                # Projeção anual baseada na média mensal
+                meses_completos = len(year_df.groupby(year_df['Data'].dt.month))
+                if meses_completos > 0:
+                    media_mensal = acumulado_ate_mes / meses_completos
+                    projecao_anual = media_mensal * 12
+                else:
+                    projecao_anual = 0
+                
+                with col1:
+                    st.metric("📊 Acumulado até o Mês", f"{format_number_br(acumulado_ate_mes)} kWh")
+                with col2:
+                    st.metric("📈 Total do Ano", f"{format_number_br(total_year)} kWh")
+                with col3:
+                    st.metric("🎯 Projeção Anual", f"{format_number_br(projecao_anual)} kWh")
+                
+                st.divider()
+            
+            with tab4:
+                display_df = filtered_df.copy()
+                display_df['Data_str'] = display_df['Data'].dt.strftime('%d/%m/%Y')
+                display_df['Energia_str'] = display_df['Energia Gerada (kWh)'].apply(lambda x: format_number_br(x))
+                
+                col1, col2 = st.columns([3, 1])
+                
+                with col1:
+                    st.dataframe(
+                        display_df[['Data_str', 'Energia_str']].rename(columns={
+                            'Data_str': 'Data',
+                            'Energia_str': 'Energia Gerada (kWh)'
+                        }),
+                        use_container_width=True,
+                        hide_index=True
                     )
+                
+                with col2:
+                    if st.button("✏️ Editar Registros", use_container_width=True):
+                        st.session_state.edit_mode = not st.session_state.edit_mode
+                
+                if st.session_state.edit_mode:
+                    st.divider()
+                    st.subheader("✏️ Editar Registros")
                     
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        edit_date = st.date_input("📅 Data", 
-                            value=filtered_df.iloc[selected_index]['Data'], 
-                            format="DD/MM/YYYY")
+                    if len(filtered_df) > 0:
+                        selected_index = st.selectbox(
+                            "Selecione o registro", 
+                            options=range(len(filtered_df)),
+                            format_func=lambda x: f"{filtered_df.iloc[x]['Data'].strftime('%d/%m/%Y')} - {format_number_br(filtered_df.iloc[x]['Energia Gerada (kWh)'])} kWh"
+                        )
                         
-                    with col2:
-                        edit_energy = st.number_input("⚡ Energia (kWh)", 
-                            value=float(filtered_df.iloc[selected_index]['Energia Gerada (kWh)']), 
-                            min_value=0.0, step=0.1, format="%.2f")
-                    
-                    with col3:
-                        st.write("")
-                        save_col, delete_col = st.columns(2)
+                        col1, col2, col3 = st.columns(3)
                         
-                        with save_col:
-                            if st.button("💾 Salvar", use_container_width=True):
-                                original_index = filtered_df.index[selected_index]
-                                if update_data(original_index, edit_date, edit_energy):
-                                    st.success("✅ Atualizado!")
-                                    st.session_state.edit_mode = False
-                                    time.sleep(1)
-                                    st.rerun()
+                        with col1:
+                            edit_date = st.date_input("📅 Data", 
+                                value=filtered_df.iloc[selected_index]['Data'], 
+                                format="DD/MM/YYYY")
+                            
+                        with col2:
+                            edit_energy = st.number_input("⚡ Energia (kWh)", 
+                                value=float(filtered_df.iloc[selected_index]['Energia Gerada (kWh)']), 
+                                min_value=0.0, step=0.1, format="%.2f")
                         
-                        with delete_col:
-                            if st.button("🗑️ Excluir", use_container_width=True):
-                                original_index = filtered_df.index[selected_index]
-                                if delete_data(original_index):
-                                    st.success("✅ Excluído!")
-                                    st.session_state.edit_mode = False
-                                    time.sleep(1)
-                                    st.rerun()
+                        with col3:
+                            st.write("")
+                            save_col, delete_col = st.columns(2)
+                            
+                            with save_col:
+                                if st.button("💾 Salvar", use_container_width=True):
+                                    original_index = filtered_df.index[selected_index]
+                                    if update_data(original_index, edit_date, edit_energy):
+                                        st.success("✅ Atualizado!")
+                                        st.session_state.edit_mode = False
+                                        time.sleep(1)
+                                        st.rerun()
+                            
+                            with delete_col:
+                                if st.button("🗑️ Excluir", use_container_width=True):
+                                    original_index = filtered_df.index[selected_index]
+                                    if delete_data(original_index):
+                                        st.success("✅ Excluído!")
+                                        st.session_state.edit_mode = False
+                                        time.sleep(1)
+                                        st.rerun()
     
     year_df = df[df['Data'].dt.year == selected_year].copy()
     
@@ -1099,13 +1107,10 @@ if selected_month_num is not None:
             # Tempo restante para payback
             tempo_restante_payback = max(0, payback_simples - (meses_funcionamento / 12))
             st.metric("⏳ Restam p/ Payback", f"{tempo_restante_payback:.1f} anos")
-```
 
 # — Footer —
-
 st.divider()
-st.markdown(f”””
-
+st.markdown(f"""
 <div style="text-align: center; color: var(--text-secondary); padding: 0.1rem; font-size: 0.9rem;">
     <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
     <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
@@ -1113,56 +1118,18 @@ st.markdown(f”””
 """, unsafe_allow_html=True)
 
 # — Sidebar —
-
-st.sidebar.markdown(”### 📊 Informações”)
+st.sidebar.markdown("### 📊 Informações")
 if not df.empty:
-st.sidebar.metric(“📅 Registros”, len(df))
-st.sidebar.metric(“📆 Período”, f”{df[‘Data’].min().strftime(’%m/%Y’)} - {df[‘Data’].max().strftime(’%m/%Y’)}”)
-st.sidebar.metric(“⚡ Total”, f”{format_number_br(df[‘Energia Gerada (kWh)’].sum())} kWh”)
+    st.sidebar.metric("📅 Registros", len(df))
+    st.sidebar.metric("📆 Período", f"{df['Data'].min().strftime('%m/%Y')} - {df['Data'].max().strftime('%m/%Y')}")
+    st.sidebar.metric("⚡ Total", f"{format_number_br(df['Energia Gerada (kWh)'].sum())} kWh")
 
-st.sidebar.markdown(”### 🔧 Controles”)
-if st.sidebar.button(“🔄 Atualizar”):
-st.cache_data.clear()
-st.rerun()
+st.sidebar.markdown("### 🔧 Controles")
+if st.sidebar.button("🔄 Atualizar"):
+    st.cache_data.clear()
+    st.rerun()
 
 if st.session_state.edit_mode:
-if st.sidebar.button(“❌ Sair do Modo Edição”):
-st.session_state.edit_mode = False
-st.rerun()
-
-```
-            st.altair_chart(area_chart, use_container_width=True)
-            st.divider()
-        
-        with tab3:
-            # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
-            year_df = df[df['Data'].dt.year == selected_year].copy()
-            year_df_sorted = year_df.sort_values('Data').copy()
-            year_df_sorted['Acumulado Anual'] = year_df_sorted['Energia Gerada (kWh)'].cumsum()
-            
-            # Gráfico de área para acumulado anual
-            area_chart_annual = alt.Chart(year_df_sorted).mark_area(
-                line={'color':'#8b5cf6'},
-                color=alt.Gradient(
-                    gradient='linear',
-                    stops=[alt.GradientStop(color='white', offset=0),
-                           alt.GradientStop(color='#8b5cf6', offset=1)],
-                    x1=1,
-                    x2=1,
-                    y1=1,
-                    y2=0
-                ),
-                interpolate='monotone'
-            ).encode(
-                x=alt.X('Data:T', title=''),  # Remove título do eixo X
-                y=alt.Y('Acumulado Anual:Q', title=''),  # Remove título do eixo Y
-                tooltip=[
-                    alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
-                    alt.Tooltip('Energia Gerada (kWh):Q', title='Geração do Dia', format='.2f'),
-                    alt.Tooltip('Acumulado Anual:Q', title='Acumulado no Ano', format='.2f')
-                ]
-            ).properties(
-                height=400,
-                title=''  # Remove título do gráfico
-            )
-```
+    if st.sidebar.button("❌ Sair do Modo Edição"):
+        st.session_state.edit_mode = False
+        st.rerun()
