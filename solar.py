@@ -10,6 +10,7 @@ from google.oauth2.service_account import Credentials
 import warnings
 import altair as alt
 import locale
+import calendar
 
 # Ignora avisos futuros do pandas
 warnings.filterwarnings('ignore', category=FutureWarning, message='.*observed=False.*')
@@ -296,6 +297,24 @@ html, body, [class*="st-"], .stApp, .main {{
     margin-bottom: 0.3rem;
 }}
 
+/* Destaque para médias proporcionais */
+.proportional-metric {{
+    background: linear-gradient(45deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 0.5rem;
+}}
+
+.proportional-info {{
+    background: {theme['bg_card']};
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: {theme['text_secondary']};
+}}
+
 /* Hide Streamlit elements */
 #MainMenu {{visibility: hidden;}}
 footer {{visibility: hidden;}}
@@ -522,6 +541,108 @@ def format_number_br(number, decimals=2):
     """Formata números no padrão brasileiro"""
     return f"{number:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+# — NOVAS FUNÇÕES PARA MÉDIAS PROPORCIONAIS —
+def calculate_proportional_averages(df, year, month=None):
+    """
+    Calcula médias proporcionais baseadas no tempo decorrido
+    """
+    today = datetime.now()
+    
+    if month is not None:
+        # MÉDIA MENSAL PROPORCIONAL
+        # Quantos dias já se passaram no mês
+        days_in_month = calendar.monthrange(year, month)[1]
+        
+        if year == today.year and month == today.month:
+            # Mês atual: considera apenas os dias que já passaram
+            days_elapsed = today.day
+        elif datetime(year, month, days_in_month) < today:
+            # Mês já passou completamente
+            days_elapsed = days_in_month
+        else:
+            # Mês futuro (não deveria acontecer, mas por segurança)
+            days_elapsed = days_in_month
+            
+        # Total gerado no mês
+        month_data = df[(df['Data'].dt.year == year) & (df['Data'].dt.month == month)]
+        total_month = month_data['Energia Gerada (kWh)'].sum()
+        
+        # Média proporcional = total gerado / dias decorridos
+        avg_proportional = total_month / days_elapsed if days_elapsed > 0 else 0
+        
+        return {
+            'total': total_month,
+            'days_elapsed': days_elapsed,
+            'days_in_period': days_in_month,
+            'avg_proportional': avg_proportional,
+            'avg_simple': month_data['Energia Gerada (kWh)'].mean() if len(month_data) > 0 else 0,
+            'progress_percent': (days_elapsed / days_in_month) * 100
+        }
+    else:
+        # MÉDIA ANUAL PROPORCIONAL
+        # Quantos dias já se passaram no ano
+        start_of_year = datetime(year, 1, 1)
+        end_of_year = datetime(year, 12, 31)
+        
+        if year == today.year:
+            # Ano atual: considera apenas os dias que já passaram
+            days_elapsed = (today - start_of_year).days + 1
+        elif end_of_year < today:
+            # Ano já passou completamente
+            days_elapsed = 366 if calendar.isleap(year) else 365
+        else:
+            # Ano futuro
+            days_elapsed = 366 if calendar.isleap(year) else 365
+            
+        total_days_in_year = 366 if calendar.isleap(year) else 365
+        
+        # Total gerado no ano
+        year_data = df[df['Data'].dt.year == year]
+        total_year = year_data['Energia Gerada (kWh)'].sum()
+        
+        # Média proporcional = total gerado / dias decorridos
+        avg_proportional = total_year / days_elapsed if days_elapsed > 0 else 0
+        
+        return {
+            'total': total_year,
+            'days_elapsed': days_elapsed,
+            'days_in_period': total_days_in_year,
+            'avg_proportional': avg_proportional,
+            'avg_simple': year_data['Energia Gerada (kWh)'].mean() if len(year_data) > 0 else 0,
+            'progress_percent': (days_elapsed / total_days_in_year) * 100
+        }
+
+def display_proportional_metrics(stats, period_type="mensal"):
+    """Exibe métricas com médias proporcionais"""
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown('<div class="proportional-metric">', unsafe_allow_html=True)
+        st.metric(
+            f"📊 Média {period_type.title()} Proporcional", 
+            f"{format_number_br(stats['avg_proportional'])} kWh/dia",
+            help=f"Baseada no tempo decorrido: {stats['days_elapsed']} de {stats['days_in_period']} dias"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.metric(
+            f"📈 Média {period_type.title()} Simples", 
+            f"{format_number_br(stats['avg_simple'])} kWh/dia",
+            help="Média aritmética dos dias com dados registrados"
+        )
+    
+    # Informações adicionais
+    st.markdown(f"""
+    <div class="proportional-info">
+        <strong>📅 Progresso do período:</strong> {stats['progress_percent']:.1f}% 
+        ({stats['days_elapsed']} de {stats['days_in_period']} dias)<br>
+        <strong>⚡ Total gerado:</strong> {format_number_br(stats['total'])} kWh<br>
+        <strong>🔍 Diferença entre médias:</strong> {format_number_br(abs(stats['avg_proportional'] - stats['avg_simple']))} kWh/dia
+    </div>
+    """, unsafe_allow_html=True)
+
 # — Formulário de Cadastro —
 st.markdown("""
 <div class="subheader-container blue">
@@ -625,9 +746,8 @@ else:
         ].copy()
         
         if not filtered_df.empty:
-            # --- Métricas do Mês ---
-            total = filtered_df['Energia Gerada (kWh)'].sum()
-            avg = filtered_df['Energia Gerada (kWh)'].mean()
+            # --- NOVAS MÉTRICAS COM MÉDIAS PROPORCIONAIS ---
+            month_stats = calculate_proportional_averages(df, selected_year, selected_month_num)
             best = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmax()]
             worst = filtered_df.loc[filtered_df['Energia Gerada (kWh)'].idxmin()]
             
@@ -637,18 +757,24 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
+            # Métricas principais
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                st.metric("🔋 Total no Mês", f"{format_number_br(total)} kWh")
+                st.metric("🔋 Total no Mês", f"{format_number_br(month_stats['total'])} kWh")
             with col2:
-                st.metric("📈 Média Diária", f"{format_number_br(avg)} kWh")
+                st.metric("📅 Progresso", f"{month_stats['progress_percent']:.1f}%", 
+                         delta=f"{month_stats['days_elapsed']}/{month_stats['days_in_period']} dias")
             with col3:
                 st.metric("⭐ Melhor Dia", f"{format_number_br(best['Energia Gerada (kWh)'])} kWh", 
                           delta=best['Data'].strftime('%d/%m'))
             with col4:
                 st.metric("⚠️ Menor Dia", f"{format_number_br(worst['Energia Gerada (kWh)'])} kWh",
                           delta=worst['Data'].strftime('%d/%m'), delta_color="inverse")
+            
+            # Seção de médias proporcionais
+            st.markdown("#### 🎯 Médias de Geração")
+            display_proportional_metrics(month_stats, "mensal")
             
             # --- Abas de Análise ATUALIZADAS ---
             tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📅 Acumulada Anual", "📋 Dados"])
@@ -676,21 +802,38 @@ else:
                     ]
                 )
                 
-                media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
-                linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
+                # Linha da média proporcional (mais realista)
+                linha_media_prop = alt.Chart(pd.DataFrame({'media': [month_stats['avg_proportional']]})).mark_rule(
                     color='red',
                     strokeWidth=2,
                 ).encode(
                     y=alt.Y('media:Q'),
-                    tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
+                    tooltip=alt.value(f'Média Proporcional: {format_number_br(month_stats["avg_proportional"])} kWh/dia')
                 )
                 
-                final_chart = (bar_chart + linha_media).properties(
+                # Linha da média simples (apenas dos dias com dados)
+                linha_media_simples = alt.Chart(pd.DataFrame({'media': [month_stats['avg_simple']]})).mark_rule(
+                    color='orange',
+                    strokeWidth=2,
+                    strokeDash=[5, 5]
+                ).encode(
+                    y=alt.Y('media:Q'),
+                    tooltip=alt.value(f'Média Simples: {format_number_br(month_stats["avg_simple"])} kWh/dia')
+                )
+                
+                final_chart = (bar_chart + linha_media_prop + linha_media_simples).properties(
                     height=400,
                     title=''
                 )
                 
                 st.altair_chart(final_chart, use_container_width=True)
+                
+                # Legenda das linhas
+                st.markdown("""
+                **Legenda das linhas de referência:**
+                - 🔴 **Linha vermelha sólida**: Média proporcional (considera tempo decorrido)
+                - 🟠 **Linha laranja tracejada**: Média simples (apenas dias com dados)
+                """)
                 st.divider()
             
             with tab2:
@@ -726,7 +869,7 @@ else:
                 st.divider()
             
             with tab3:
-                # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL ---
+                # --- NOVA ABA: GERAÇÃO ACUMULADA ANUAL COM MÉDIAS PROPORCIONAIS ---
                 year_df = df[df['Data'].dt.year == selected_year].copy()
                 year_df_sorted = year_df.sort_values('Data').copy()
                 year_df_sorted['Acumulado Anual'] = year_df_sorted['Energia Gerada (kWh)'].cumsum()
@@ -759,34 +902,25 @@ else:
                 
                 st.altair_chart(area_chart_annual, use_container_width=True)
                 
-                # Métricas do acumulado anual
+                # Métricas do acumulado anual com médias proporcionais
+                year_stats = calculate_proportional_averages(df, selected_year)
+                
                 col1, col2, col3 = st.columns(3)
                 
-                # Calcula até a data atual do mês/ano selecionado
-                current_date = datetime(selected_year, selected_month_num, 1)
-                end_of_month = datetime(selected_year, selected_month_num, 
-                                      pd.Timestamp(selected_year, selected_month_num, 1).days_in_month)
-                
-                # Acumulado até o mês selecionado
-                acumulado_ate_mes = year_df[year_df['Data'] <= end_of_month]['Energia Gerada (kWh)'].sum()
-                
-                # Total do ano
-                total_year = year_df['Energia Gerada (kWh)'].sum()
-                
-                # Projeção anual baseada na média mensal
-                meses_completos = len(year_df.groupby(year_df['Data'].dt.month))
-                if meses_completos > 0:
-                    media_mensal = acumulado_ate_mes / meses_completos
-                    projecao_anual = media_mensal * 12
-                else:
-                    projecao_anual = 0
-                
                 with col1:
-                    st.metric("📊 Acumulado até o Mês", f"{format_number_br(acumulado_ate_mes)} kWh")
+                    st.metric("📊 Total do Ano", f"{format_number_br(year_stats['total'])} kWh")
                 with col2:
-                    st.metric("📈 Total do Ano", f"{format_number_br(total_year)} kWh")
+                    st.metric("📅 Progresso Anual", f"{year_stats['progress_percent']:.1f}%",
+                             delta=f"{year_stats['days_elapsed']}/{year_stats['days_in_period']} dias")
                 with col3:
-                    st.metric("🎯 Projeção Anual", f"{format_number_br(projecao_anual)} kWh")
+                    # Projeção baseada na média proporcional
+                    projecao_proporcional = year_stats['avg_proportional'] * year_stats['days_in_period']
+                    st.metric("🎯 Projeção Anual", f"{format_number_br(projecao_proporcional)} kWh",
+                             help="Baseada na média proporcional ao tempo decorrido")
+                
+                # Seção de médias anuais
+                st.markdown("#### 🎯 Médias Anuais de Geração")
+                display_proportional_metrics(year_stats, "anual")
                 
                 st.divider()
             
@@ -894,13 +1028,16 @@ else:
             ]
         )
         
-        media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
-        linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
+        # Média mensal proporcional para a linha de referência
+        year_stats_summary = calculate_proportional_averages(df, selected_year)
+        media_mensal_proporcional = (year_stats_summary['avg_proportional'] * year_stats_summary['days_in_period']) / 12
+        
+        linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal_proporcional]})).mark_rule(
             color='red',
             strokeWidth=2,
         ).encode(
             y=alt.Y('media:Q'),
-            tooltip=alt.value(f'Média Mensal: {format_number_br(media_mensal)} kWh')
+            tooltip=alt.value(f'Média Mensal Esperada: {format_number_br(media_mensal_proporcional)} kWh')
         )
         
         monthly_chart = (monthly_bars + linha_media_mensal).properties(
@@ -1012,7 +1149,7 @@ else:
         st.altair_chart(final_heatmap, use_container_width=True)
         st.divider()
         
-        # --- Análise de Viabilidade Econômica ---
+        # --- Análise de Viabilidade Econômica COM MÉDIAS PROPORCIONAIS ---
         st.markdown("""
         <div class="subheader-container pink">
             <h3>💰 Análise de Viabilidade Econômica</h3>
@@ -1026,11 +1163,14 @@ else:
         TARIFA_ENERGIA = 0.95552617
         DATA_INSTALACAO = datetime(2025, 5, 1)
         
-        # Cálculos básicos
-        year_total = year_df['Energia Gerada (kWh)'].sum()
+        # Usar médias proporcionais para cálculos mais precisos
+        year_stats_econ = calculate_proportional_averages(df, selected_year)
         
-        # Economia mensal e anual baseada na geração
-        economia_mensal_kwh = year_total / 12 if year_total > 0 else 0
+        # Projeção anual baseada na média proporcional
+        projecao_anual_kwh = year_stats_econ['avg_proportional'] * year_stats_econ['days_in_period']
+        
+        # Cálculos básicos usando projeção proporcional
+        economia_mensal_kwh = projecao_anual_kwh / 12 if projecao_anual_kwh > 0 else 0
         economia_mensal_reais = economia_mensal_kwh * TARIFA_ENERGIA
         economia_anual_reais = economia_mensal_reais * 12
         
@@ -1050,9 +1190,9 @@ else:
         hoje = datetime.now()
         meses_funcionamento = max(1, (hoje.year - DATA_INSTALACAO.year) * 12 + (hoje.month - DATA_INSTALACAO.month))
         
-        # Valor já economizado
-        valor_ja_economizado = (meses_funcionamento * economia_mensal_reais)
-        percentual_recuperado = (valor_ja_economizado / INVESTIMENTO_INICIAL) * 100
+        # Valor já economizado (usando dados reais)
+        valor_ja_economizado_real = year_stats_econ['total'] * TARIFA_ENERGIA
+        percentual_recuperado = (valor_ja_economizado_real / INVESTIMENTO_INICIAL) * 100
         
         # TIR estimada
         tir_anual = (economia_anual_reais / INVESTIMENTO_INICIAL) * 100
@@ -1060,8 +1200,8 @@ else:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric("💰 Economia Mensal", f"R$ {format_number_br(economia_mensal_reais)}")
-            st.metric("📊 Economia Anual", f"R$ {format_number_br(economia_anual_reais)}")
+            st.metric("💰 Economia Mensal (Proj.)", f"R$ {format_number_br(economia_mensal_reais)}")
+            st.metric("📊 Economia Anual (Proj.)", f"R$ {format_number_br(economia_anual_reais)}")
             st.metric("⏱️ Payback Simples", f"{payback_simples:.1f} anos")
         
         with col2:
@@ -1069,21 +1209,23 @@ else:
             st.metric("⚡ Compensação", f"{compensacao_consumo:.1f}%")
             st.metric("🎯 TIR Estimada", f"{tir_anual:.1f}% a.a.")
         with col3:
-            st.metric("💵 Já Economizado", f"R$ {format_number_br(valor_ja_economizado)}")
+            st.metric("💵 Já Economizado (Real)", f"R$ {format_number_br(valor_ja_economizado_real)}")
             st.metric("🔄 Investimento Recuperado", f"{percentual_recuperado:.1f}%")
+            st.metric("⚡ Projeção Anual", f"{format_number_br(projecao_anual_kwh)} kWh")
         
         # --- EXPLICAÇÕES DOS INDICADORES ECONÔMICOS ---
-        st.markdown("""
+        st.markdown(f"""
         <div class="economic-explanation">
             <h4>📚 Entenda os Indicadores Econômicos:</h4>
             <ul>
-                <li><strong>💰 Economia Mensal/Anual:</strong> Valor em reais que você economiza na conta de luz com a energia solar gerada</li>
-                <li><strong>⏱️ Payback Simples:</strong> Tempo necessário para recuperar o investimento inicial através das economias geradas</li>
-                <li><strong>📈 ROI (Return on Investment):</strong> Retorno total do investimento em 25 anos, considerando toda a economia gerada</li>
-                <li><strong>⚡ Compensação:</strong> Percentual do seu consumo mensal que é compensado pela geração solar</li>
-                <li><strong>🎯 TIR (Taxa Interna de Retorno):</strong> Rentabilidade anual do investimento em energia solar</li>
-                <li><strong>💵 Já Economizado:</strong> Valor total economizado desde a instalação do sistema</li>
-                <li><strong>🔄 Investimento Recuperado:</strong> Percentual do investimento inicial já recuperado através das economias</li>
+                <li><strong>💰 Economia Mensal/Anual (Proj.):</strong> Valores projetados com base na média proporcional de {format_number_br(year_stats_econ['avg_proportional'])} kWh/dia</li>
+                <li><strong>⏱️ Payback Simples:</strong> Tempo necessário para recuperar o investimento inicial através das economias projetadas</li>
+                <li><strong>📈 ROI (Return on Investment):</strong> Retorno total do investimento em 25 anos, considerando toda a economia projetada</li>
+                <li><strong>⚡ Compensação:</strong> Percentual do seu consumo mensal que seria compensado pela geração solar projetada</li>
+                <li><strong>🎯 TIR (Taxa Interna de Retorno):</strong> Rentabilidade anual do investimento baseada nas projeções</li>
+                <li><strong>💵 Já Economizado (Real):</strong> Valor real economizado com base na geração já registrada ({format_number_br(year_stats_econ['total'])} kWh)</li>
+                <li><strong>🔄 Investimento Recuperado:</strong> Percentual do investimento inicial já recuperado através das economias reais</li>
+                <li><strong>⚡ Projeção Anual:</strong> Geração anual esperada baseada na performance proporcional ao tempo decorrido</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -1153,8 +1295,8 @@ else:
         
         with col3:
             potencia_estimada = 10
-            produtividade_anual = (year_total / potencia_estimada) if potencia_estimada > 0 else 0
-            st.metric("⚡ Produtividade", f"{format_number_br(produtividade_anual)} kWh/kW.ano")
+            produtividade_anual = (projecao_anual_kwh / potencia_estimada) if potencia_estimada > 0 else 0
+            st.metric("⚡ Produtividade (Proj.)", f"{format_number_br(produtividade_anual)} kWh/kW.ano")
         
         with col4:
             tempo_restante_payback = max(0, payback_simples - (meses_funcionamento / 12))
@@ -1194,3 +1336,13 @@ if st.session_state.edit_mode:
     if st.sidebar.button("❌ Sair do Modo Edição"):
         st.session_state.edit_mode = False
         st.rerun()
+
+# Informações sobre as médias proporcionais na sidebar
+st.sidebar.markdown("### 📈 Sobre Médias Proporcionais")
+st.sidebar.info("""
+**Média Proporcional**: Considera o tempo decorrido no período (dias passados no mês/ano).
+
+**Média Simples**: Considera apenas os dias com dados registrados.
+
+A média proporcional oferece uma visão mais realista da performance esperada.
+""")
