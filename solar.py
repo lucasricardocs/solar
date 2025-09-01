@@ -38,43 +38,91 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# — CSS —
-st.markdown("""
+# — Inicialização do Session State —
+if 'edit_mode' not in st.session_state:
+    st.session_state.edit_mode = False
+
+# Inicializa o tema (padrão: claro)
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+
+# Função para obter as cores do tema
+def get_theme_colors():
+    if st.session_state.dark_mode:
+        return {
+            'primary_color': '#ffffff',
+            'secondary_color': '#60a5fa',
+            'accent_color': '#34d399',
+            'text_primary': '#f3f4f6',
+            'text_secondary': '#d1d5db',
+            'bg_main': '#111827',
+            'bg_light': '#1f2937',
+            'bg_card': '#374151',
+            'border_light': '#4b5563',
+            'header_bg': 'linear-gradient(135deg, #1f2937, #111827)',
+            'subheader_bg': '#374151',
+            'form_bg': '#374151',
+            'metric_bg': '#374151'
+        }
+    else:
+        return {
+            'primary_color': '#1f2937',
+            'secondary_color': '#3b82f6',
+            'accent_color': '#10b981',
+            'text_primary': '#1f2937',
+            'text_secondary': '#6b7280',
+            'bg_main': '#f8fafc',
+            'bg_light': '#f8fafc',
+            'bg_card': '#ffffff',
+            'border_light': '#e2e8f0',
+            'header_bg': 'linear-gradient(135deg, #e6f3ff, #f0f0f0)',
+            'subheader_bg': '#ffffff',
+            'form_bg': 'white',
+            'metric_bg': '#ffffff'
+        }
+
+theme = get_theme_colors()
+
+# — CSS Dinâmico baseado no tema —
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
 
-:root {
-    --primary-color: #1f2937;
-    --secondary-color: #3b82f6;
-    --accent-color: #10b981;
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --bg-light: #f8fafc;
-    --border-light: #e2e8f0;
-}
+:root {{
+    --primary-color: {theme['primary_color']};
+    --secondary-color: {theme['secondary_color']};
+    --accent-color: {theme['accent_color']};
+    --text-primary: {theme['text_primary']};
+    --text-secondary: {theme['text_secondary']};
+    --bg-main: {theme['bg_main']};
+    --bg-light: {theme['bg_light']};
+    --bg-card: {theme['bg_card']};
+    --border-light: {theme['border_light']};
+}}
 
 /* Aplica a fonte Nunito a todos os elementos */
-html, body, [class*="st-"], .stApp, .main {
+html, body, [class*="st-"], .stApp, .main {{
     font-family: 'Nunito', sans-serif !important;
-}
+}}
 
-.stApp {
-    background-color: var(--bg-light);
-}
+.stApp {{
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+}}
 
-.main .block-container {
+.main .block-container {{
     padding-top: 2rem;
     padding-bottom: 2rem;
     max-width: 1200px;
-}
+}}
 
 /* Header com altura reduzida e animação */
-.header-section {
-    background: linear-gradient(135deg, #e6f3ff, #f0f0f0);
-    color: #1f2937;
+.header-section {{
+    background: {theme['header_bg']};
+    color: {theme['text_primary']};
     padding: 1rem 2rem;
     border-radius: 12px;
-    border: 1px solid #d3d3d3;  /* Borda reduzida para 1px */
+    border: 1px solid {theme['border_light']};
     margin-bottom: 2rem;
     display: flex;
     align-items: center;
@@ -82,160 +130,233 @@ html, body, [class*="st-"], .stApp, .main {
     gap: 1rem;
     height: 120px;
     animation: headerPulse 6s ease-in-out infinite alternate;
-}
+}}
 
-@keyframes headerPulse {
-    0% { 
+@keyframes headerPulse {{
+    0% {{ 
         box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
         transform: scale(1);
-    }
-    100% { 
+    }}
+    100% {{ 
         box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
         transform: scale(1.01);
-    }
-}
+    }}
+}}
 
-.header-content {
+.header-content {{
     display: flex;
     align-items: center;
     gap: 1rem;
-}
+}}
 
-.solar-icon {
+.solar-icon {{
     width: 100px;
     height: 100px;
     flex-shrink: 0;
-}
+}}
 
-.header-text {
+.header-text {{
     text-align: left;
-}
+}}
 
-.header-title {
+.header-title {{
     font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 0.2rem;
-    background: linear-gradient(135deg, #1f2937, #3b82f6);
+    background: linear-gradient(135deg, {theme['text_primary']}, {theme['secondary_color']});
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     line-height: 1.1;
-}
+}}
 
-.header-subtitle {
+.header-subtitle {{
     font-size: 0.95rem;
     opacity: 0.8;
     font-weight: 400;
-    color: #1f2937;
+    color: {theme['text_primary']};
     margin: 0;
     line-height: 1.2;
-}
+}}
 
 /* Padrão para containers de subheaders - BORDA LATERAL ESQUERDA APENAS */
-.subheader-container {
+.subheader-container {{
     margin: 20px 0;
     padding: 12px 20px;
-    background: #ffffff;
+    background: {theme['subheader_bg']};
     border-radius: 8px;
-    border-left: 4px solid;  /* Apenas borda lateral esquerda com 4px */
+    border-left: 4px solid;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-}
+}}
 
-.subheader-container:hover {
+.subheader-container:hover {{
     transform: translateX(5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-}
+}}
 
-.subheader-container.blue { border-left-color: #3498db; }
-.subheader-container.green { border-left-color: #2ecc71; }
-.subheader-container.orange { border-left-color: #f39c12; }
-.subheader-container.purple { border-left-color: #9b59b6; }
-.subheader-container.pink { border-left-color: #e91e63; }
-.subheader-container.teal { border-left-color: #1abc9c; }
+.subheader-container.blue {{ border-left-color: #3498db; }}
+.subheader-container.green {{ border-left-color: #2ecc71; }}
+.subheader-container.orange {{ border-left-color: #f39c12; }}
+.subheader-container.purple {{ border-left-color: #9b59b6; }}
+.subheader-container.pink {{ border-left-color: #e91e63; }}
+.subheader-container.teal {{ border-left-color: #1abc9c; }}
 
 /* Ajuste do tamanho da fonte dos títulos dentro dos containers */
-.subheader-container h2 {
+.subheader-container h2 {{
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0;
-}
+    color: {theme['text_primary']};
+}}
 
-.subheader-container h3 {
+.subheader-container h3 {{
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
-}
+    color: {theme['text_primary']};
+}}
 
 /* Cards com borda mínima */
-[data-testid="metric-container"] {
-    background: #ffffff;
-    border: 1px solid #d3d3d3;  /* Borda reduzida para 1px */
+[data-testid="metric-container"] {{
+    background: {theme['metric_bg']};
+    border: 1px solid {theme['border_light']};
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+}}
 
 /* Forms com borda mínima */
-.stForm {
-    background: white;
-    border: 1px solid #d3d3d3;  /* Borda reduzida para 1px */
+.stForm {{
+    background: {theme['form_bg']};
+    border: 1px solid {theme['border_light']};
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-}
+}}
+
+/* Inputs e elementos do Streamlit */
+.stSelectbox > div > div {{
+    background-color: {theme['bg_card']};
+    color: {theme['text_primary']};
+}}
+
+.stDateInput > div > div > input {{
+    background-color: {theme['bg_card']};
+    color: {theme['text_primary']};
+}}
+
+.stNumberInput > div > div > input {{
+    background-color: {theme['bg_card']};
+    color: {theme['text_primary']};
+}}
+
+.stTextInput > div > div > input {{
+    background-color: {theme['bg_card']};
+    color: {theme['text_primary']};
+}}
+
+/* Botão de tema */
+.theme-toggle {{
+    background: {theme['secondary_color']};
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+}}
+
+.theme-toggle:hover {{
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}}
 
 /* Status badges */
-.status-badge {
+.status-badge {{
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     display: inline-block;
-}
+}}
 
-.status-connected { background-color: #10B98120; color: #10B981; }
-.status-disconnected { background-color: #EF444420; color: #EF4444; }
+.status-connected {{ background-color: #10B98120; color: #10B981; }}
+.status-disconnected {{ background-color: #EF444420; color: #EF4444; }}
 
 /* Explicações dos indicadores econômicos */
-.economic-explanation {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;  /* Borda reduzida para 1px */
+.economic-explanation {{
+    background: {theme['bg_card']};
+    border: 1px solid {theme['border_light']};
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
     font-size: 0.9rem;
-    color: #495057;
-}
+    color: {theme['text_secondary']};
+}}
 
-.economic-explanation h4 {
-    color: #343a40;
+.economic-explanation h4 {{
+    color: {theme['text_primary']};
     margin-top: 0;
     margin-bottom: 0.5rem;
     font-size: 1rem;
     font-weight: 600;
-}
+}}
 
-.economic-explanation ul {
+.economic-explanation ul {{
     margin: 0.5rem 0;
     padding-left: 1.2rem;
-}
+}}
 
-.economic-explanation li {
+.economic-explanation li {{
     margin-bottom: 0.3rem;
-}
+}}
+
+/* Sidebar styling */
+.css-1d391kg {{
+    background-color: {theme['bg_card']};
+}}
+
+/* Dataframe styling */
+.stDataFrame {{
+    background-color: {theme['bg_card']};
+}}
+
+/* Tab styling */
+.stTabs [data-baseweb="tab-list"] {{
+    background-color: {theme['bg_card']};
+}}
+
+.stTabs [data-baseweb="tab"] {{
+    color: {theme['text_primary']};
+}}
 
 /* Hide Streamlit elements */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
+#MainMenu {{visibility: hidden;}}
+footer {{visibility: hidden;}}
+header {{visibility: hidden;}}
 </style>
 """, unsafe_allow_html=True)
 
 # — TEMA DOS GRÁFICOS —
 def configure_altair_theme():
-    """Configura um tema global para todos os gráficos Altair."""
+    """Configura um tema global para todos os gráficos Altair baseado no tema atual."""
     font = "Nunito"
+    
+    # Cores baseadas no tema
+    if st.session_state.dark_mode:
+        bg_color = "#374151"
+        text_color = "#f3f4f6"
+        grid_color = "#4b5563"
+        tick_color = "#d1d5db"
+    else:
+        bg_color = "transparent"
+        text_color = "#1f2937"
+        grid_color = "#e2e8f0"
+        tick_color = "#6b7280"
     
     # Desativa o tema padrão para começar do zero
     alt.themes.enable('none')
@@ -243,9 +364,9 @@ def configure_altair_theme():
     # Registra e ativa o tema customizado
     alt.themes.register("custom_theme", lambda: {
         "config": {
-            "background": "transparent",
+            "background": bg_color,
             "view": {
-                "fill": "transparent",
+                "fill": bg_color,
                 "strokeWidth": 0
             },
             "title": {
@@ -260,10 +381,10 @@ def configure_altair_theme():
                 "titleFont": font,
                 "labelFontSize": 11,
                 "titleFontSize": 0,
-                "gridColor": "#e2e8f0",
+                "gridColor": grid_color,
                 "domain": False,
-                "tickColor": "#6b7280",
-                "labelColor": "#6b7280",
+                "tickColor": tick_color,
+                "labelColor": tick_color,
                 "titleColor": "transparent",
                 "titleFontWeight": 0,
                 "labelFontWeight": 400,
@@ -275,8 +396,8 @@ def configure_altair_theme():
                 "labelFontSize": 11,
                 "titleFontSize": 12,
                 "titleFontWeight": 600,
-                "labelColor": "#6b7280",
-                "titleColor": "#1f2937"
+                "labelColor": tick_color,
+                "titleColor": text_color
             }
         }
     })
@@ -284,10 +405,6 @@ def configure_altair_theme():
 
 # Aplica o tema aos gráficos
 configure_altair_theme()
-
-# — Inicialização do Session State —
-if 'edit_mode' not in st.session_state:
-    st.session_state.edit_mode = False
 
 # — Header —
 st.markdown("""
@@ -591,48 +708,6 @@ else:
                         scale=alt.Scale(nice=False)
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title=''),
-                    tooltip=[
-                        alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'), 
-                        alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
-                    ]
-                )
-                
-                media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
-                linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
-                    color='red',
-                    strokeWidth=2,  # Reduzido para 2px
-                ).encode(
-                    y=alt.Y('media:Q'),
-                    tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
-                )
-                
-                final_chart = (bar_chart + linha_media).properties(
-                    height=400,
-                    title=''
-                )
-                
-                st.altair_chart(final_chart, use_container_width=True)
-                st.divider()
-            
-            with tab2:
-                filtered_df_sorted = filtered_df.sort_values('Data').copy()
-                filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
-                
-                area_chart = alt.Chart(filtered_df_sorted).mark_area(
-                    line={'color':'darkgreen'},
-                    color=alt.Gradient(
-                        gradient='linear',
-                        stops=[alt.GradientStop(color='white', offset=0),
-                               alt.GradientStop(color='darkgreen', offset=1)],
-                        x1=1,
-                        x2=1,
-                        y1=1,
-                        y2=0
-                    ),
-                    interpolate='monotone'
-                ).encode(
-                    x=alt.X('Data:T', title=''),
-                    y=alt.Y('Acumulado:Q', title=''),
                     tooltip=[
                         alt.Tooltip('Data:T', title='Data', format='%d/%m/%Y'),
                         alt.Tooltip('Energia Gerada (kWh):Q', title='Geração', format='.2f'),
@@ -1099,7 +1174,16 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# — Sidebar —
+# — Sidebar com Controle de Tema —
+st.sidebar.markdown("### 🎨 Tema")
+# Botão de alternância de tema
+theme_icon = "🌙" if st.session_state.dark_mode else "☀️"
+theme_text = "Modo Claro" if st.session_state.dark_mode else "Modo Escuro"
+
+if st.sidebar.button(f"{theme_icon} {theme_text}", use_container_width=True, key="theme_toggle"):
+    st.session_state.dark_mode = not st.session_state.dark_mode
+    st.rerun()
+
 st.sidebar.markdown("### 📊 Informações")
 if not df.empty:
     st.sidebar.metric("📅 Registros", len(df))
@@ -1109,9 +1193,53 @@ if not df.empty:
 st.sidebar.markdown("### 🔧 Controles")
 if st.sidebar.button("🔄 Atualizar"):
     st.cache_data.clear()
+    # Reaplica o tema após atualizar
+    configure_altair_theme()
     st.rerun()
 
 if st.session_state.edit_mode:
     if st.sidebar.button("❌ Sair do Modo Edição"):
         st.session_state.edit_mode = False
-        st.rerun()
+        st.rerun()Data', format='%d/%m/%Y'), 
+                        alt.Tooltip('Energia Gerada (kWh):Q', title='Energia', format='.2f')
+                    ]
+                )
+                
+                media_diaria = filtered_df['Energia Gerada (kWh)'].mean()
+                linha_media = alt.Chart(pd.DataFrame({'media': [media_diaria]})).mark_rule(
+                    color='red',
+                    strokeWidth=2,  # Reduzido para 2px
+                ).encode(
+                    y=alt.Y('media:Q'),
+                    tooltip=alt.value(f'Média: {format_number_br(media_diaria)} kWh')
+                )
+                
+                final_chart = (bar_chart + linha_media).properties(
+                    height=400,
+                    title=''
+                )
+                
+                st.altair_chart(final_chart, use_container_width=True)
+                st.divider()
+            
+            with tab2:
+                filtered_df_sorted = filtered_df.sort_values('Data').copy()
+                filtered_df_sorted['Acumulado'] = filtered_df_sorted['Energia Gerada (kWh)'].cumsum()
+                
+                area_chart = alt.Chart(filtered_df_sorted).mark_area(
+                    line={'color':'darkgreen'},
+                    color=alt.Gradient(
+                        gradient='linear',
+                        stops=[alt.GradientStop(color='white', offset=0),
+                               alt.GradientStop(color='darkgreen', offset=1)],
+                        x1=1,
+                        x2=1,
+                        y1=1,
+                        y2=0
+                    ),
+                    interpolate='monotone'
+                ).encode(
+                    x=alt.X('Data:T', title=''),
+                    y=alt.Y('Acumulado:Q', title=''),
+                    tooltip=[
+                        alt.Tooltip('Data:T', title='
