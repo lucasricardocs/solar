@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 SolarAnalytics Pro - Dashboard de Monitoramento de Energia Solar
-Versão: 3.0.0 (Enterprise Edition)
+Versão: 3.1.0 (Enterprise Edition - Heatmap Adjusted)
 Autor: Adaptado por Gemini AI
 Data: Dezembro 2025
 
@@ -15,7 +15,7 @@ Funcionalidades:
 - Dashboard interativo com Streamlit e Altair.
 - Análise financeira detalhada (Payback, VPL, TIR, ROI).
 - Cálculo de tarifas com desconto do Fio B (Taxação do Sol).
-- Heatmaps e análise de sazonalidade.
+- Heatmaps com escala de cores dinâmica baseada no histórico.
 - Design responsivo com temas Claro/Escuro.
 """
 
@@ -73,7 +73,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://www.github.com/lucasricardocs',
         'Report a bug': "mailto:support@solaranalytics.com",
-        'About': "# SolarAnalytics Pro v3.0\nMonitoramento avançado de energia solar."
+        'About': "# SolarAnalytics Pro v3.1\nMonitoramento avançado de energia solar."
     }
 )
 
@@ -744,6 +744,19 @@ def main():
         st.sidebar.markdown("### 📊 Status")
         st.sidebar.info(f"Registros: {len(df_full)}\nÚltimo: {df_full['Data'].max().strftime('%d/%m/%Y')}")
 
+        # --- CÁLCULO DOS LIMITES PARA O HEATMAP (Global Scope) ---
+        # Encontra o máximo global de geração
+        global_max_prod = df_full['Energia Gerada (kWh)'].max()
+        # Encontra o mínimo global que seja maior que zero
+        global_min_prod = df_full[df_full['Energia Gerada (kWh)'] > 0]['Energia Gerada (kWh)'].min()
+        
+        # Fallback de segurança caso os dados não existam
+        if pd.isna(global_max_prod): global_max_prod = 20
+        if pd.isna(global_min_prod): global_min_prod = 0
+    else:
+        global_max_prod = 20
+        global_min_prod = 0
+
     # 3. Filtros de Data
     df_view, period_label = render_date_filters(df_full)
 
@@ -890,8 +903,8 @@ def main():
                 
                 st.divider()
                 
-                # 2. Heatmap (Calendário)
-                st.markdown("##### Mapa de Calor de Produção")
+                # 2. Heatmap (Calendário) com Escala Dinâmica Ajustada
+                st.markdown(f"##### Mapa de Calor de Produção ({sel_heat_year})")
                 
                 # Prepara grid completo do ano (365/366 dias)
                 d_start = datetime(sel_heat_year, 1, 1)
@@ -918,7 +931,13 @@ def main():
                         labelExpr="['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][datum.value]",
                         ticks=False
                     )),
-                    color=alt.Color('Energia Gerada (kWh):Q', scale=alt.Scale(scheme='yellowgreen'), legend=alt.Legend(title="kWh")),
+                    # AQUI ESTÁ A CORREÇÃO SOLICITADA:
+                    # Scale domain usa o mínimo (>0) e máximo globais do dataset
+                    color=alt.Color(
+                        'Energia Gerada (kWh):Q', 
+                        scale=alt.Scale(scheme='yellowgreen', domain=[global_min_prod, global_max_prod]), 
+                        legend=alt.Legend(title="kWh")
+                    ),
                     tooltip=[alt.Tooltip('Data', format='%d/%m/%Y'), 'Energia Gerada (kWh)']
                 ).properties(height=200)
                 
@@ -1067,7 +1086,7 @@ def main():
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: var(--text-sub); font-size: 0.8rem; margin-top: 2rem;">
-        SolarAnalytics Pro Enterprise v3.0 • Desenvolvido com Python & Streamlit<br>
+        SolarAnalytics Pro Enterprise v3.1 • Desenvolvido com Python & Streamlit<br>
         Última sincronização: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
     </div>
     """, unsafe_allow_html=True)
