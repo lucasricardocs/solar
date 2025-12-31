@@ -691,22 +691,20 @@ else:
             tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Geração Acumulada", "📅 Acumulada Anual", "📋 Dados"])
             
             with tab1:
-                # --- GRÁFICO DE GERAÇÃO DIÁRIA (BARRAS ADAPTATIVAS) ---
-                # A alteração principal está aqui: removido size=35
+                # --- GRÁFICO DE GERAÇÃO DIÁRIA (BARRAS LARGAS) ---
                 bar_chart = alt.Chart(filtered_df).mark_bar(
                     color="green",
                     cornerRadiusTopLeft=3,
                     cornerRadiusTopRight=3,
                     stroke="black",
                     strokeWidth=1,
-                    # size=35 FOI REMOVIDO para que as barras sejam adaptativas
                 ).encode(
                     x=alt.X(
-                        'Data:O',  # Mudamos de :T para :O (Ordinal)
-                        timeUnit='date',  # Extrai apenas o dia (1, 2, 3...)
-                        title='',
-                        axis=alt.Axis(labelAngle=0), # Mantém os números retos
-                        scale=alt.Scale(padding=0.1) # 0.05 = Barras bem grossas (5% de espaço)
+                        'Data:O',  # Ordinal
+                        timeUnit='date', # Dia (1, 2, 3...)
+                        title='', 
+                        axis=alt.Axis(labelAngle=0), 
+                        scale=alt.Scale(padding=0.05) # 0.05 = Barras largas
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title=''),
                     tooltip=[
@@ -889,15 +887,11 @@ else:
                                         time.sleep(1)
                                         st.rerun()
     
+    # --- RESUMO ANUAL COMPLETO (Métricas + Gráfico Largo) ---
     year_df = df[df['Data'].dt.year == selected_year].copy()
     
     if not year_df.empty:
-        st.markdown(f"""
-        <div class="subheader-container purple">
-            <h2>📅 Resumo Anual de {selected_year}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
+        # Cálculos para as métricas anuais
         monthly_summary = year_df.groupby(
             year_df['Data'].dt.month
         )['Energia Gerada (kWh)'].sum().reset_index()
@@ -906,21 +900,45 @@ else:
         monthly_summary['Nome Mês'] = monthly_summary['Mês'].apply(
             lambda m: month_names[m][:3]
         )
+
+        total_ano = year_df['Energia Gerada (kWh)'].sum()
+        media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
+        melhor_mes = monthly_summary.loc[monthly_summary['Energia Gerada (kWh)'].idxmax()]
+        pior_mes = monthly_summary.loc[monthly_summary['Energia Gerada (kWh)'].idxmin()]
+
+        st.markdown(f"""
+        <div class="subheader-container purple">
+            <h2>📅 Resumo Anual de {selected_year}</h2>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # --- GRÁFICO MENSAL (BARRAS ADAPTATIVAS) ---
+        # Exibição das Métricas do Ano
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("🔋 Total no Ano", f"{format_number_br(total_ano)} kWh")
+        with col2:
+            st.metric("📈 Média Mensal", f"{format_number_br(media_mensal)} kWh")
+        with col3:
+            st.metric("⭐ Melhor Mês", f"{format_number_br(melhor_mes['Energia Gerada (kWh)'])} kWh", 
+                      delta=melhor_mes['Nome Mês'])
+        with col4:
+            st.metric("⚠️ Pior Mês", f"{format_number_br(pior_mes['Energia Gerada (kWh)'])} kWh",
+                      delta=pior_mes['Nome Mês'], delta_color="inverse")
+        
+        # --- GRÁFICO MENSAL (BARRAS LARGAS) ---
         monthly_bars = alt.Chart(monthly_summary).mark_bar(
             color="#f59e0b",
             cornerRadiusTopLeft=2,
             cornerRadiusTopRight=2,
             stroke="black",
             strokeWidth=1,
-            # size=50 REMOVIDO para largura variável
         ).encode(
             x=alt.X(
                 'Nome Mês:N', 
                 title='',
                 sort=[m[:3] for m in month_names.values()],
-                scale=alt.Scale(padding=0.1) # Barras largas
+                scale=alt.Scale(padding=0.05) # Barras largas
             ),
             y=alt.Y('Energia Gerada (kWh):Q', title=''),
             tooltip=[
@@ -929,7 +947,6 @@ else:
             ]
         )
         
-        media_mensal = monthly_summary['Energia Gerada (kWh)'].mean()
         linha_media_mensal = alt.Chart(pd.DataFrame({'media': [media_mensal]})).mark_rule(
             color='red',
             strokeWidth=2,
@@ -1003,9 +1020,9 @@ else:
                 alt.Color(
                     'Energia Gerada (kWh):Q',
                     scale=alt.Scale(
-                        scheme='goldgreen',
-                        domainMin=10,
-                        domainMax=28
+                        scheme='yellowgreen', # Corrigido para yellowgreen (seguro)
+                        domainMin=7, # Ajustado para 7 (claro)
+                        domainMax=28 # Ajustado para 28 (escuro)
                     ),
                     legend=alt.Legend(title="kWh Gerado")
                 ),
@@ -1051,9 +1068,6 @@ else:
             <h3>💰 Análise de Viabilidade Econômica (Lei 14.300)</h3>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Parâmetros do sistema solar (AGORA NA VARIÁVEL, VINDO DO SIDEBAR)
-        # INVESTIMENTO_INICIAL, TARIFA_ENERGIA, ETC já foram definidos acima
         
         # Cálculos básicos
         year_total = year_df['Energia Gerada (kWh)'].sum()
