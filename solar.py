@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 SolarAnalytics Pro - Sistema Integrado de Monitoramento Fotovoltaico
-Versão: 4.0.0 (Full Enterprise)
+Versão: 5.0.0 (No Sidebar Edition)
 Compatibilidade: Lei 14.300 (Taxação do Sol)
 """
 
@@ -34,19 +34,18 @@ except:
     try:
         locale.setlocale(locale.LC_ALL, 'pt_BR')
     except:
-        # Fallback silencioso para padrão do sistema
         pass
 
 # Constantes de Conexão
 SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
 WORKSHEET_NAME = 'solardaily'
 
-# Configuração da Página Streamlit (Layout Wide para Dashboard)
+# Configuração da Página Streamlit (Layout Wide)
 st.set_page_config(
     layout="wide",
-    page_title="SolarAnalytics Pro | Dashboard Energia Solar",
+    page_title="SolarAnalytics Pro | Dashboard",
     page_icon="⚡",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # Esconde a sidebar nativa
 )
 
 # Inicialização do Session State
@@ -54,7 +53,7 @@ if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
 
 if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False
+    st.session_state.dark_mode = True # Começa escuro por padrão para contraste
 
 if 'last_update' not in st.session_state:
     st.session_state.last_update = datetime.now()
@@ -66,51 +65,52 @@ if 'last_update' not in st.session_state:
 def get_theme_colors():
     """
     Retorna o dicionário de cores baseado no estado atual (Claro/Escuro).
-    No modo escuro, prioriza alto contraste para legibilidade.
     """
     if st.session_state.dark_mode:
         return {
             'mode': 'dark',
             'primary_color': '#FFFFFF',      # Títulos em Branco Puro
-            'secondary_color': '#22D3EE',    # Ciano Neon (Destaques)
-            'accent_color': '#34D399',       # Verde Esmeralda (Sucesso/Geração)
-            'warning_color': '#FACC15',      # Amarelo (Alertas)
-            'danger_color': '#FB7185',       # Rosa/Vermelho (Erro)
-            'text_primary': '#F1F5F9',       # Cinza muito claro (Slate 100)
-            'text_secondary': '#94A3B8',     # Cinza médio (Slate 400)
-            'bg_main': '#020617',            # Azul Quase Preto (Slate 950) - Fundo Profundo
-            'bg_light': '#0F172A',           # Slate 900 - Fundo de Seções
-            'bg_card': '#1E293B',            # Slate 800 - Cards
-            'border_light': '#334155',       # Slate 700 - Bordas sutis
-            'header_bg': 'linear-gradient(135deg, #0F172A 0%, #020617 100%)',
-            'subheader_bg': '#0F172A',
-            'form_bg': '#1E293B',
-            'metric_bg': '#1E293B',
-            'heatmap_stroke': '#334155',     # Borda dos quadrados do heatmap
-            'heatmap_zero': '#0F172A',       # Cor para valor zero
-            'chart_grid': '#334155'          # Grid dos gráficos
+            'secondary_color': '#06b6d4',    # Ciano (Cyan 500)
+            'accent_color': '#10b981',       # Verde Esmeralda
+            'warning_color': '#f59e0b',      # Amarelo (Amber 500)
+            'danger_color': '#ef4444',       # Vermelho (Red 500)
+            'text_primary': '#f8fafc',       # Branco Gelo (Slate 50)
+            'text_secondary': '#94a3b8',     # Cinza médio (Slate 400)
+            'bg_main': '#0f172a',            # Azul Noturno (Slate 900)
+            'bg_light': '#1e293b',           # Slate 800
+            'bg_card': '#334155',            # Slate 700
+            'border_light': '#475569',       # Slate 600
+            'header_bg': 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            'subheader_bg': '#1e293b',
+            'form_bg': '#1e293b',
+            'metric_bg': '#1e293b',
+            'heatmap_stroke': '#475569',
+            'heatmap_zero': '#1e293b',
+            'chart_grid': '#334155',
+            'bar_color': '#22d3ee'           # Cor Neon para as barras no escuro
         }
     else:
         return {
             'mode': 'light',
-            'primary_color': '#111827',      # Cinza Escuro (Gray 900)
-            'secondary_color': '#3B82F6',    # Azul Real (Blue 500)
-            'accent_color': '#10B981',       # Verde (Emerald 500)
-            'warning_color': '#F59E0B',      # Laranja
-            'danger_color': '#EF4444',       # Vermelho
-            'text_primary': '#1F2937',       # Gray 800
-            'text_secondary': '#6B7280',     # Gray 500
-            'bg_main': '#F8FAFC',            # Slate 50 - Fundo Claro
-            'bg_light': '#FFFFFF',           # Branco
-            'bg_card': '#FFFFFF',            # Branco
-            'border_light': '#E2E8F0',       # Slate 200
-            'header_bg': 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
-            'subheader_bg': '#FFFFFF',
-            'form_bg': '#FFFFFF',
-            'metric_bg': '#FFFFFF',
-            'heatmap_stroke': '#E2E8F0',
-            'heatmap_zero': '#F1F5F9',
-            'chart_grid': '#E5E7EB'
+            'primary_color': '#111827',
+            'secondary_color': '#3b82f6',
+            'accent_color': '#10b981',
+            'warning_color': '#f59e0b',
+            'danger_color': '#ef4444',
+            'text_primary': '#1f2937',
+            'text_secondary': '#6b7280',
+            'bg_main': '#f8fafc',
+            'bg_light': '#ffffff',
+            'bg_card': '#ffffff',
+            'border_light': '#e2e8f0',
+            'header_bg': 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+            'subheader_bg': '#ffffff',
+            'form_bg': '#ffffff',
+            'metric_bg': '#ffffff',
+            'heatmap_stroke': '#e2e8f0',
+            'heatmap_zero': '#f1f5f9',
+            'chart_grid': '#e5e7eb',
+            'bar_color': '#3b82f6'           # Azul para barras no claro
         }
 
 theme = get_theme_colors()
@@ -140,9 +140,9 @@ html, body, [class*="st-"], .stApp {{
 }}
 
 .main .block-container {{
-    padding-top: 2rem;
+    padding-top: 1rem;
     padding-bottom: 3rem;
-    max-width: 1400px;
+    max-width: 1600px;
 }}
 
 /* --- Header Personalizado --- */
@@ -150,26 +150,26 @@ html, body, [class*="st-"], .stApp {{
     background: {theme['header_bg']};
     color: {theme['text_primary']};
     padding: 1.5rem 2rem;
-    border-radius: 16px;
+    border-radius: 12px;
     border: 1px solid {theme['border_light']};
     margin-bottom: 2rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between; /* Espalha conteúdo */
     gap: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }}
 
-.header-section:hover {{
-    border-color: {theme['secondary_color']};
-    transform: translateY(-2px);
+.header-content {{
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }}
 
 .header-title {{
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
     background: linear-gradient(120deg, {theme['text_primary']}, {theme['secondary_color']});
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -187,55 +187,45 @@ html, body, [class*="st-"], .stApp {{
 /* --- Subheaders Estilizados --- */
 .subheader-container {{
     margin: 25px 0 15px 0;
-    padding: 12px 20px;
+    padding: 10px 15px;
     background: {theme['subheader_bg']};
     border-radius: 8px;
     border-left: 5px solid;
     border-top: 1px solid {theme['border_light']};
     border-right: 1px solid {theme['border_light']};
     border-bottom: 1px solid {theme['border_light']};
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
 }}
 
 .subheader-container h2 {{
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
     color: {theme['text_primary']};
 }}
 
-.subheader-container.blue {{ border-left-color: #3b82f6; }}
-.subheader-container.green {{ border-left-color: #10b981; }}
-.subheader-container.orange {{ border-left-color: #f59e0b; }}
-.subheader-container.purple {{ border-left-color: #8b5cf6; }}
-.subheader-container.pink {{ border-left-color: #ec4899; }}
-.subheader-container.teal {{ border-left-color: #14b8a6; }}
+.border-blue {{ border-left-color: {theme['secondary_color']}; }}
+.border-green {{ border-left-color: {theme['accent_color']}; }}
+.border-orange {{ border-left-color: {theme['warning_color']}; }}
+.border-pink {{ border-left-color: {theme['danger_color']}; }}
 
 /* --- Métricas (KPI Cards) --- */
 [data-testid="metric-container"] {{
     background-color: {theme['metric_bg']};
     border: 1px solid {theme['border_light']};
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 1rem;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    transition: transform 0.2s;
-}}
-
-[data-testid="metric-container"]:hover {{
-    transform: scale(1.02);
-    border-color: {theme['secondary_color']};
 }}
 
 [data-testid="metric-label"] {{
     font-size: 0.9rem !important;
     color: {theme['text_secondary']} !important;
-    font-weight: 600 !important;
 }}
 
 [data-testid="metric-value"] {{
-    font-size: 1.8rem !important;
+    font-size: 1.5rem !important;
     color: {theme['text_primary']} !important;
     font-weight: 800 !important;
 }}
@@ -244,11 +234,10 @@ html, body, [class*="st-"], .stApp {{
 .stForm {{
     background-color: {theme['form_bg']};
     border: 1px solid {theme['border_light']};
-    border-radius: 12px;
-    padding: 2rem;
+    border-radius: 10px;
+    padding: 1.5rem;
 }}
 
-/* Estilização profunda de inputs para dark mode */
 .stTextInput > div > div, 
 .stNumberInput > div > div, 
 .stDateInput > div > div, 
@@ -256,10 +245,10 @@ html, body, [class*="st-"], .stApp {{
     background-color: {theme['bg_card']} !important;
     color: {theme['text_primary']} !important;
     border-color: {theme['border_light']} !important;
-    border-radius: 8px;
+    border-radius: 6px;
 }}
 
-/* Hover nos inputs */
+/* Inputs Hover */
 .stTextInput:hover > div > div, 
 .stNumberInput:hover > div > div {{
     border-color: {theme['secondary_color']} !important;
@@ -270,8 +259,7 @@ button[kind="secondary"] {{
     background-color: {theme['bg_card']};
     border: 1px solid {theme['border_light']};
     color: {theme['text_primary']};
-    border-radius: 8px;
-    transition: all 0.2s;
+    border-radius: 6px;
 }}
 
 button[kind="secondary"]:hover {{
@@ -284,59 +272,30 @@ button[kind="primary"] {{
     background-color: {theme['secondary_color']};
     color: #ffffff;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 700;
 }}
 
-/* --- Badges e Utilitários --- */
+/* Badges e Utilitários */
 .status-badge {{
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
     font-weight: 700;
     display: inline-block;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }}
 
-.status-connected {{ 
-    background-color: rgba(16, 185, 129, 0.2); 
+.status-online {{ 
+    background-color: rgba(16, 185, 129, 0.15); 
     color: #10B981; 
     border: 1px solid rgba(16, 185, 129, 0.3);
 }}
 
-.status-disconnected {{ 
-    background-color: rgba(239, 68, 68, 0.2); 
-    color: #EF4444; 
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}}
-
-/* Explicações Financeiras */
-.economic-box {{
-    background: {theme['bg_card']};
-    border: 1px solid {theme['border_light']};
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-    color: {theme['text_secondary']};
-}}
-
-.economic-box h4 {{
-    color: {theme['text_primary']};
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-weight: 700;
-}}
-
-.economic-box li {{
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
-}}
-
-/* Remove elementos padrão do Streamlit */
+/* Remove elementos padrão */
 #MainMenu {{visibility: hidden;}}
 footer {{visibility: hidden;}}
 header {{visibility: hidden;}}
+[data-testid="stSidebar"] {{display: none;}} /* Força remoção da sidebar */
 
 </style>
 """, unsafe_allow_html=True)
@@ -346,53 +305,24 @@ def configure_altair_theme():
     """Configura o tema dos gráficos para combinar com o modo Claro/Escuro."""
     font = "Nunito"
     
-    # Cores
-    bg_color = 'transparent' # Fundo transparente para mesclar
+    bg_color = 'transparent'
     text_color = theme['text_primary']
     grid_color = theme['chart_grid']
     
-    # Desativa tema padrão
     alt.themes.enable('none')
-    
-    # Registra tema customizado
     alt.themes.register("custom_theme", lambda: {
         "config": {
             "background": bg_color,
-            "view": {
-                "stroke": "transparent"
-            },
-            "title": {
-                "font": font,
-                "fontSize": 14,
-                "color": text_color,
-                "anchor": "start"
-            },
+            "view": { "stroke": "transparent" },
+            "title": { "font": font, "fontSize": 14, "color": text_color },
             "axis": {
-                "labelFont": font,
-                "titleFont": font,
-                "labelColor": theme['text_secondary'],
-                "titleColor": theme['text_secondary'],
-                "gridColor": grid_color,
-                "domainColor": grid_color,
-                "tickColor": grid_color,
+                "labelFont": font, "titleFont": font,
+                "labelColor": theme['text_secondary'], "titleColor": theme['text_secondary'],
+                "gridColor": grid_color, "domainColor": grid_color, "tickColor": grid_color,
             },
             "legend": {
-                "labelFont": font,
-                "titleFont": font,
-                "labelColor": text_color,
-                "titleColor": text_color,
-                "padding": 10,
-                "cornerRadius": 5,
-                "fillColor": theme['bg_card'],
-                "strokeColor": theme['border_light']
-            },
-            "range": {
-                "category": [
-                    theme['secondary_color'], 
-                    theme['accent_color'], 
-                    theme['warning_color'], 
-                    theme['danger_color']
-                ]
+                "labelFont": font, "titleFont": font,
+                "labelColor": text_color, "titleColor": text_color,
             }
         }
     })
@@ -401,406 +331,261 @@ def configure_altair_theme():
 configure_altair_theme()
 
 # ==============================================================================
-# 3. LÓGICA DE DADOS E CONEXÃO
+# 3. CONEXÃO E DADOS
 # ==============================================================================
 
-def format_number_br(number, decimals=2):
-    """Formata números para o padrão PT-BR (ex: 1.234,56)."""
-    if number is None: return "0,00"
-    return f"{number:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+def format_br(val):
+    if val is None: return "0,00"
+    return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-@st.cache_resource(show_spinner="🔌 Estabelecendo conexão segura com Google Sheets...")
-def connect_to_gsheets():
-    """
-    Estabelece a conexão com a API do Google Sheets.
-    Utiliza cache para evitar reconexões desnecessárias.
-    """
+@st.cache_resource(show_spinner="Conectando...")
+def connect_gsheets():
     try:
-        scopes = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        
-        # Carrega credenciais dos segredos do Streamlit
-        creds_dict = st.secrets["gcp_service_account"]
-        creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-        
-        # Autoriza e abre a planilha
+        scopes = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
         client = gspread.authorize(creds)
-        spreadsheet = client.open_by_key(SPREADSHEET_ID)
-        sheet = spreadsheet.worksheet(WORKSHEET_NAME)
-        
-        return sheet
+        return client.open_by_key(SPREADSHEET_ID).worksheet(WORKSHEET_NAME)
     except Exception as e:
-        # Log do erro (opcional) e retorno nulo
-        st.error(f"Erro de Conexão: {str(e)}")
+        st.error(f"Erro Conexão: {e}")
         return None
 
-@st.cache_data(ttl=300, show_spinner="📊 Sincronizando dados...")
+@st.cache_data(ttl=300)
 def load_data():
-    """
-    Carrega, limpa e tipa os dados da planilha.
-    Cache de 5 minutos para performance.
-    """
     try:
-        sheet = connect_to_gsheets()
-        if not sheet: 
-            return pd.DataFrame()
+        sheet = connect_gsheets()
+        if not sheet: return pd.DataFrame()
         
-        # Obtém todos os valores
-        values = sheet.get_all_values()
-
-        if len(values) < 2: 
-            return pd.DataFrame()
+        vals = sheet.get_all_values()
+        if len(vals) < 2: return pd.DataFrame()
         
-        # Cria DataFrame
-        df = pd.DataFrame(values[1:], columns=values[0])
+        df = pd.DataFrame(vals[1:], columns=vals[0])
+        df.columns = [c.lower().strip() for c in df.columns]
+        df.rename(columns={'data': 'Data', 'gerado': 'Energia'}, inplace=True)
         
-        # Normaliza nomes de colunas
-        df.columns = [col.lower().strip() for col in df.columns]
-        
-        # Validação básica
-        if 'data' not in df.columns or 'gerado' not in df.columns:
-            st.error("⚠️ Estrutura inválida: Colunas 'data' e 'gerado' são obrigatórias.")
-            return pd.DataFrame()
-        
-        # Renomeia para padrão interno
-        df.rename(columns={
-            'data': 'Data', 
-            'gerado': 'Energia Gerada (kWh)'
-        }, inplace=True)
-        
-        # Conversão de Data
         df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
-        # Fallback para datas mal formatadas
-        if df['Data'].isna().any():
-            df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
+        df['Energia'] = (df['Energia'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False))
+        df['Energia'] = pd.to_numeric(df['Energia'], errors='coerce')
         
-        # Conversão de Número (Trata padrão PT-BR 1.000,00)
-        df['Energia Gerada (kWh)'] = (
-            df['Energia Gerada (kWh)']
-            .astype(str)
-            .str.replace('.', '', regex=False)  # Remove milhar
-            .str.replace(',', '.', regex=False) # Troca vírgula por ponto
-        )
-        df['Energia Gerada (kWh)'] = pd.to_numeric(df['Energia Gerada (kWh)'], errors='coerce')
-        
-        # Limpeza Final
-        df.dropna(subset=['Data', 'Energia Gerada (kWh)'], inplace=True)
-        df = df[df['Energia Gerada (kWh)'] >= 0]
-        df = df.sort_values(by='Data')
-        
-        # Remove duplicatas (mantém a última inserção)
-        df = df.drop_duplicates(subset=['Data'], keep='last')
-        
-        return df.reset_index(drop=True)
-        
-    except Exception as e:
-        st.error(f"🚨 Falha crítica no carregamento: {str(e)}")
-        return pd.DataFrame()
+        df.dropna(subset=['Data', 'Energia'], inplace=True)
+        df = df[df['Energia'] >= 0]
+        return df.sort_values('Data').drop_duplicates(subset=['Data'], keep='last').reset_index(drop=True)
+    except: return pd.DataFrame()
 
-# --- Funções CRUD (Create, Read, Update, Delete) ---
-
-def append_data(date, energy):
-    """Adiciona um novo registro."""
+def save_data(dt, val):
     try:
-        sheet = connect_to_gsheets()
-        formatted_date = date.strftime('%d/%m/%Y')
-        energy_str = str(energy).replace('.', ',')
-        sheet.append_row([formatted_date, energy_str], value_input_option='USER_ENTERED')
-        st.cache_data.clear() # Limpa cache para refletir mudança
-        return True
-    except Exception as e:
-        st.error(f"Erro ao salvar: {e}")
-        return False
-
-def update_data(row_index, date, energy):
-    """Atualiza registro existente."""
-    try:
-        sheet = connect_to_gsheets()
-        # +2 porque gspread é 1-based e a linha 1 é cabeçalho
-        gspread_row = row_index + 2 
-        formatted_date = date.strftime('%d/%m/%Y')
-        energy_str = str(energy).replace('.', ',')
-        
-        sheet.update_cell(gspread_row, 1, formatted_date)
-        sheet.update_cell(gspread_row, 2, energy_str)
+        s = connect_gsheets()
+        s.append_row([dt.strftime('%d/%m/%Y'), str(val).replace('.', ',')], value_input_option='USER_ENTERED')
         st.cache_data.clear()
         return True
-    except Exception as e:
-        st.error(f"Erro ao atualizar: {e}")
-        return False
+    except: return False
 
-def delete_data(row_index):
-    """Remove registro."""
+def update_data(idx, dt, val):
     try:
-        sheet = connect_to_gsheets()
-        gspread_row = row_index + 2
-        sheet.delete_rows(gspread_row)
+        s = connect_gsheets()
+        s.update_cell(idx+2, 1, dt.strftime('%d/%m/%Y'))
+        s.update_cell(idx+2, 2, str(val).replace('.', ','))
         st.cache_data.clear()
         return True
-    except Exception as e:
-        st.error(f"Erro ao excluir: {e}")
-        return False
+    except: return False
+
+def delete_data(idx):
+    try:
+        s = connect_gsheets()
+        s.delete_rows(idx+2)
+        st.cache_data.clear()
+        return True
+    except: return False
 
 # ==============================================================================
-# 4. LÓGICA FINANCEIRA (LEI 14.300 - MARCO LEGAL GD)
+# 4. LÓGICA FINANCEIRA (LEI 14.300)
 # ==============================================================================
 
-def calcular_economia_lei14300(geracao_total, tarifa_cheia, tarifa_fio_b, simultaneidade_percent):
-    """
-    Calcula a economia real considerando a taxação do Fio B.
+def calc_financeiro(total_kwh, t_cheia, t_fio, simult):
+    fator = simult / 100.0
     
-    Args:
-        geracao_total: Total produzido (kWh)
-        tarifa_cheia: Valor cheio da tarifa (R$/kWh)
-        tarifa_fio_b: Componente Fio B (R$/kWh)
-        simultaneidade_percent: % de Autoconsumo (0-100)
+    # Volumes
+    auto = total_kwh * fator
+    injecao = total_kwh * (1 - fator)
     
-    Returns:
-        Dict com economia líquida, taxa paga e volumes divididos.
-    """
-    if geracao_total <= 0:
-        return {'economia_reais': 0, 'taxa_paga': 0, 'kwh_autoconsumo': 0, 'kwh_injetado': 0}
-
-    fator = simultaneidade_percent / 100.0
+    # Regra de Transição (Fio B progressivo)
+    ano = datetime.now().year
+    # Tabela 14.300
+    tab = {2023:0.15, 2024:0.30, 2025:0.45, 2026:0.60, 2027:0.75, 2028:0.90}
+    perc_taxa = tab.get(ano, 1.0)
     
-    # 1. Energia Autoconsumida (Instantânea - Isenta de Taxas)
-    autoconsumo = geracao_total * fator
-    valor_autoconsumo = autoconsumo * tarifa_cheia
-    
-    # 2. Energia Injetada (Compensada - Sujeita a Taxas)
-    injecao = geracao_total * (1 - fator)
-    
-    # Tabela de Transição da Lei 14.300
-    ano_atual = datetime.now().year
-    tabela_transicao = {
-        2023: 0.15, 
-        2024: 0.30, 
-        2025: 0.45, 
-        2026: 0.60, 
-        2027: 0.75, 
-        2028: 0.90,
-        2029: 1.00 # E anos seguintes
-    }
-    percentual_fio_b = tabela_transicao.get(ano_atual, 1.0)
-    
-    # Custo do Pedágio (Taxa)
-    custo_taxa = injecao * (tarifa_fio_b * percentual_fio_b)
-    
-    # Valor Líquido da Injeção
-    valor_injecao_bruto = injecao * tarifa_cheia
-    valor_injecao_liquido = valor_injecao_bruto - custo_taxa
+    # Custos e Economias
+    taxa_fio_b = injecao * (t_fio * perc_taxa)
+    econ_bruta = (auto * t_cheia) + (injecao * t_cheia)
+    econ_liq = econ_bruta - taxa_fio_b
     
     return {
-        "economia_reais": valor_autoconsumo + valor_injecao_liquido,
-        "taxa_paga": custo_taxa,
-        "kwh_autoconsumo": autoconsumo,
-        "kwh_injetado": injecao,
-        "percentual_taxa": percentual_fio_b * 100
+        'econ_liq': econ_liq,
+        'taxa': taxa_fio_b,
+        'auto_kwh': auto,
+        'perc': perc_taxa * 100
     }
 
 # ==============================================================================
-# 5. INTERFACE DO USUÁRIO (MAIN APP)
+# 5. APP PRINCIPAL
 # ==============================================================================
 
 def main():
     
-    # --- Sidebar: Configurações e Menu ---
-    st.sidebar.markdown("### ⚙️ Painel de Controle")
+    # --- HEADER ---
+    col_h1, col_h2 = st.columns([3, 1])
+    with col_h1:
+        st.markdown(f"""
+        <div class="header-section">
+            <div class="header-content">
+                <span style="font-size: 2.5rem;">⚡</span>
+                <div>
+                    <h1 class="header-title">SolarAnalytics Pro</h1>
+                    <p class="header-subtitle">Enterprise Edition • Lei 14.300 Ready</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Controle de Tema
-    col_theme, col_refresh = st.sidebar.columns(2)
-    with col_theme:
+    with col_h2:
+        # Botão de Tema no Header
         icon = "☀️" if not st.session_state.dark_mode else "🌙"
-        lbl = "Claro" if not st.session_state.dark_mode else "Escuro"
+        lbl = "Mudar Tema"
         if st.button(f"{icon} {lbl}", use_container_width=True):
             st.session_state.dark_mode = not st.session_state.dark_mode
             st.rerun()
-            
-    with col_refresh:
-        if st.button("🔄 Atualizar", use_container_width=True):
+        
+        if st.button("🔄 Recarregar Dados", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
-    # Parâmetros Financeiros
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 💰 Configuração (Lei 14.300)")
-    
-    with st.sidebar.expander("📝 Editar Tarifas", expanded=True):
-        tarifa_cheia = st.number_input(
-            "Tarifa Cheia (R$/kWh)", 
-            value=0.9555, format="%.4f", step=0.01,
-            help="Soma de TE + TUSD + Impostos (Valor final da conta)."
-        )
-        tarifa_fio_b = st.number_input(
-            "Tarifa Fio B (R$/kWh)", 
-            value=0.4900, format="%.4f", step=0.01,
-            help="Componente de distribuição da tarifa."
-        )
-        fator_simultaneidade = st.slider(
-            "Simultaneidade (%)", 
-            0, 100, 30, 
-            help="% da energia consumida na hora que é gerada."
-        )
+    # --- CONTROLES SUPERIORES (SUBSTITUI SIDEBAR) ---
+    with st.expander("⚙️ Configurações, Tarifas e Filtros", expanded=False):
+        c_conf1, c_conf2, c_conf3 = st.columns([1, 1, 2])
         
-        st.markdown("---")
-        investimento_inicial = st.number_input("Investimento (R$)", value=15000.0, step=500.0)
-        data_instalacao = st.date_input("Data Instalação", datetime(2025, 5, 1))
-
-    # Carrega dados
-    df = load_data()
-    
-    # Status na Sidebar
-    if sheet := connect_to_gsheets():
-        st.sidebar.markdown('<br><span class="status-badge status-connected">✅ ONLINE</span>', unsafe_allow_html=True)
-    else:
-        st.sidebar.markdown('<br><span class="status-badge status-disconnected">❌ OFFLINE</span>', unsafe_allow_html=True)
-        st.stop()
-
-    # --- Header Principal ---
-    st.markdown("""
-    <div class="header-section">
-        <div class="header-content">
-            <img src="https://raw.githubusercontent.com/lucasricardocs/solar/refs/heads/main/solar.png" 
-                 class="solar-icon" width="80" style="margin-right: 20px;"
-                 onerror="this.style.display='none'">
-            <div class="header-text">
-                <div class="header-title">⚡ SolarAnalytics Pro</div>
-                <div class="header-subtitle">Monitoramento Inteligente • Enterprise Edition</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # --- Filtros de Data (Sidebar) ---
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📅 Período de Análise")
-    
-    filtro_tipo = st.sidebar.radio(
-        "Modo de Filtro:",
-        ["Mês Específico", "Intervalo Personalizado", "Ano Completo", "Todo o Histórico"]
-    )
-    
-    df_filtrado = df.copy()
-    label_periodo = "Geral"
-    heatmap_year_default = datetime.now().year
-    
-    if not df.empty:
-        # Limites globais para Heatmap (Baseado no histórico total para consistência de cor)
-        global_max = df['Energia Gerada (kWh)'].max()
-        global_min = df[df['Energia Gerada (kWh)'] > 0]['Energia Gerada (kWh)'].min() if not df[df['Energia Gerada (kWh)'] > 0].empty else 0
-        
-        # Fallback
-        if pd.isna(global_max): global_max = 20
-        if pd.isna(global_min): global_min = 0
-
-        # Lógica de Filtro
-        if filtro_tipo == "Mês Específico":
-            anos = sorted(df['Data'].dt.year.unique(), reverse=True)
-            sel_ano = st.sidebar.selectbox("Ano", anos)
-            meses = sorted(df[df['Data'].dt.year == sel_ano]['Data'].dt.month.unique())
-            mapa_meses = {1:'Jan', 2:'Fev', 3:'Mar', 4:'Abr', 5:'Mai', 6:'Jun', 7:'Jul', 8:'Ago', 9:'Set', 10:'Out', 11:'Nov', 12:'Dez'}
-            sel_mes = st.sidebar.selectbox("Mês", meses, format_func=lambda x: mapa_meses[x])
+        with c_conf1:
+            st.markdown("##### 💰 Tarifas")
+            t_cheia = st.number_input("Tarifa Cheia (R$)", 0.9555, format="%.4f")
+            t_fio = st.number_input("Tarifa Fio B (R$)", 0.4900, format="%.4f")
             
-            df_filtrado = df[(df['Data'].dt.year == sel_ano) & (df['Data'].dt.month == sel_mes)]
-            label_periodo = f"{mapa_meses[sel_mes]}/{sel_ano}"
-            heatmap_year_default = sel_ano
+        with c_conf2:
+            st.markdown("##### ⚙️ Sistema")
+            f_simult = st.slider("Simultaneidade (%)", 0, 100, 30)
+            invest = st.number_input("Investimento (R$)", 15000.0)
+            
+        with c_conf3:
+            st.markdown("##### 📅 Filtros de Data")
+            tipo_filtro = st.radio("Período:", ["Mês Específico", "Intervalo", "Ano Completo", "Tudo"], horizontal=True)
+            
+            # Carrega dados para filtros
+            df = load_data()
+            
+            df_view = df.copy()
+            label_per = "Geral"
+            heatmap_year = datetime.now().year
+            
+            if not df.empty:
+                # Limites Globais para Heatmap (Baseado no histórico total)
+                g_max = df['Energia'].max()
+                g_min = df[df['Energia'] > 0]['Energia'].min() if not df[df['Energia'] > 0].empty else 0.1
+                if pd.isna(g_max): g_max = 20
+                if pd.isna(g_min): g_min = 0.1
 
-        elif filtro_tipo == "Intervalo Personalizado":
-            d_min, d_max = df['Data'].min().date(), df['Data'].max().date()
-            intervalo = st.sidebar.date_input("Selecione", [d_min, d_max])
-            if len(intervalo) == 2:
-                df_filtrado = df[(df['Data'].dt.date >= intervalo[0]) & (df['Data'].dt.date <= intervalo[1])]
-                label_periodo = "Personalizado"
+                if tipo_filtro == "Mês Específico":
+                    ys = sorted(df['Data'].dt.year.unique(), reverse=True)
+                    sy = st.selectbox("Ano", ys)
+                    ms = sorted(df[df['Data'].dt.year == sy]['Data'].dt.month.unique())
+                    sm = st.selectbox("Mês", ms)
+                    df_view = df[(df['Data'].dt.year == sy) & (df['Data'].dt.month == sm)]
+                    label_per = f"{sm}/{sy}"
+                    heatmap_year = sy
+                    
+                elif tipo_filtro == "Intervalo":
+                    d1, d2 = df['Data'].min().date(), df['Data'].max().date()
+                    dr = st.date_input("De / Até", [d1, d2])
+                    if len(dr) == 2:
+                        df_view = df[(df['Data'].dt.date >= dr[0]) & (df['Data'].dt.date <= dr[1])]
+                        label_per = "Personalizado"
+                        
+                elif tipo_filtro == "Ano Completo":
+                    ys = sorted(df['Data'].dt.year.unique(), reverse=True)
+                    sy = st.selectbox("Ano", ys)
+                    df_view = df[df['Data'].dt.year == sy]
+                    label_per = str(sy)
+                    heatmap_year = sy
+                else:
+                    label_per = "Todo o Histórico"
 
-        elif filtro_tipo == "Ano Completo":
-            anos = sorted(df['Data'].dt.year.unique(), reverse=True)
-            sel_ano = st.sidebar.selectbox("Ano", anos)
-            df_filtrado = df[df['Data'].dt.year == sel_ano]
-            label_periodo = f"Ano {sel_ano}"
-            heatmap_year_default = sel_ano
-        
-        else:
-            label_periodo = "Todo o Histórico"
-
-    # --- Área de Registro (Topo) ---
-    st.markdown('<div class="subheader-container blue"><h2>📝 Novo Registro</h2></div>', unsafe_allow_html=True)
-    with st.form("entry_form", clear_on_submit=True):
+    # --- INPUT DE DADOS ---
+    st.markdown('<div class="subheader-container border-blue"><h2>📝 Registrar Produção</h2></div>', unsafe_allow_html=True)
+    with st.form("add_data"):
         c1, c2, c3 = st.columns([2, 2, 1])
-        with c1: input_date = st.date_input("Data", datetime.today())
-        with c2: input_val = st.number_input("Geração (kWh)", min_value=0.0, step=0.1, format="%.2f")
-        with c3:
-            st.write("")
-            st.write("")
-            if st.form_submit_button("💾 Salvar", use_container_width=True):
-                if input_val > 0:
-                    append_data(input_date, input_val)
+        d_in = c1.date_input("Data", datetime.today())
+        v_in = c2.number_input("Energia Gerada (kWh)", min_value=0.0, step=0.1)
+        if c3.form_submit_button("Salvar Registro", use_container_width=True):
+            if v_in > 0:
+                if save_data(d_in, v_in):
                     st.success("Salvo!")
                     time.sleep(0.5)
                     st.rerun()
-                else:
-                    st.warning("Valor inválido")
+            else:
+                st.warning("Valor deve ser > 0")
 
-    # --- Dashboard Principal ---
-    if df_filtrado.empty:
-        st.info("Nenhum dado encontrado para este filtro.")
+    # --- DASHBOARD ---
+    if df_view.empty:
+        st.info("Nenhum dado para exibir neste período.")
     else:
-        # Cálculos de KPI
-        total_gerado = df_filtrado['Energia Gerada (kWh)'].sum()
-        media_diaria = df_filtrado['Energia Gerada (kWh)'].mean()
+        # Cálculos
+        total_kwh = df_view['Energia'].sum()
+        media_kwh = df_view['Energia'].mean()
+        fin = calc_financeiro(total_kwh, t_cheia, t_fio, f_simult)
         
-        # Financeiro
-        financas = calcular_economia_lei14300(total_gerado, tarifa_cheia, tarifa_fio_b, fator_simultaneidade)
-        
-        # Exibição de KPIs
-        st.markdown(f'<div class="subheader-container green"><h2>📊 Resultados: {label_periodo}</h2></div>', unsafe_allow_html=True)
+        # Cards KPI
+        st.markdown(f'<div class="subheader-container border-green"><h2>📊 Resultados: {label_per}</h2></div>', unsafe_allow_html=True)
         
         k1, k2, k3, k4 = st.columns(4)
-        k1.metric("💰 Economia Líquida", f"R$ {format_number_br(financas['economia_reais'])}", delta="Livre de Impostos")
-        k2.metric("🔋 Geração Total", f"{format_number_br(total_gerado)} kWh", delta=f"Média: {format_number_br(media_diaria)}")
-        k3.metric("💸 Taxa Paga (Fio B)", f"R$ {format_number_br(financas['taxa_paga'])}", delta="Descontado", delta_color="inverse")
-        k4.metric("🏠 Autoconsumo", f"{format_number_br(financas['kwh_autoconsumo'])} kWh", help="Energia consumida instantaneamente")
+        k1.metric("Economia Líquida", f"R$ {format_br(fin['econ_liq'])}", help="Já descontando o fio B")
+        k2.metric("Geração Total", f"{format_br(total_kwh)} kWh", delta=f"Média: {format_br(media_kwh)}")
+        k3.metric("Taxa Paga (Fio B)", f"R$ {format_br(fin['taxa'])}", delta=f"{fin['perc']:.0f}%", delta_color="inverse")
+        k4.metric("Autoconsumo", f"{format_br(fin['auto_kwh'])} kWh")
 
-        st.markdown("---")
+        st.divider()
 
-        # --- ABAS DE GRÁFICOS ---
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Produção Diária", "📈 Acumulado", "💰 Financeiro & ROI", "📋 Dados"])
+        # Tabs
+        t1, t2, t3, t4 = st.tabs(["📊 Produção Diária", "📈 Acumulado", "💰 Financeiro", "📋 Dados"])
 
-        # TAB 1: Produção Diária (Adaptativa)
-        with tab1:
-            st.markdown("##### Performance Diária")
+        with t1:
+            # Gráfico Diário Adaptativo
+            st.markdown("##### Produção Diária")
             
-            # Lógica para "engordar" as barras:
-            # Calculamos a largura ideal baseada no número de dias exibidos
-            qtd_dias = len(df_filtrado)
-            # Se tiver 5 dias, size grande (~50). Se tiver 365, size pequeno ou automático.
-            # Largura estimada do chart container: 800px.
-            largura_barra_calc = max(3, min(60, 800 // (qtd_dias + 1)))
+            # Garante que as barras apareçam usando band padding nativo
+            # Se tiver muitos dados, aumenta o padding (barras finas).
+            # Se tiver poucos dados, diminui o padding (barras grossas).
+            count = len(df_view)
+            pad = 0.1 if count < 20 else (0.3 if count < 60 else 0.05)
             
-            chart_daily = alt.Chart(df_filtrado).mark_bar(
-                color=theme['secondary_color'],
-                cornerRadiusTopLeft=4,
-                cornerRadiusTopRight=4,
-                size=largura_barra_calc  # <--- APLICAÇÃO DA LARGURA ADAPTATIVA
+            bars = alt.Chart(df_view).mark_bar(
+                color=theme['bar_color'],
+                cornerRadiusTopLeft=3,
+                cornerRadiusTopRight=3
             ).encode(
-                x=alt.X('Data:T', title='', axis=alt.Axis(format='%d/%m')),
-                y=alt.Y('Energia Gerada (kWh):Q', title='Produção'),
-                tooltip=['Data', alt.Tooltip('Energia Gerada (kWh)', format='.2f')]
-            ).properties(height=380)
+                # Use band=True implicitamente com Ordinal/Temporal e padding controlado
+                x=alt.X('Data:T', axis=alt.Axis(format='%d/%m', labelAngle=-45)),
+                y=alt.Y('Energia:Q', title='kWh'),
+                tooltip=['Data', alt.Tooltip('Energia', format='.2f')]
+            )
             
-            line_avg = alt.Chart(pd.DataFrame({'y':[media_diaria]})).mark_rule(
+            line = alt.Chart(pd.DataFrame({'y':[media_kwh]})).mark_rule(
                 color=theme['danger_color'], strokeDash=[5,5]
-            ).encode(y='y', tooltip=alt.value(f"Média: {media_diaria:.2f}"))
+            ).encode(y='y', tooltip=alt.value(f"Média: {media_kwh:.2f}"))
             
-            st.altair_chart((chart_daily + line_avg).interactive(), use_container_width=True)
+            st.altair_chart((bars + line).interactive(), use_container_width=True)
 
-        # TAB 2: Acumulado
-        with tab2:
-            df_acc = df_filtrado.sort_values('Data').copy()
-            df_acc['Acumulado'] = df_acc['Energia Gerada (kWh)'].cumsum()
+        with t2:
+            st.markdown("##### Curva Acumulada")
+            df_acc = df_view.sort_values('Data').copy()
+            df_acc['Acumulado'] = df_acc['Energia'].cumsum()
             
-            chart_acc = alt.Chart(df_acc).mark_area(
+            area = alt.Chart(df_acc).mark_area(
                 line={'color': theme['secondary_color']},
                 color=alt.Gradient(
                     gradient='linear',
@@ -809,134 +594,92 @@ def main():
                     x1=1, x2=1, y1=1, y2=0
                 )
             ).encode(
-                x=alt.X('Data:T', title='Data'),
-                y=alt.Y('Acumulado:Q', title='Total Acumulado (kWh)'),
-                tooltip=['Data', 'Acumulado']
-            ).properties(height=380)
-            
-            st.altair_chart(chart_acc, use_container_width=True)
+                x='Data:T', y='Acumulado:Q', tooltip=['Data', 'Acumulado']
+            )
+            st.altair_chart(area, use_container_width=True)
 
-        # TAB 3: Financeiro
-        with tab3:
-            st.markdown('<div class="subheader-container pink"><h3>Análise de Viabilidade (Estimativa)</h3></div>', unsafe_allow_html=True)
+        with t3:
+            st.markdown("##### Análise de Retorno")
+            # Projeção simples anualizada
+            fator_anual = 365 / max(1, len(df_view))
+            econ_proj = fin['econ_liq'] * fator_anual
+            payback = invest / econ_proj if econ_proj > 0 else 0
             
-            # Projeção Anual baseada na média do filtro atual
-            projecao_anual_kwh = media_diaria * 365
-            fin_proj = calcular_economia_lei14300(projecao_anual_kwh, tarifa_cheia, tarifa_fio_b, fator_simultaneidade)
-            econ_anual_reais = fin_proj['economia_reais']
+            c1, c2 = st.columns(2)
+            c1.metric("Payback Estimado", f"{payback:.1f} Anos")
+            c2.metric("Projeção Anual (R$)", f"R$ {format_br(econ_proj)}")
             
-            payback = investimento_inicial / econ_anual_reais if econ_anual_reais > 0 else 0
-            
-            # Dados Históricos Totais para ROI Real
-            total_hist = df['Energia Gerada (kWh)'].sum()
-            fin_hist = calcular_economia_lei14300(total_hist, tarifa_cheia, tarifa_fio_b, fator_simultaneidade)
-            total_poupado = fin_hist['economia_reais']
-            
-            c_f1, c_f2, c_f3 = st.columns(3)
-            c_f1.metric("Projeção Anual (R$)", f"R$ {format_number_br(econ_anual_reais)}")
-            c_f2.metric("Payback Estimado", f"{payback:.1f} Anos")
-            c_f3.metric("Total Já Poupado (Vida Útil)", f"R$ {format_number_br(total_poupado)}")
-            
-            st.divider()
-            
-            # Gráfico Fluxo de Caixa
-            st.markdown("##### Fluxo de Caixa (25 Anos)")
+            # Fluxo de Caixa
             anos = list(range(26))
-            fluxo = [-investimento_inicial]
-            acum = -investimento_inicial
+            fluxo = [-invest]
+            acum = -invest
             for i in range(1, 26):
-                deg = (1 - 0.005) ** i
-                acum += (econ_anual_reais * deg)
+                acum += econ_proj * ((1 - 0.005) ** i) # Degradação 0.5%
                 fluxo.append(acum)
             
-            df_fluxo = pd.DataFrame({'Ano': anos, 'Saldo': fluxo})
+            df_cf = pd.DataFrame({'Ano': anos, 'Saldo': fluxo})
             
-            chart_fluxo = alt.Chart(df_fluxo).mark_line(
+            cf_chart = alt.Chart(df_cf).mark_line(
                 point=True, color=theme['accent_color'], strokeWidth=3
             ).encode(
-                x='Ano:O', 
-                y='Saldo:Q',
-                tooltip=['Ano', alt.Tooltip('Saldo', format=',.2f')]
-            ).properties(height=300)
-            
-            line_zero = alt.Chart(pd.DataFrame({'y':[0]})).mark_rule(color='gray').encode(y='y')
-            st.altair_chart(chart_fluxo + line_zero, use_container_width=True)
-            
-            st.markdown(f"""
-            <div class="economic-box">
-                <h4>📚 Detalhes da Lei 14.300 (Taxação do Sol)</h4>
-                <ul>
-                    <li><strong>Fio B:</strong> Componente da tarifa que remunera o uso da rede. Cobrança progressiva iniciada em 2023.</li>
-                    <li><strong>Simultaneidade:</strong> Energia que você consome NO MOMENTO que gera não paga taxa. Aumente isso para economizar mais!</li>
-                    <li><strong>Status Atual:</strong> Você está pagando {financas['percentual_taxa']:.0f}% da tarifa Fio B sobre a injeção.</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
+                x='Ano:O', y='Saldo:Q', tooltip=['Ano', alt.Tooltip('Saldo', format=',.2f')]
+            )
+            zero = alt.Chart(pd.DataFrame({'y':[0]})).mark_rule(color='gray').encode(y='y')
+            st.altair_chart(cf_chart + zero, use_container_width=True)
 
-        # TAB 4: Dados
-        with tab4:
-            c_table, c_edit = st.columns([3, 1])
+        with t4:
+            c_d1, c_d2 = st.columns([3, 1])
+            with c_d1:
+                st.dataframe(df_view.style.format({"Energia": "{:.2f}"}), use_container_width=True, height=400)
             
-            with c_table:
-                st.dataframe(df_filtrado.style.format({"Energia Gerada (kWh)": "{:.2f}"}), use_container_width=True, height=500)
-            
-            with c_edit:
-                st.warning("⚠️ Zona de Edição")
-                if st.button("Ativar Edição", use_container_width=True):
-                    st.session_state.edit_mode = not st.session_state.edit_mode
-                
+            with c_d2:
+                if st.button("Ativar Edição"): st.session_state.edit_mode = not st.session_state.edit_mode
                 if st.session_state.edit_mode:
-                    sel_idx = st.selectbox("ID", df_filtrado.index)
-                    if sel_idx is not None:
-                        row = df_filtrado.loc[sel_idx]
-                        n_dt = st.date_input("Nova Data", row['Data'])
-                        n_vl = st.number_input("Novo Valor", value=float(row['Energia Gerada (kWh)']))
-                        
+                    sid = st.selectbox("ID", df_view.index)
+                    if sid is not None:
+                        row = df_view.loc[sid]
+                        ndt = st.date_input("Data", row['Data'])
+                        nvl = st.number_input("Valor", value=float(row['Energia']))
                         if st.button("Atualizar"):
-                            update_data(sel_idx, n_dt, n_vl)
+                            update_data(sid, ndt, nvl)
                             st.rerun()
-                        if st.button("Excluir"):
-                            delete_data(sel_idx)
+                        if st.button("Deletar"):
+                            delete_data(sid)
                             st.rerun()
 
-        # --- HEATMAP FORA DAS TABS (Visão Geral) ---
+        # --- HEATMAP FORA DAS ABAS (Visão Global) ---
         st.divider()
-        st.markdown(f'<div class="subheader-container teal"><h3>🗓️ Mapa de Calor Anual ({heatmap_year_default})</h3></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="subheader-container border-orange"><h2>🗓️ Mapa de Calor Anual ({heatmap_year})</h2></div>', unsafe_allow_html=True)
         
-        # Filtra dados para o ano do heatmap (padrão ano atual ou selecionado)
-        df_heat_src = df[df['Data'].dt.year == heatmap_year_default].copy()
+        # Filtra o ano para o heatmap
+        df_heat_src = df[df['Data'].dt.year == heatmap_year].copy()
         
         if not df_heat_src.empty:
-            # Grid completo
-            d1 = datetime(heatmap_year_default, 1, 1)
-            d2 = datetime(heatmap_year_default, 12, 31)
-            datas_completas = pd.date_range(d1, d2)
-            df_full_year = pd.DataFrame({'Data': datas_completas})
+            # Cria calendário completo
+            d1 = datetime(heatmap_year, 1, 1)
+            d2 = datetime(heatmap_year, 12, 31)
+            full_dates = pd.date_range(d1, d2)
+            df_full = pd.DataFrame({'Data': full_dates})
             
-            # Merge
-            df_heat = pd.merge(df_full_year, df_heat_src, on='Data', how='left').fillna(0)
+            df_hm = pd.merge(df_full, df_heat_src, on='Data', how='left').fillna(0)
+            df_hm['Semana'] = df_hm['Data'].dt.isocalendar().week
+            df_hm['Dia'] = df_hm['Data'].dt.dayofweek
+            df_hm['Mes'] = df_hm['Data'].dt.month
             
-            # Atributos Temporais
-            df_heat['Semana'] = df_heat['Data'].dt.isocalendar().week
-            df_heat['Dia'] = df_heat['Data'].dt.dayofweek
-            df_heat['Mes'] = df_heat['Data'].dt.month
-            
-            # Ajuste visual virada de ano
-            df_heat.loc[(df_heat['Mes']==1) & (df_heat['Semana']>50), 'Semana'] = 0
-            df_heat.loc[(df_heat['Mes']==12) & (df_heat['Semana']==1), 'Semana'] = 53
+            # Ajuste virada ano
+            df_hm.loc[(df_hm['Mes']==1) & (df_hm['Semana']>50), 'Semana'] = 0
+            df_hm.loc[(df_hm['Mes']==12) & (df_hm['Semana']==1), 'Semana'] = 53
 
-            # Gráfico: Labels dos Meses (Topo)
-            month_labels = df_heat.groupby('Mes')['Semana'].min().reset_index()
-            month_labels['Nome'] = month_labels['Mes'].apply(lambda x: datetime(2023, x, 1).strftime('%b'))
+            # Labels Meses
+            lbls = df_hm.groupby('Mes')['Semana'].min().reset_index()
+            lbls['Nome'] = lbls['Mes'].apply(lambda x: datetime(2023, x, 1).strftime('%b'))
             
-            c_labels = alt.Chart(month_labels).mark_text(align='left', dy=10, color=theme['text_secondary']).encode(
-                x=alt.X('Semana:O', axis=None), 
-                text='Nome'
+            c_lbl = alt.Chart(lbls).mark_text(align='left', dy=10, color=theme['text_secondary']).encode(
+                x=alt.X('Semana:O', axis=None), text='Nome'
             )
             
-            # Gráfico: Quadrados (Heatmap)
-            # CORREÇÃO DE COR: Escala do Verde vai de (Mínimo > 0) até (Máximo Histórico)
-            c_squares = alt.Chart(df_heat).mark_rect(
+            # Heatmap com escala global corrigida
+            c_hm = alt.Chart(df_hm).mark_rect(
                 stroke=theme['heatmap_stroke'], 
                 strokeWidth=1, 
                 cornerRadius=2
@@ -944,28 +687,25 @@ def main():
                 x=alt.X('Semana:O', axis=None),
                 y=alt.Y('Dia:O', axis=None, title=''),
                 color=alt.condition(
-                    'datum["Energia Gerada (kWh)"] > 0',
-                    alt.Color('Energia Gerada (kWh):Q', 
-                              scale=alt.Scale(scheme='yellowgreen', domain=[global_min, global_max]),
+                    'datum.Energia > 0',
+                    alt.Color('Energia:Q', 
+                              scale=alt.Scale(scheme='yellowgreen', domain=[g_min, g_max]),
                               legend=alt.Legend(title="kWh")),
-                    alt.value(theme['heatmap_zero']) # Cor para dias vazios (Zero)
+                    alt.value(theme['heatmap_zero'])
                 ),
-                tooltip=[
-                    alt.Tooltip('Data', format='%d/%m/%Y'), 
-                    alt.Tooltip('Energia Gerada (kWh)', format='.2f')
-                ]
+                tooltip=['Data', alt.Tooltip('Energia', format='.2f')]
             ).properties(height=180)
             
-            st.altair_chart(alt.vconcat(c_labels, c_squares), use_container_width=True)
+            st.altair_chart(alt.vconcat(c_lbl, c_hm), use_container_width=True)
         else:
-            st.warning(f"Sem dados para o ano {heatmap_year_default}")
+            st.warning(f"Sem dados para o ano {heatmap_year}")
 
     # Footer
     st.markdown("---")
     st.markdown(f"""
-    <div style="text-align: center; color: {theme['text_secondary']}; font-size: 0.8rem; margin-top: 2rem;">
-        SolarAnalytics Pro v4.0 • Enterprise Edition<br>
-        Última sincronização: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
+    <div style="text-align: center; color: {theme['text_secondary']}; font-size: 0.8rem; margin-top: 3rem;">
+        SolarAnalytics Pro v5.0 • Desenvolvido com Python & Streamlit<br>
+        Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}
     </div>
     """, unsafe_allow_html=True)
 
