@@ -801,7 +801,7 @@ else:
                 
                 current_date = datetime(selected_year, selected_month_num, 1)
                 end_of_month = datetime(selected_year, selected_month_num, 
-                                    pd.Timestamp(selected_year, selected_month_num, 1).days_in_month)
+                                        pd.Timestamp(selected_year, selected_month_num, 1).days_in_month)
                 
                 acumulado_ate_mes = year_df[year_df['Data'] <= end_of_month]['Energia Gerada (kWh)'].sum()
                 total_year = year_df['Energia Gerada (kWh)'].sum()
@@ -1190,8 +1190,8 @@ else:
 st.divider()
 st.markdown(f"""
 <div style="text-align: center; color: var(--text-secondary); padding: 0.1rem; font-size: 0.9rem;">
-    <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
-    <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
+    <p>🌱 <strong>SolarAnalytics Pro</strong> - Monitoramento de Energia Solar</p>
+    <p><em>Última atualização: {datetime.now().strftime('%d/%m/%Y às %H:%M')}</em></p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1201,22 +1201,22 @@ theme_icon = "🌙" if st.session_state.dark_mode else "☀️"
 theme_text = "Modo Claro" if st.session_state.dark_mode else "Modo Escuro"
 
 if st.sidebar.button(f"{theme_icon} {theme_text}", use_container_width=True, key="theme_toggle"):
-    st.session_state.dark_mode = not st.session_state.dark_mode
-    st.rerun()
+    st.session_state.dark_mode = not st.session_state.dark_mode
+    st.rerun()
 
 st.sidebar.markdown("### 📊 Informações")
 if not df.empty:
-    st.sidebar.metric("📅 Registros", len(df))
-    st.sidebar.metric("📆 Período", f"{df['Data'].min().strftime('%m/%Y')} - {df['Data'].max().strftime('%m/%Y')}")
-    st.sidebar.metric("⚡ Total", f"{format_number_br(df['Energia Gerada (kWh)'].sum())} kWh")
+    st.sidebar.metric("📅 Registros", len(df))
+    st.sidebar.metric("📆 Período", f"{df['Data'].min().strftime('%m/%Y')} - {df['Data'].max().strftime('%m/%Y')}")
+    st.sidebar.metric("⚡ Total", f"{format_number_br(df['Energia Gerada (kWh)'].sum())} kWh")
 
 st.sidebar.markdown("### 🔧 Controles")
 if st.sidebar.button("🔄 Atualizar"):
-    st.cache_data.clear()
-    configure_altair_theme()
-    st.rerun()
+    st.cache_data.clear()
+    configure_altair_theme()
+    st.rerun()
 
 if st.session_state.edit_mode:
-    if st.sidebar.button("❌ Sair do Modo Edição"):
-        st.session_state.edit_mode = False
-        st.rerun()
+    if st.sidebar.button("❌ Sair do Modo Edição"):
+        st.session_state.edit_mode = False
+        st.rerun()
