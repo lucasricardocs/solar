@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 SolarAnalytics Pro - Dashboard de Monitoramento de Energia Solar
-Versão: 3.2.0 (Enterprise Edition - Visual Fidelity)
+Versão: 3.1.0 (Enterprise Edition - Heatmap Adjusted)
 Autor: Adaptado por Gemini AI
 Data: Dezembro 2025
 
@@ -15,8 +15,7 @@ Funcionalidades:
 - Dashboard interativo com Streamlit e Altair.
 - Análise financeira detalhada (Payback, VPL, TIR, ROI).
 - Cálculo de tarifas com desconto do Fio B (Taxação do Sol).
-- Heatmaps fiéis ao design original com escala dinâmica.
-- Gráficos de barras adaptativos (preenchimento otimizado).
+- Heatmaps com escala de cores dinâmica baseada no histórico.
 - Design responsivo com temas Claro/Escuro.
 """
 
@@ -37,16 +36,14 @@ from datetime import datetime, timedelta, date
 from google.oauth2.service_account import Credentials
 from dateutil.relativedelta import relativedelta
 
-# Configurações de warnings para manter o log limpo e profissional
+# Configurações de warnings para manter o log limpo
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
-warnings.filterwarnings('ignore', message='.*observed=False.*')
 
 # Otimização do Altair para grandes volumes de dados JSON
 alt.data_transformers.enable('json')
 
 # Tentativa de configuração de Localidade para formato de moeda e data (pt-BR)
-# Isso garante que R$ e datas apareçam no formato brasileiro correto
 try:
     locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 except Exception:
@@ -68,7 +65,6 @@ SPREADSHEET_ID = '1WI2tZ94lVV9GfaaWerdSfuChFLzWfMbU4v2m6QrwTdY'
 WORKSHEET_NAME = 'solardaily'
 
 # Configuração da Página Streamlit
-# Define o layout wide (tela cheia) e recolhe a sidebar inicialmente para foco nos dados
 st.set_page_config(
     layout="wide",
     page_title="SolarAnalytics Pro | Enterprise Dashboard",
@@ -77,11 +73,11 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://www.github.com/lucasricardocs',
         'Report a bug': "mailto:support@solaranalytics.com",
-        'About': "# SolarAnalytics Pro v3.2\nMonitoramento avançado de energia solar com fidelidade visual."
+        'About': "# SolarAnalytics Pro v3.1\nMonitoramento avançado de energia solar."
     }
 )
 
-# Inicialização do Session State (Estado da Sessão) para persistência de dados
+# Inicialização do Session State (Estado da Sessão)
 if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
 
@@ -98,15 +94,12 @@ if 'last_update' not in st.session_state:
 class ThemeManager:
     """
     Classe responsável por gerenciar as cores, estilos e injeção de CSS
-    dinâmico na aplicação. Mantém a consistência visual entre modo Claro/Escuro.
+    dinâmico na aplicação.
     """
     
     @staticmethod
     def get_colors():
-        """
-        Retorna o dicionário de cores baseado no modo (Claro/Escuro).
-        Essas cores são usadas tanto no CSS quanto nos gráficos Altair.
-        """
+        """Retorna o dicionário de cores baseado no modo (Claro/Escuro)."""
         if st.session_state.dark_mode:
             return {
                 'primary': '#ffffff',
@@ -121,8 +114,7 @@ class ThemeManager:
                 'bg_card': '#374151',       # Cinza azulado
                 'border': '#4b5563',        # Borda sutil
                 'header_grad': 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-                'metric_box': '#374151',
-                'heatmap_stroke': '#4b5563' # Cor da borda do heatmap no modo escuro
+                'metric_box': '#374151'
             }
         else:
             return {
@@ -138,16 +130,12 @@ class ThemeManager:
                 'bg_card': '#ffffff',       # Branco puro
                 'border': '#e2e8f0',        # Cinza claro
                 'header_grad': 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)',
-                'metric_box': '#ffffff',
-                'heatmap_stroke': '#d3d3d3' # Cor da borda do heatmap no modo claro (original)
+                'metric_box': '#ffffff'
             }
 
     @staticmethod
     def apply_css():
-        """
-        Gera e injeta o CSS na página.
-        Este bloco CSS é extenso para garantir o controle total da aparência.
-        """
+        """Gera e injeta o CSS na página."""
         c = ThemeManager.get_colors()
         
         css = f"""
@@ -232,7 +220,6 @@ class ThemeManager:
         }}
 
         /* --- Subheaders Coloridos --- */
-        /* Estilo idêntico ao original, com borda esquerda colorida */
         .section-header {{
             margin: 25px 0 15px 0;
             padding: 12px 20px;
@@ -334,17 +321,6 @@ class ThemeManager:
         }}
         
         .info-box li {{ margin-bottom: 0.5rem; }}
-
-        /* --- Badges de Status --- */
-        .status-badge {{
-            padding: 0.25rem 0.75rem; 
-            border-radius: 20px; 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            display: inline-block;
-        }}
-        .status-connected {{ background-color: #10B98120; color: #10B981; }}
-        .status-disconnected {{ background-color: #EF444420; color: #EF4444; }}
 
         /* --- Elementos Ocultos --- */
         #MainMenu {{visibility: hidden;}}
@@ -768,18 +744,13 @@ def main():
         st.sidebar.markdown("### 📊 Status")
         st.sidebar.info(f"Registros: {len(df_full)}\nÚltimo: {df_full['Data'].max().strftime('%d/%m/%Y')}")
 
-        # --- CÁLCULO DOS LIMITES GLOBAIS PARA O HEATMAP ---
-        # A cor do heatmap será baseada no mínimo (>0) e máximo de TODO o histórico
-        # Isso garante que um dia de 20kWh seja sempre verde escuro, independente do ano
+        # --- CÁLCULO DOS LIMITES PARA O HEATMAP (Global Scope) ---
+        # Encontra o máximo global de geração
         global_max_prod = df_full['Energia Gerada (kWh)'].max()
-        global_min_prod_series = df_full[df_full['Energia Gerada (kWh)'] > 0]['Energia Gerada (kWh)']
+        # Encontra o mínimo global que seja maior que zero
+        global_min_prod = df_full[df_full['Energia Gerada (kWh)'] > 0]['Energia Gerada (kWh)'].min()
         
-        if not global_min_prod_series.empty:
-            global_min_prod = global_min_prod_series.min()
-        else:
-            global_min_prod = 0
-        
-        # Fallback de segurança
+        # Fallback de segurança caso os dados não existam
         if pd.isna(global_max_prod): global_max_prod = 20
         if pd.isna(global_min_prod): global_min_prod = 0
     else:
@@ -850,23 +821,15 @@ def main():
         with tab_daily:
             st.markdown("##### Comportamento da Geração Diária")
             
-            # Gráfico de Barras Adaptativo
+            # Gráfico de Barras Adaptativo (Sem largura fixa)
             colors = ThemeManager.get_colors()
             
-            # CORREÇÃO: Usando 'bin=False' e 'padding' no scale para garantir barras largas
-            # quando houver poucos dados, e barras finas quando houver muitos.
             chart_bar = alt.Chart(df_view).mark_bar(
                 color=colors['accent'],
                 cornerRadiusTopLeft=4,
                 cornerRadiusTopRight=4
             ).encode(
-                x=alt.X(
-                    'Data:T', 
-                    title='', 
-                    axis=alt.Axis(format='%d/%m', labelAngle=-45),
-                    # Padding reduzido aproxima as barras
-                    scale=alt.Scale(padding=0.1) 
-                ),
+                x=alt.X('Data:T', title='', axis=alt.Axis(format='%d/%m', labelAngle=-45)),
                 y=alt.Y('Energia Gerada (kWh):Q', title='Produção (kWh)'),
                 tooltip=[
                     alt.Tooltip('Data', format='%d/%m/%Y'), 
@@ -924,22 +887,14 @@ def main():
             if df_year_target.empty:
                 st.info("Sem dados para este ano.")
             else:
-                # 1. Barras Mensais (Ajuste de largura)
+                # 1. Barras Mensais
                 monthly_agg = df_year_target.groupby(df_year_target['Data'].dt.month)['Energia Gerada (kWh)'].sum().reset_index()
                 # Mapa de nomes de mês curto
                 m_names = {1:'Jan', 2:'Fev', 3:'Mar', 4:'Abr', 5:'Mai', 6:'Jun', 7:'Jul', 8:'Ago', 9:'Set', 10:'Out', 11:'Nov', 12:'Dez'}
                 monthly_agg['Nome'] = monthly_agg['Data'].map(m_names)
                 
-                chart_months = alt.Chart(monthly_agg).mark_bar(
-                    color=colors['warning'],
-                    # Removido size fixo, padding cuida do espaçamento
-                ).encode(
-                    x=alt.X(
-                        'Nome:N', 
-                        sort=list(m_names.values()), 
-                        title='Mês',
-                        scale=alt.Scale(padding=0.1) # Barras largas
-                    ),
+                chart_months = alt.Chart(monthly_agg).mark_bar(color=colors['warning']).encode(
+                    x=alt.X('Nome:N', sort=list(m_names.values()), title='Mês'),
                     y=alt.Y('Energia Gerada (kWh):Q', title='Total (kWh)'),
                     tooltip=['Nome', 'Energia Gerada (kWh)']
                 ).properties(height=300)
@@ -948,10 +903,10 @@ def main():
                 
                 st.divider()
                 
-                # 2. Heatmap (Calendário - Estilo Original Restaurado)
+                # 2. Heatmap (Calendário) com Escala Dinâmica Ajustada
                 st.markdown(f"##### Mapa de Calor de Produção ({sel_heat_year})")
                 
-                # Prepara grid completo
+                # Prepara grid completo do ano (365/366 dias)
                 d_start = datetime(sel_heat_year, 1, 1)
                 d_end = datetime(sel_heat_year, 12, 31)
                 full_range = pd.date_range(d_start, d_end, freq='D')
@@ -964,68 +919,29 @@ def main():
                 df_heat['DiaSemana'] = df_heat['Data'].dt.dayofweek
                 df_heat['Mes'] = df_heat['Data'].dt.month
                 
-                # Ajustes de virada de ano
+                # Correção visual para viradas de ano
                 df_heat.loc[(df_heat['Mes'] == 1) & (df_heat['Semana'] > 50), 'Semana'] = 0
                 df_heat.loc[(df_heat['Mes'] == 12) & (df_heat['Semana'] == 1), 'Semana'] = 53
-
-                # --- IMPLEMENTAÇÃO FIEL AO ORIGINAL ---
-                # O usuário pediu "igual ao primeiro". Isso usa VConcat com Labels separados.
                 
-                # Parte 1: Labels dos Meses
-                month_starts = df_heat.groupby('Mes').agg(first_week=('Semana', 'min')).reset_index()
-                month_starts['NomeMes'] = month_starts['Mes'].map(m_names)
-                
-                month_labels_chart = alt.Chart(month_starts).mark_text(
-                    align='left', baseline='bottom', dx=2,
-                    font='Nunito', fontSize=12, color=colors['text_sub']
+                heatmap = alt.Chart(df_heat).mark_rect(
+                    stroke=colors['bg_paper'], strokeWidth=1, cornerRadius=2
                 ).encode(
-                    x=alt.X('first_week:O', title=None, axis=None),
-                    text='NomeMes:N'
-                ).properties(height=20)
-
-                # Parte 2: O Grid de Dias
-                heatmap_grid = alt.Chart(df_heat).mark_rect(
-                    stroke=colors['heatmap_stroke'], 
-                    strokeWidth=0.5, 
-                    cornerRadius=2
-                ).encode(
-                    x=alt.X(
-                        'Semana:O', 
-                        title=None, 
-                        axis=None,
-                        scale=alt.Scale(padding=0.02)
-                    ),
-                    y=alt.Y(
-                        'DiaSemana:O', 
-                        title=None, 
-                        axis=alt.Axis(
-                            labelExpr="['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][datum.value]",
-                            ticks=False,
-                            labelFont='Nunito'
-                        ),
-                        scale=alt.Scale(padding=0.04)
-                    ),
-                    # AQUI: Escala dinâmica (Min > 0 até Max Global)
-                    color=alt.condition(
-                        alt.datum['Energia Gerada (kWh)'] > 0,
-                        alt.Color(
-                            'Energia Gerada (kWh):Q',
-                            scale=alt.Scale(scheme='yellowgreen', domain=[global_min_prod, global_max_prod]),
-                            legend=alt.Legend(title="kWh", orient="bottom")
-                        ),
-                        alt.value('#f3f4f6' if not st.session_state.dark_mode else '#1f2937') # Cor para dias sem geração
+                    x=alt.X('Semana:O', title='Semanas', axis=None),
+                    y=alt.Y('DiaSemana:O', title='', axis=alt.Axis(
+                        labelExpr="['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][datum.value]",
+                        ticks=False
+                    )),
+                    # AQUI ESTÁ A CORREÇÃO SOLICITADA:
+                    # Scale domain usa o mínimo (>0) e máximo globais do dataset
+                    color=alt.Color(
+                        'Energia Gerada (kWh):Q', 
+                        scale=alt.Scale(scheme='yellowgreen', domain=[global_min_prod, global_max_prod]), 
+                        legend=alt.Legend(title="kWh")
                     ),
                     tooltip=[alt.Tooltip('Data', format='%d/%m/%Y'), 'Energia Gerada (kWh)']
-                ).properties(height=220)
-
-                # Combinação (Igual ao código original)
-                final_heatmap = alt.vconcat(
-                    month_labels_chart,
-                    heatmap_grid,
-                    spacing=5
-                ).configure_view(strokeWidth=0)
+                ).properties(height=200)
                 
-                st.altair_chart(final_heatmap, use_container_width=True)
+                st.altair_chart(heatmap, use_container_width=True)
 
         # ABA 4: Simulador ROI (Financeiro Avançado)
         with tab_roi:
@@ -1053,6 +969,7 @@ def main():
             annual_savings_proj = fin_proj_annual['net_savings']
             
             payback_years = params['investimento'] / annual_savings_proj if annual_savings_proj > 0 else 0
+            roi_perc = ((total_saved - params['investimento']) / params['investimento']) * 100 if params['investimento'] > 0 else 0
             
             # Métricas
             c_r1, c_r2, c_r3 = st.columns(3)
@@ -1169,7 +1086,7 @@ def main():
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: var(--text-sub); font-size: 0.8rem; margin-top: 2rem;">
-        SolarAnalytics Pro Enterprise v3.2 • Desenvolvido com Python & Streamlit<br>
+        SolarAnalytics Pro Enterprise v3.1 • Desenvolvido com Python & Streamlit<br>
         Última sincronização: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
     </div>
     """, unsafe_allow_html=True)
