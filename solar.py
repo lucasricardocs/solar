@@ -1003,7 +1003,7 @@ else:
                 alt.Color(
                     'Energia Gerada (kWh):Q',
                     scale=alt.Scale(
-                        scheme='magma',
+                        scheme='goldgrenn',
                         domainMin=10,
                         domainMax=30
                     ),
