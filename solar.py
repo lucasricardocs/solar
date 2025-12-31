@@ -702,10 +702,11 @@ else:
                     # size=35 FOI REMOVIDO para que as barras sejam adaptativas
                 ).encode(
                     x=alt.X(
-                        'Data:T', 
-                        title='', 
-                        axis=alt.Axis(format='%d', labelAngle=0, tickCount='day'),
-                        scale=alt.Scale(nice=False, padding=0.05) # Padding ajuda a controlar a largura relativa
+                        'Data:O',  # Mudamos de :T para :O (Ordinal)
+                        timeUnit='date',  # Extrai apenas o dia (1, 2, 3...)
+                        title='',
+                        axis=alt.Axis(labelAngle=0), # Mantém os números retos
+                        scale=alt.Scale(padding=0.05) # 0.05 = Barras bem grossas (5% de espaço)
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title=''),
                     tooltip=[
