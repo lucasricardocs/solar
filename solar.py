@@ -1004,7 +1004,7 @@ else:
                     scale=alt.Scale(
                         scheme='yellowgreen',
                         domainMin=5,
-                        domainMax=30
+                        domainMax=28
                     ),
                     legend=alt.Legend(title="kWh Gerado")
                 ),
