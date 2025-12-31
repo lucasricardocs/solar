@@ -706,7 +706,7 @@ else:
                         timeUnit='date',  # Extrai apenas o dia (1, 2, 3...)
                         title='',
                         axis=alt.Axis(labelAngle=0), # Mantém os números retos
-                        scale=alt.Scale(padding=0.05) # 0.05 = Barras bem grossas (5% de espaço)
+                        scale=alt.Scale(padding=0.035) # 0.05 = Barras bem grossas (5% de espaço)
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title=''),
                     tooltip=[
