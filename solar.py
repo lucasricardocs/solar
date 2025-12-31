@@ -1002,9 +1002,9 @@ else:
                 alt.Color(
                     'Energia Gerada (kWh):Q',
                     scale=alt.Scale(
-                        scheme='yellowgreen',
+                        scheme='redgreen',
                         domainMin=5,
-                        domainMax=28
+                        domainMax=30
                     ),
                     legend=alt.Legend(title="kWh Gerado")
                 ),
