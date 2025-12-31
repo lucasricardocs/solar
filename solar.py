@@ -705,7 +705,7 @@ else:
                         'Data:T', 
                         title='', 
                         axis=alt.Axis(format='%d', labelAngle=0, tickCount='day'),
-                        scale=alt.Scale(nice=False, padding=0.1) # Padding ajuda a controlar a largura relativa
+                        scale=alt.Scale(nice=False, padding=0.05) # Padding ajuda a controlar a largura relativa
                     ),
                     y=alt.Y('Energia Gerada (kWh):Q', title=''),
                     tooltip=[
